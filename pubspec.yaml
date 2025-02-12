@@ -1,7 +1,8 @@
 name: nb_maps_flutter
-description: A Flutter plugin for integrating Nextbillion's Maps SDK to your Flutter Project.
-version: 1.2.0
-homepage: https://github.com/nextbillion-ai/nb-maps-flutter
+description: Nextbillion.ai Maps SDK for Flutter
+version: 2.0.0
+homepage: https://github.com/nextbillion-ai/nextbillion-maps-flutter
+repository: https://github.com/nextbillion-ai/nextbillion-maps-flutter
 
 dependencies:
   flutter:
