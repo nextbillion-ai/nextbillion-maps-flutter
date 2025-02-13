@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../../nb_maps_flutter.dart";
 
 class Circle implements Annotation {
   Circle(this._id, this.options, [this._data]);

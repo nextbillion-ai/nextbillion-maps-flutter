@@ -44,7 +44,8 @@ void main() {
 
     test('Error should be an instance of DownloadRegionStatus', () {
       // Arrange
-      PlatformException cause = PlatformException(code: 'error_code', message: 'error_message');
+      PlatformException cause =
+          PlatformException(code: 'error_code', message: 'error_message');
       DownloadRegionStatus status = Error(cause);
 
       // Assert
@@ -53,7 +54,8 @@ void main() {
 
     test('Error should have correct cause value', () {
       // Arrange
-      PlatformException cause = PlatformException(code: 'error_code', message: 'error_message');
+      PlatformException cause =
+          PlatformException(code: 'error_code', message: 'error_message');
       Error status = Error(cause);
 
       // Assert
@@ -62,7 +64,8 @@ void main() {
 
     test('Error should have correct toString representation', () {
       // Arrange
-      PlatformException cause = PlatformException(code: 'error_code', message: 'error_message');
+      PlatformException cause =
+          PlatformException(code: 'error_code', message: 'error_message');
       DownloadRegionStatus status = Error(cause);
 
       // Assert

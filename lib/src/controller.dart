@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../nb_maps_flutter.dart";
 
 typedef void OnMapClickCallback(Point<double> point, LatLng coordinates);
 
