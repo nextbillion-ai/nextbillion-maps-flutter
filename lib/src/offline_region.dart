@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../nb_maps_flutter.dart";
 
 /// Description of region to be downloaded. Identifier will be generated when
 /// the download is initiated.

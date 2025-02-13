@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../../nb_maps_flutter.dart";
 
 /// A pair of latitude and longitude coordinates, stored as degrees.
 class LatLng {

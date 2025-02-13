@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../nb_maps_flutter.dart";
 
 abstract class AnnotationManager<T extends Annotation> {
   final NextbillionMapController controller;

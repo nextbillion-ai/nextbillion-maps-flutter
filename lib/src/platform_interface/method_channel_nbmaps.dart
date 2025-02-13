@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../../nb_maps_flutter.dart";
 
 class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   late MethodChannel _channel;

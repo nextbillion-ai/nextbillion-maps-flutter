@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../../nb_maps_flutter.dart";
 
 class Symbol implements Annotation {
   Symbol(this._id, this.options, [this._data]);

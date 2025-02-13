@@ -1,6 +1,6 @@
 name: nb_maps_flutter
-description: Nextbillion.ai Maps SDK for Flutter
-version: 2.0.0-dev.1
+description: A Flutter plugin for Nextbillion.ai Maps SDK that provides cross-platform map functionality with custom styles, camera controls, location tracking, and various annotation types.
+version: 2.0.0-dev.2
 homepage: https://github.com/nextbillion-ai/nextbillion-maps-flutter
 repository: https://github.com/nextbillion-ai/nextbillion-maps-flutter
 
@@ -12,7 +12,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^5.0.0
   test: ^1.24.9
   mockito: ^5.0.17
   build_runner: ^2.1.5
@@ -27,5 +27,5 @@ flutter:
         pluginClass: SwiftNbMapsFlutterPlugin
 
 environment:  
-  sdk: '>=3.0.0 <4.0.0'
-  flutter: ">=3.3.0"
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: ">=3.24.0"

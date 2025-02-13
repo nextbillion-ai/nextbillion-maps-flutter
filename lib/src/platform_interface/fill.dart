@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../../nb_maps_flutter.dart";
 
 FillOptions translateFillOptions(FillOptions options, LatLng delta) {
   if (options.geometry != null) {

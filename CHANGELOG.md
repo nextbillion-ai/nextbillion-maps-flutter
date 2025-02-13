@@ -1,3 +1,6 @@
+## v2.0.0-dev.2, Feb 13, 2025
+* resolved lint issues, updated description of the library
+
 ## v2.0.0-dev.1, Feb 13, 2025
 * prerelease v2.0.0-dev.1, bump version to v2.0.x to align with Nextbillion.ai SDK matrix.
 

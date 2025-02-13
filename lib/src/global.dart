@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../nb_maps_flutter.dart";
 
 typedef EventChannelCreator = EventChannel Function(String name);
 

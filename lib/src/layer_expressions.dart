@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../nb_maps_flutter.dart";
 
 class Expressions {
   /// Binds expressions to named variables, which can then be referenced in

@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../../nb_maps_flutter.dart";
 
 /// Callback function taking a single argument.
 typedef void ArgumentCallback<T>(T argument);
