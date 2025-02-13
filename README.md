@@ -7,9 +7,9 @@
 
 ## Prerequisites
 * Access Key
-* Android minSdkVersion 16+
-* iOS 11+
-* Flutter 3.10+
+* Android minSdkVersion 21+
+* iOS 12+
+* Flutter 3.22+
 * Pod 1.11.3+
 * Ensure that Build Libraries for Distribution (available under build settings) is set to No.
  <img width="1061" alt="截屏2023-07-20 上午11 22 01" src="https://github.com/nextbillion-ai/nb-navigation-flutter/assets/100656364/641c31b7-3d9a-4337-b5e5-f7808cd0c737">
