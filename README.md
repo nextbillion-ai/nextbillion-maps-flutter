@@ -1,18 +1,14 @@
 # Nextbillion Maps Flutter
 [![codecov](https://codecov.io/github/nextbillion-ai/nextbillion-maps-flutter/graph/badge.svg?token=900HR97IZ6)](https://codecov.io/github/nextbillion-ai/nextbillion-maps-flutter)
 
-## Instroduction
-![Nextbillion_Maps_IMG](https://github.com/nextbillion-ai/nb-maps-flutter/assets/100656364/5b8cedb6-a839-45b4-bc04-a760ba562329)
-
 
 ## Prerequisites
 * Access Key
 * Android minSdkVersion 21+
 * iOS 12+
 * Flutter 3.22+
-* Pod 1.11.3+
-* Ensure that Build Libraries for Distribution (available under build settings) is set to No.
- <img width="1061" alt="截屏2023-07-20 上午11 22 01" src="https://github.com/nextbillion-ai/nb-navigation-flutter/assets/100656364/641c31b7-3d9a-4337-b5e5-f7808cd0c737">
+* In the build settings, locate "**Build Libraries for Distribution**" and ensure it is set to "**No**".
+ <img width="1061" src="assets/BuildLibrariesforDistribution.png">
 
 ## Installation
 ### Dependency
