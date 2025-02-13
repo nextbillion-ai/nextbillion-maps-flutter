@@ -1,5 +1,5 @@
-## v2.0.0, Feb 11, 2025
-* bump version to 2.0.0 to align with Nextbillion.ai SDK matrix.
+## v2.0.0-dev.1, Feb 13, 2025
+* prerelease v2.0.0-dev.1, bump version to v2.0.x to align with Nextbillion.ai SDK matrix.
 
 ## v1.2.0, Dec 16, 2024
 * Adapting to Android Gradle Plugin 8.0 Without Using the AGP Upgrading Assistant
