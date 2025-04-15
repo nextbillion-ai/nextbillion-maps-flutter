@@ -1,3 +1,5 @@
+## v2.0.0, Apr 15, 2025
+* Update project to support flutter 3.29, Fixed PluginRegistry.Registrar issue
 ## v2.0.0-dev.2, Feb 13, 2025
 * resolved lint issues, updated description of the library
 
