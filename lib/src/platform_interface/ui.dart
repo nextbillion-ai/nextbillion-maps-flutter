@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../../nb_maps_flutter.dart";
 
 class NbMapStyles {
   static const String NBMAP_STREETS =

@@ -1,4 +1,4 @@
-part of nb_maps_flutter;
+part of "../../nb_maps_flutter.dart";
 
 /// The position of the map "camera", the view point from which the world is
 /// shown in the map view. Aggregates the camera's [target] geographical
