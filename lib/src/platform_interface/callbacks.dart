@@ -1,7 +1,7 @@
 part of "../../nb_maps_flutter.dart";
 
 /// Callback function taking a single argument.
-typedef void ArgumentCallback<T>(T argument);
+typedef ArgumentCallback<T> = void Function(T argument);
 
 /// Mutable collection of [ArgumentCallback] instances, itself an [ArgumentCallback].
 ///
@@ -23,7 +23,7 @@ class ArgumentCallbacks<T> {
     if (length == 1) {
       _callbacks[0].call(argument);
     } else if (0 < length) {
-      for (ArgumentCallback<T> callback
+      for (final ArgumentCallback<T> callback
           in List<ArgumentCallback<T>>.from(_callbacks)) {
         callback(argument);
       }

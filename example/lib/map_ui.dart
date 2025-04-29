@@ -1,8 +1,9 @@
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 final LatLngBounds sydneyBounds = LatLngBounds(
   southwest: const LatLng(-34.022631, 150.620685),
@@ -10,7 +11,7 @@ final LatLngBounds sydneyBounds = LatLngBounds(
 );
 
 class MapUiPage extends ExamplePage {
-  MapUiPage() : super(const Icon(Icons.map), 'User interface');
+  const MapUiPage() : super(const Icon(Icons.map), 'User interface');
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +29,7 @@ class MapUiBody extends StatefulWidget {
 class MapUiBodyState extends State<MapUiBody> {
   MapUiBodyState();
 
-  static final CameraPosition _kInitialPosition = const CameraPosition(
+  static const CameraPosition _kInitialPosition = CameraPosition(
     target: LatLng(-33.852, 151.211),
     zoom: 11.0,
   );
@@ -41,15 +42,16 @@ class MapUiBodyState extends State<MapUiBody> {
   CameraTargetBounds _cameraTargetBounds = CameraTargetBounds.unbounded;
   MinMaxZoomPreference _minMaxZoomPreference = MinMaxZoomPreference.unbounded;
   int _styleStringIndex = 0;
+
   // Style string can a reference to a local or remote resources.
   // On Android the raw JSON can also be passed via a styleString, on iOS this is not supported.
-  List<String> _styleStrings = [
-    NbMapStyles.NBMAP_STREETS,
-    NbMapStyles.SATELLITE,
-    NbMapStyles.DARK
+  final List<String> _styleStrings = [
+    NbMapStyles.nbmapStreets,
+    NbMapStyles.satellite,
+    NbMapStyles.dark
   ];
-  List<String> _styleStringLabels = [
-    "NBMAP_STREETS",
+  final List<String> _styleStringLabels = [
+    "nbmapStreets",
     "SATELLITE",
     "LOCAL_ASSET"
   ];
@@ -60,7 +62,7 @@ class MapUiBodyState extends State<MapUiBody> {
   bool _zoomGesturesEnabled = true;
   bool _myLocationEnabled = true;
   bool _telemetryEnabled = true;
-  MyLocationTrackingMode _myLocationTrackingMode = MyLocationTrackingMode.None;
+  MyLocationTrackingMode _myLocationTrackingMode = MyLocationTrackingMode.none;
   List<Object>? _featureQueryFilter;
   Fill? _selectedFill;
 
@@ -277,19 +279,28 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _visibleRegionGetter() {
-    return TextButton(
-      child: Text('get currently visible region'),
-      onPressed: () async {
-        var result = await mapController!.getVisibleRegion();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              "SW: ${result?.southwest.toString()} NE: ${result?.northeast.toString()}"),
-        ));
+    return Builder(
+      builder: (context) {
+        return TextButton(
+          child: const Text('Get currently visible region'),
+          onPressed: () async {
+            final scaffoldMessenger = ScaffoldMessenger.of(
+                context); // capture context-dependent object early
+
+            final result = await mapController!.getVisibleRegion();
+            scaffoldMessenger.showSnackBar(
+              SnackBar(
+                content:
+                    Text("SW: ${result?.southwest} NE: ${result?.northeast}"),
+              ),
+            );
+          },
+        );
       },
     );
   }
 
-  _clearFill() {
+  void _clearFill() {
     if (_selectedFill != null) {
       mapController!.removeFill(_selectedFill!);
       setState(() {
@@ -298,25 +309,40 @@ class MapUiBodyState extends State<MapUiBody> {
     }
   }
 
-  _drawFill(List<dynamic> features) async {
-    Map<String, dynamic>? feature =
-        features.firstWhereOrNull((f) => f['geometry']['type'] == 'Polygon');
+  Future<void> _drawFill(List<dynamic> features) async {
+    final feature = features.cast<Map<String, dynamic>>().firstWhereOrNull((f) {
+      final geometry = f['geometry'];
+      if (geometry is Map<String, dynamic>) {
+        return geometry['type'] == 'Polygon';
+      }
+      return false;
+    });
 
     if (feature != null) {
-      List<List<LatLng>> geometry = feature['geometry']['coordinates']
-          .map(
-              (ll) => ll.map((l) => LatLng(l[1], l[0])).toList().cast<LatLng>())
-          .toList()
-          .cast<List<LatLng>>();
-      Fill? fill = await mapController!.addFill(FillOptions(
+      final geometryMap = feature['geometry'] as Map<String, dynamic>;
+      final coordinates = geometryMap['coordinates'] as List<dynamic>;
+
+      final List<List<LatLng>> geometry = coordinates
+          .map((ll) => (ll as List)
+              .map((l) => LatLng(
+                    ((l as List)[1] as num).toDouble(),
+                    (l[0] as num).toDouble(),
+                  ))
+              .toList())
+          .toList();
+
+      final Fill? fill = await mapController!.addFill(FillOptions(
         geometry: geometry,
         fillColor: "#FF0000",
         fillOutlineColor: "#FF0000",
         fillOpacity: 0.6,
       ));
-      setState(() {
-        _selectedFill = fill;
-      });
+
+      if (mounted) {
+        setState(() {
+          _selectedFill = fill;
+        });
+      }
     }
   }
 
@@ -337,46 +363,51 @@ class MapUiBodyState extends State<MapUiBody> {
       doubleClickZoomEnabled: _doubleClickToZoomEnabled,
       myLocationEnabled: _myLocationEnabled,
       myLocationTrackingMode: _myLocationTrackingMode,
-      myLocationRenderMode: MyLocationRenderMode.GPS,
+      myLocationRenderMode: MyLocationRenderMode.gps,
       onMapClick: (point, latLng) async {
-        print(
-            "Map click: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
-        print("Filter $_featureQueryFilter");
-        List features = await mapController!
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
+        final List features = await mapController!
             .queryRenderedFeatures(point, ["landuse"], _featureQueryFilter);
-        print('# features: ${features.length}');
         _clearFill();
         if (features.isEmpty && _featureQueryFilter != null) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          scaffoldMessenger.showSnackBar(const SnackBar(
               content: Text('QueryRenderedFeatures: No features found!')));
         } else if (features.isNotEmpty) {
           _drawFill(features);
         }
       },
       onMapLongClick: (point, latLng) async {
-        print(
-            "Map long press: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
+        if (kDebugMode) {
+          print(
+              "Map long press: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
+        }
 
-        double? metersPerPixel =
+        final double? metersPerPixel =
             await mapController!.getMetersPerPixelAtLatitude(latLng.latitude);
 
-        print(
-            "Map long press The distance measured in meters at latitude ${latLng.latitude} is $metersPerPixel m");
+        if (kDebugMode) {
+          print(
+              "Map long press The distance measured in meters at latitude ${latLng.latitude} is $metersPerPixel m");
+        }
 
-        List features =
+        final List features =
             await mapController!.queryRenderedFeatures(point, [], null);
-        if (features.length > 0) {
-          print(features[0]);
+        if (features.isNotEmpty) {
+          if (kDebugMode) {
+            print(features[0]);
+          }
         }
       },
       onCameraTrackingDismissed: () {
-        this.setState(() {
-          _myLocationTrackingMode = MyLocationTrackingMode.None;
+        setState(() {
+          _myLocationTrackingMode = MyLocationTrackingMode.none;
         });
       },
       onUserLocationUpdated: (location) {
-        print(
-            "new location: ${location.position}, alt.: ${location.altitude}, bearing: ${location.bearing}, speed: ${location.speed}, horiz. accuracy: ${location.horizontalAccuracy}, vert. accuracy: ${location.verticalAccuracy}");
+        if (kDebugMode) {
+          print(
+              "new location: ${location.position}, alt.: ${location.altitude}, bearing: ${location.bearing}, speed: ${location.speed}, horiz. accuracy: ${location.horizontalAccuracy}, vert. accuracy: ${location.verticalAccuracy}");
+        }
       },
     );
 

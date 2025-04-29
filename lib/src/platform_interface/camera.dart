@@ -44,7 +44,7 @@ class CameraPosition {
   /// will be silently clamped to the supported range.
   final double zoom;
 
-  dynamic toMap() => <String, dynamic>{
+  Map<String, dynamic> toMap() => <String, dynamic> {
         'bearing': bearing,
         'target': target.toJson(),
         'tilt': tilt,
@@ -52,16 +52,29 @@ class CameraPosition {
       };
 
   @visibleForTesting
-  static CameraPosition? fromMap(dynamic json) {
+  static CameraPosition? fromMap(Map<String, dynamic>? json) {
     if (json == null) {
       return null;
     }
     return CameraPosition(
-      bearing: json['bearing'],
-      target: LatLng._fromJson(json['target']),
-      tilt: json['tilt'],
-      zoom: json['zoom'],
+      bearing: _getDoubleValue(json['bearing']),
+      target: LatLng._fromJson(json['target'] as List<dynamic>),
+      tilt: _getDoubleValue(json['tilt']),
+      zoom: _getDoubleValue(json['zoom']),
     );
+  }
+
+  static double _getDoubleValue(dynamic value) {
+    if (value == null) {
+      return 0.0;  // Default value if null
+    }
+    if (value is double) {
+      return value;
+    } else if (value is num) {
+      return value.toDouble();
+    } else {
+      throw ArgumentError('Expected a double or int, but got ${value.runtimeType}');
+    }
   }
 
   @override
@@ -90,7 +103,7 @@ class CameraUpdate {
   CameraUpdate._(this._json);
 
   /// Returns a camera update that moves the camera to the specified position.
-  static CameraUpdate newCameraPosition(CameraPosition cameraPosition) {
+  factory CameraUpdate.newCameraPosition(CameraPosition cameraPosition) {
     return CameraUpdate._(
       <dynamic>['newCameraPosition', cameraPosition.toMap()],
     );
@@ -98,7 +111,7 @@ class CameraUpdate {
 
   /// Returns a camera update that moves the camera target to the specified
   /// geographical location.
-  static CameraUpdate newLatLng(LatLng latLng) {
+  factory CameraUpdate.newLatLng(LatLng latLng) {
     return CameraUpdate._(<dynamic>['newLatLng', latLng.toJson()]);
   }
 
@@ -107,7 +120,7 @@ class CameraUpdate {
   /// possible zoom level. A non-zero [left], [top], [right] and [bottom] padding
   /// insets the bounding box from the map view's edges.
   /// The camera's new tilt and bearing will both be 0.0.
-  static CameraUpdate newLatLngBounds(LatLngBounds bounds,
+  factory CameraUpdate.newLatLngBounds(LatLngBounds bounds,
       {double left = 0, double top = 0, double right = 0, double bottom = 0}) {
     return CameraUpdate._(<dynamic>[
       'newLatLngBounds',
@@ -121,7 +134,7 @@ class CameraUpdate {
 
   /// Returns a camera update that moves the camera target to the specified
   /// geographical location and zoom level.
-  static CameraUpdate newLatLngZoom(LatLng latLng, double zoom) {
+  factory CameraUpdate.newLatLngZoom(LatLng latLng, double zoom) {
     return CameraUpdate._(
       <dynamic>['newLatLngZoom', latLng.toJson(), zoom],
     );
@@ -133,7 +146,7 @@ class CameraUpdate {
   /// For a camera with bearing 0.0 (pointing north), scrolling by 50,75 moves
   /// the camera's target to a geographical location that is 50 to the east and
   /// 75 to the south of the current location, measured in screen coordinates.
-  static CameraUpdate scrollBy(double dx, double dy) {
+  factory CameraUpdate.scrollBy(double dx, double dy) {
     return CameraUpdate._(
       <dynamic>['scrollBy', dx, dy],
     );
@@ -142,7 +155,7 @@ class CameraUpdate {
   /// Returns a camera update that modifies the camera zoom level by the
   /// specified amount. The optional [focus] is a screen point whose underlying
   /// geographical location should be invariant, if possible, by the movement.
-  static CameraUpdate zoomBy(double amount, [Offset? focus]) {
+  factory CameraUpdate.zoomBy(double amount, [Offset? focus]) {
     if (focus == null) {
       return CameraUpdate._(<dynamic>['zoomBy', amount]);
     } else {
@@ -158,7 +171,7 @@ class CameraUpdate {
   /// closer to the surface of the Earth.
   ///
   /// Equivalent to the result of calling `zoomBy(1.0)`.
-  static CameraUpdate zoomIn() {
+  factory CameraUpdate.zoomIn() {
     return CameraUpdate._(<dynamic>['zoomIn']);
   }
 
@@ -166,22 +179,22 @@ class CameraUpdate {
   /// further away from the surface of the Earth.
   ///
   /// Equivalent to the result of calling `zoomBy(-1.0)`.
-  static CameraUpdate zoomOut() {
+  factory CameraUpdate.zoomOut() {
     return CameraUpdate._(<dynamic>['zoomOut']);
   }
 
   /// Returns a camera update that sets the camera zoom level.
-  static CameraUpdate zoomTo(double zoom) {
+  factory CameraUpdate.zoomTo(double zoom) {
     return CameraUpdate._(<dynamic>['zoomTo', zoom]);
   }
 
   /// Returns a camera update that sets the camera bearing.
-  static CameraUpdate bearingTo(double bearing) {
+  factory CameraUpdate.bearingTo(double bearing) {
     return CameraUpdate._(<dynamic>['bearingTo', bearing]);
   }
 
   /// Returns a camera update that sets the camera bearing.
-  static CameraUpdate tiltTo(double tilt) {
+  factory CameraUpdate.tiltTo(double tilt) {
     return CameraUpdate._(<dynamic>['tiltTo', tilt]);
   }
 

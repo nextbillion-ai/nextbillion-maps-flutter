@@ -2,11 +2,11 @@ part of "../nb_maps_flutter.dart";
 
 enum AnnotationType { fill, line, circle, symbol }
 
-typedef void MapCreatedCallback(NextbillionMapController controller);
+typedef MapCreatedCallback = void Function(NextbillionMapController controller);
 
 class NBMap extends StatefulWidget {
   const NBMap({
-    Key? key,
+    super.key,
     required this.initialCameraPosition,
     this.onMapCreated,
     this.onStyleLoadedCallback,
@@ -23,8 +23,8 @@ class NBMap extends StatefulWidget {
     this.dragEnabled = true,
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
-    this.myLocationTrackingMode = MyLocationTrackingMode.None,
-    this.myLocationRenderMode = MyLocationRenderMode.COMPASS,
+    this.myLocationTrackingMode = MyLocationTrackingMode.none,
+    this.myLocationRenderMode = MyLocationRenderMode.compass,
     this.logoViewMargins,
     this.compassViewPosition,
     this.compassViewMargins,
@@ -50,11 +50,10 @@ class NBMap extends StatefulWidget {
       AnnotationType.line,
       AnnotationType.circle,
     ],
-    this.useDelayedDisposal,
+    // this.useDelayedDisposal,
     this.useHybridCompositionOverride,
   })  : assert(annotationOrder.length <= 4),
-        assert(annotationConsumeTapEvents.length > 0),
-        super(key: key);
+        assert(annotationConsumeTapEvents.length > 0);
 
   /// Defines the layer order of annotations displayed on map
   ///
@@ -212,8 +211,8 @@ class NBMap extends StatefulWidget {
   final OnMapIdleCallback? onMapIdle;
 
   // This flag has no effect anymore and will be removed in the next major release.
-  @deprecated
-  final bool? useDelayedDisposal;
+  // @deprecated
+  // final bool? useDelayedDisposal;
 
   /// Override hybrid mode per map instance
   final bool? useHybridCompositionOverride;
@@ -259,7 +258,7 @@ class _NBMapState extends State<NBMap> {
   }
 
   @override
-  void dispose() async {
+  Future<void> dispose() async {
     super.dispose();
     if (_controller.isCompleted) {
       final controller = await _controller.future;
@@ -278,7 +277,7 @@ class _NBMapState extends State<NBMap> {
     _nextbillionMapOptions = newOptions;
   }
 
-  void _updateOptions(Map<String, dynamic> updates) async {
+  Future<void> _updateOptions(Map<String, dynamic> updates) async {
     if (updates.isEmpty) {
       return;
     }
@@ -293,7 +292,7 @@ class _NBMapState extends State<NBMap> {
       onStyleLoadedCallback: () {
         _controller.future.then((_) {
           if (widget.onStyleLoadedCallback != null) {
-            widget.onStyleLoadedCallback!();
+            widget.onStyleLoadedCallback?.call();
           }
         });
       },
@@ -311,7 +310,7 @@ class _NBMapState extends State<NBMap> {
     await _nbmapsGlPlatform.initPlatform(id);
     _controller.complete(controller);
     if (widget.onMapCreated != null) {
-      widget.onMapCreated!(controller);
+      widget.onMapCreated?.call(controller);
     }
   }
 }
@@ -341,7 +340,7 @@ class NextBillionMapOptions {
     this.attributionButtonMargins,
   });
 
-  static NextBillionMapOptions fromWidget(NBMap map) {
+  factory NextBillionMapOptions.fromWidget(NBMap map) {
     return NextBillionMapOptions(
       compassEnabled: map.compassEnabled,
       cameraTargetBounds: map.cameraTargetBounds,
@@ -401,7 +400,7 @@ class NextBillionMapOptions {
 
   final Point? attributionButtonMargins;
 
-  final _gestureGroup = {
+  final _gestureGroup = const {
     'rotateGesturesEnabled',
     'scrollGesturesEnabled',
     'tiltGesturesEnabled',

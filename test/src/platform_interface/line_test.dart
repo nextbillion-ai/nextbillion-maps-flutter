@@ -1,11 +1,11 @@
-import 'package:test/test.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('Line', () {
     test('toGeoJson should return the correct GeoJSON representation', () {
       // Arrange
-      final lineOptions = LineOptions(
+      const lineOptions = LineOptions(
         lineJoin: 'round',
         lineOpacity: 0.8,
         lineColor: '#FF0000',
@@ -24,31 +24,33 @@ void main() {
 
       // Act
       final geoJson = line.toGeoJson();
-
+      final properties = geoJson['properties'] as Map<String, dynamic>?;
+      final geometry = geoJson['geometry'] as Map<String, dynamic>?;
       // Assert
       expect(line.data, isNull);
       expect(geoJson['type'], equals('Feature'));
-      expect(geoJson['properties']['lineJoin'], equals('round'));
-      expect(geoJson['properties']['lineOpacity'], equals(0.8));
-      expect(geoJson['properties']['lineColor'], equals('#FF0000'));
-      expect(geoJson['properties']['lineWidth'], equals(2.0));
-      expect(geoJson['properties']['lineGapWidth'], equals(0.0));
-      expect(geoJson['properties']['lineOffset'], equals(0.0));
-      expect(geoJson['properties']['lineBlur'], equals(0.0));
-      expect(geoJson['properties']['linePattern'], equals('solid'));
-      expect(geoJson['properties']['draggable'], equals(true));
-      expect(geoJson['geometry']['type'], equals('LineString'));
+      expect(properties?['lineJoin'], equals('round'));
+      expect(properties?['lineOpacity'], equals(0.8));
+      expect(properties?['lineColor'], equals('#FF0000'));
+      expect(properties?['lineWidth'], equals(2.0));
+      expect(properties?['lineGapWidth'], equals(0.0));
+      expect(properties?['lineOffset'], equals(0.0));
+      expect(properties?['lineBlur'], equals(0.0));
+      expect(properties?['linePattern'], equals('solid'));
+      expect(properties?['draggable'], equals(true));
+      expect(geometry?['type'], equals('LineString'));
       expect(
-          geoJson['geometry']['coordinates'],
-          equals([
-            [-122.4194, 37.7749],
-            [-122.3927, 37.8095],
-          ]));
+        geometry?['coordinates'],
+        equals([
+          [-122.4194, 37.7749],
+          [-122.3927, 37.8095],
+        ]),
+      );
     });
 
     test('translate should update the line geometry correctly', () {
       // Arrange
-      final lineOptions = LineOptions(
+      const lineOptions = LineOptions(
         geometry: [
           LatLng(37.7749, -122.4194),
           LatLng(37.8095, -122.3927),
@@ -57,7 +59,7 @@ void main() {
       final line = Line('line1', lineOptions);
 
       // Act
-      line.translate(LatLng(0.1, 0.1));
+      line.translate(const LatLng(0.1, 0.1));
 
       // Assert
 
@@ -70,7 +72,7 @@ void main() {
     test(
         'LineOption.toJson should contain geometry by default(addGeometry == true)',
         () {
-      final lineOptions = LineOptions(
+      const lineOptions = LineOptions(
         lineJoin: 'round',
         lineOpacity: 0.8,
         lineColor: '#FF0000',
@@ -92,7 +94,7 @@ void main() {
 
     test('LineOption.toJson should not contain geometry if addGeometry != true',
         () {
-      final lineOptions = LineOptions(
+      const lineOptions = LineOptions(
         lineJoin: 'round',
         lineOpacity: 0.8,
         lineColor: '#FF0000',

@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:test/test.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('_NextBillionMapOptions', () {
@@ -11,12 +11,12 @@ void main() {
         compassEnabled: true,
         cameraTargetBounds: CameraTargetBounds(
           LatLngBounds(
-            southwest: LatLng(37.7749, -122.4194),
-            northeast: LatLng(37.8095, -122.3927),
+            southwest: const LatLng(37.7749, -122.4194),
+            northeast: const LatLng(37.8095, -122.3927),
           ),
         ),
         styleString: 'https://example.com/mapstyle',
-        minMaxZoomPreference: MinMaxZoomPreference(10.0, 15.0),
+        minMaxZoomPreference: const MinMaxZoomPreference(10.0, 15.0),
         rotateGesturesEnabled: true,
         scrollGesturesEnabled: true,
         tiltGesturesEnabled: true,
@@ -24,13 +24,13 @@ void main() {
         doubleClickZoomEnabled: true,
         trackCameraPosition: true,
         myLocationEnabled: true,
-        myLocationTrackingMode: MyLocationTrackingMode.None,
-        myLocationRenderMode: MyLocationRenderMode.NORMAL,
-        logoViewMargins: Point(10, 10),
-        compassViewPosition: CompassViewPosition.BottomLeft,
-        compassViewMargins: Point(5, 5),
-        attributionButtonPosition: AttributionButtonPosition.BottomRight,
-        attributionButtonMargins: Point(5, 5),
+        myLocationTrackingMode: MyLocationTrackingMode.none,
+        myLocationRenderMode: MyLocationRenderMode.normal,
+        logoViewMargins:  const Point(10, 10),
+        compassViewPosition: CompassViewPosition.bottomLeft,
+        compassViewMargins: const Point(5, 5),
+        attributionButtonPosition: AttributionButtonPosition.bottomRight,
+        attributionButtonMargins: const Point(5, 5),
       );
 
       // Act
@@ -49,15 +49,15 @@ void main() {
       expect(result['trackCameraPosition'], equals(true));
       expect(result['myLocationEnabled'], equals(true));
       expect(result['myLocationTrackingMode'],
-          equals(MyLocationTrackingMode.None.index));
+          equals(MyLocationTrackingMode.none.index));
       expect(result['myLocationRenderMode'],
-          equals(MyLocationRenderMode.NORMAL.index));
+          equals(MyLocationRenderMode.normal.index));
       expect(result['logoViewMargins'], equals([10, 10]));
       expect(result['compassViewPosition'],
-          equals(CompassViewPosition.BottomLeft.index));
+          equals(CompassViewPosition.bottomLeft.index));
       expect(result['compassViewMargins'], equals([5, 5]));
       expect(result['attributionButtonPosition'],
-          equals(AttributionButtonPosition.BottomRight.index));
+          equals(AttributionButtonPosition.bottomRight.index));
       expect(result['attributionButtonMargins'], equals([5, 5]));
     });
 

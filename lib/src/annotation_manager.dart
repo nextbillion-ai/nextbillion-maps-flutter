@@ -9,7 +9,7 @@ abstract class AnnotationManager<T extends Annotation> {
   final void Function(T)? onTap;
 
   /// base id of the manager. User [layerdIds] to get the actual ids.
-  String get id => "${managerType}-$randomPostFix";
+  String get id => "$managerType-$randomPostFix";
 
   final String managerType;
 
@@ -62,14 +62,14 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  _onFeatureTapped(dynamic id, Point<double> point, LatLng coordinates) {
+  void _onFeatureTapped(dynamic id, Point<double> point, LatLng coordinates) {
     final annotation = _idToAnnotation[id];
     if (annotation != null) {
       onTap!(annotation);
     }
   }
 
-  String _makeLayerId(int layerIndex) => "${id}-$layerIndex";
+  String _makeLayerId(int layerIndex) => "$id-$layerIndex";
 
   Future<void> _setAll() async {
     if (selectLayer != null) {
@@ -98,7 +98,7 @@ abstract class AnnotationManager<T extends Annotation> {
   /// Adds a multiple annotations to the map. This much faster than calling add
   /// multiple times
   Future<void> addAll(Iterable<T> annotations) async {
-    for (var a in annotations) {
+    for (final a in annotations) {
       _idToAnnotation[a.id] = a;
     }
     await _setAll();
@@ -112,7 +112,7 @@ abstract class AnnotationManager<T extends Annotation> {
 
   /// Removes multiple annotations from the map
   Future<void> removeAll(Iterable<T> annotations) async {
-    for (var a in annotations) {
+    for (final a in annotations) {
       _idToAnnotation.remove(a.id);
     }
     await _setAll();
@@ -142,13 +142,13 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  _onDrag(dynamic id,
+  void _onDrag(dynamic id,
       {required Point<double> point,
       required LatLng origin,
       required LatLng current,
       required LatLng delta,
       required DragEventType eventType}) {
-    final annotation = byId(id);
+    final annotation = byId(id as String? ?? "");
     if (annotation != null) {
       annotation.translate(delta);
       set(annotation);
@@ -175,13 +175,10 @@ abstract class AnnotationManager<T extends Annotation> {
 }
 
 class LineManager extends AnnotationManager<Line> {
-  LineManager(NextbillionMapController controller,
-      {void Function(Line)? onTap, bool enableInteraction = true})
+  LineManager(super.controller,
+      {super.onTap, super.enableInteraction = true})
       : super(
-          controller,
           managerType: "line",
-          onTap: onTap,
-          enableInteraction: enableInteraction,
           selectLayer: (Line line) => line.options.linePattern == null ? 0 : 1,
         );
 
@@ -198,20 +195,17 @@ class LineManager extends AnnotationManager<Line> {
   List<LayerProperties> get allLayerProperties => [
         _baseProperties,
         _baseProperties.copyWith(
-            LineLayerProperties(linePattern: [Expressions.get, 'linePattern'])),
+            const LineLayerProperties(linePattern: [Expressions.get, 'linePattern'])),
       ];
 }
 
 class FillManager extends AnnotationManager<Fill> {
   FillManager(
-    NextbillionMapController controller, {
-    void Function(Fill)? onTap,
-    bool enableInteraction = true,
+    super.controller, {
+    super.onTap,
+    super.enableInteraction = true,
   }) : super(
-          controller,
           managerType: "fill",
-          onTap: onTap,
-          enableInteraction: enableInteraction,
           selectLayer: (Fill fill) => fill.options.fillPattern == null ? 0 : 1,
         );
   @override
@@ -232,14 +226,11 @@ class FillManager extends AnnotationManager<Fill> {
 
 class CircleManager extends AnnotationManager<Circle> {
   CircleManager(
-    NextbillionMapController controller, {
-    void Function(Circle)? onTap,
-    bool enableInteraction = true,
+    super.controller, {
+    super.onTap,
+    super.enableInteraction = true,
   }) : super(
-          controller,
           managerType: "circle",
-          enableInteraction: enableInteraction,
-          onTap: onTap,
         );
   @override
   List<LayerProperties> get allLayerProperties => const [
@@ -257,22 +248,19 @@ class CircleManager extends AnnotationManager<Circle> {
 
 class SymbolManager extends AnnotationManager<Symbol> {
   SymbolManager(
-    NextbillionMapController controller, {
-    void Function(Symbol)? onTap,
+    super.controller, {
+    super.onTap,
     bool iconAllowOverlap = false,
     bool textAllowOverlap = false,
     bool iconIgnorePlacement = false,
     bool textIgnorePlacement = false,
-    bool enableInteraction = true,
+    super.enableInteraction = true,
   })  : _iconAllowOverlap = iconAllowOverlap,
         _textAllowOverlap = textAllowOverlap,
         _iconIgnorePlacement = iconIgnorePlacement,
         _textIgnorePlacement = textIgnorePlacement,
         super(
-          controller,
           managerType: "symbol",
-          enableInteraction: enableInteraction,
-          onTap: onTap,
         );
 
   bool _iconAllowOverlap;
