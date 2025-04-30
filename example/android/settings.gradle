@@ -22,4 +22,8 @@ plugins {
     id "org.jetbrains.kotlin.android" version "1.7.20" apply false
 }
 
-include ":app"
+include ':app'
+
+// Add nb_maps_flutter module
+include ':nb_maps_flutter'
+project(':nb_maps_flutter').projectDir = new File('../../android')
