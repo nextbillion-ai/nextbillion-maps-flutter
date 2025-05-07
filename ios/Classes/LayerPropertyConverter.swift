@@ -1,5 +1,3 @@
-
-
 import Nbmap
 
 class LayerPropertyConverter {
@@ -122,7 +120,6 @@ class LayerPropertyConverter {
                 symbolLayer.textOptional = expression
             case "visibility":
                 symbolLayer.isVisible = propertyValue == "visible"
-
             default:
                 break
             }
@@ -162,7 +159,6 @@ class LayerPropertyConverter {
                 circleLayer.circleSortKey = expression
             case "visibility":
                 circleLayer.isVisible = propertyValue == "visible"
-
             default:
                 break
             }
@@ -210,7 +206,6 @@ class LayerPropertyConverter {
                 lineLayer.lineSortKey = expression
             case "visibility":
                 lineLayer.isVisible = propertyValue == "visible"
-
             default:
                 break
             }
@@ -242,47 +237,45 @@ class LayerPropertyConverter {
                 fillLayer.fillSortKey = expression
             case "visibility":
                 fillLayer.isVisible = propertyValue == "visible"
-
             default:
                 break
             }
         }
     }
 
-        class func addFillExtrusionProperties(
-            fillExtrusionLayer: NGLFillExtrusionStyleLayer,
-            properties: [String: String]
-        ) {
-            for (propertyName, propertyValue) in properties {
-                let expression = interpretExpression(
-                    propertyName: propertyName,
-                    expression: propertyValue
-                )
-                switch propertyName {
-                case "fill-extrusion-opacity":
-                    fillExtrusionLayer.fillExtrusionOpacity = expression
-                case "fill-extrusion-color":
-                    fillExtrusionLayer.fillExtrusionColor = expression
-                case "fill-extrusion-translate":
-                    fillExtrusionLayer.fillExtrusionTranslation = expression
-                case "fill-extrusion-translate-anchor":
-                    fillExtrusionLayer.fillExtrusionTranslationAnchor = expression
-                case "fill-extrusion-pattern":
-                    fillExtrusionLayer.fillExtrusionPattern = expression
-                case "fill-extrusion-height":
-                    fillExtrusionLayer.fillExtrusionHeight = expression
-                case "fill-extrusion-base":
-                    fillExtrusionLayer.fillExtrusionBase = expression
-                case "fill-extrusion-vertical-gradient":
-                    fillExtrusionLayer.fillExtrusionHasVerticalGradient = expression
-                case "visibility":
-                    fillExtrusionLayer.isVisible = propertyValue == "visible"
-
-                default:
-                    break
-                }
+    class func addFillExtrusionProperties(
+        fillExtrusionLayer: NGLFillExtrusionStyleLayer,
+        properties: [String: String]
+    ) {
+        for (propertyName, propertyValue) in properties {
+            let expression = interpretExpression(
+                propertyName: propertyName,
+                expression: propertyValue
+            )
+            switch propertyName {
+            case "fill-extrusion-opacity":
+                fillExtrusionLayer.fillExtrusionOpacity = expression
+            case "fill-extrusion-color":
+                fillExtrusionLayer.fillExtrusionColor = expression
+            case "fill-extrusion-translate":
+                fillExtrusionLayer.fillExtrusionTranslation = expression
+            case "fill-extrusion-translate-anchor":
+                fillExtrusionLayer.fillExtrusionTranslationAnchor = expression
+            case "fill-extrusion-pattern":
+                fillExtrusionLayer.fillExtrusionPattern = expression
+            case "fill-extrusion-height":
+                fillExtrusionLayer.fillExtrusionHeight = expression
+            case "fill-extrusion-base":
+                fillExtrusionLayer.fillExtrusionBase = expression
+            case "fill-extrusion-vertical-gradient":
+                fillExtrusionLayer.fillExtrusionHasVerticalGradient = expression
+            case "visibility":
+                fillExtrusionLayer.isVisible = propertyValue == "visible"
+            default:
+                break
             }
         }
+    }
 
     class func addRasterProperties(rasterLayer: NGLRasterStyleLayer, properties: [String: String]) {
         for (propertyName, propertyValue) in properties {
@@ -309,7 +302,6 @@ class LayerPropertyConverter {
                 rasterLayer.rasterFadeDuration = expression
             case "visibility":
                 rasterLayer.isVisible = propertyValue == "visible"
-
             default:
                 break
             }
@@ -340,7 +332,6 @@ class LayerPropertyConverter {
                 hillshadeLayer.hillshadeAccentColor = expression
             case "visibility":
                 hillshadeLayer.isVisible = propertyValue == "visible"
-
             default:
                 break
             }
@@ -369,7 +360,6 @@ class LayerPropertyConverter {
                 heatmapLayer.heatmapOpacity = expression
             case "visibility":
                 heatmapLayer.isVisible = propertyValue == "visible"
-
             default:
                 break
             }
@@ -377,8 +367,7 @@ class LayerPropertyConverter {
     }
 
     private class func interpretExpression(propertyName: String,
-                                           expression: String) -> NSExpression?
-    {
+                                           expression: String) -> NSExpression? {
         let isColor = propertyName.contains("color")
 
         do {
@@ -391,15 +380,15 @@ class LayerPropertyConverter {
                     return NSExpression(forConstantValue: UIColor(hexString: color))
                 }
             }
-         
+
             if let offset = json as? [Any] {
                 if offset.count == 2, offset.first is String, offset.first as? String == "literal" {
                     if let vector = offset.last as? [Any] {
                         if vector.count == 2 {
-                            if let x = vector.first as? Double, let y = vector.last as? Double {
+                            if let xValue = vector.first as? Double, let yValue = vector.last as? Double {
                                 return NSExpression(
-                                    forConstantValue: NSValue(cgVector: CGVector(dx: x,
-                                                                                 dy: y))
+                                    forConstantValue: NSValue(cgVector: CGVector(dx: xValue,
+                                                                                 dy: yValue))
                                 )
                             }
                         }

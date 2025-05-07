@@ -57,12 +57,12 @@ class OfflinePackDownloader {
         storage
             .addPack(for: tilePyramidRegion,
                      withContext: regionData.prepareContext()) { [weak self] pack, error in
-                if let pack = pack {
-                    self?.onPackCreated(pack: pack)
-                } else {
-                    self?.onPackCreationError(error: error)
-                }
+            if let pack = pack {
+                self?.onPackCreated(pack: pack)
+            } else {
+                self?.onPackCreationError(error: error)
             }
+        }
         return id
     }
 
@@ -70,8 +70,7 @@ class OfflinePackDownloader {
 
     private func onPackCreated(pack: NGLOfflinePack) {
         if let region = OfflineRegion.fromOfflinePack(pack),
-           let regionData = try? JSONSerialization.data(withJSONObject: region.toDictionary())
-        {
+           let regionData = try? JSONSerialization.data(withJSONObject: region.toDictionary()) {
             // Start downloading
             self.pack = pack
             pack.resume()
@@ -79,7 +78,7 @@ class OfflinePackDownloader {
             result(String(data: regionData, encoding: .utf8))
             channelHandler.onStart()
         } else {
-            onPackCreationError(error: OfflinePackError.InvalidPackData)
+            onPackCreationError(error: OfflinePackError.invalidPackData)
         }
     }
 
@@ -219,5 +218,5 @@ class OfflinePackDownloader {
 }
 
 enum OfflinePackError: Error {
-    case InvalidPackData
+    case invalidPackData
 }
