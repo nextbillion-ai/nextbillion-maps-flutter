@@ -38,35 +38,31 @@ class Convert {
             delegate.setMyLocationEnabled(myLocationEnabled: myLocationEnabled)
         }
         if let myLocationTrackingMode = options["myLocationTrackingMode"] as? UInt,
-           let trackingMode = NGLUserTrackingMode(rawValue: myLocationTrackingMode)
-        {
+           let trackingMode = NGLUserTrackingMode(rawValue: myLocationTrackingMode) {
             delegate.setMyLocationTrackingMode(myLocationTrackingMode: trackingMode)
         }
         if let myLocationRenderMode = options["myLocationRenderMode"] as? Int,
-           let renderMode = MyLocationRenderMode(rawValue: myLocationRenderMode)
-        {
+           let renderMode = MyLocationRenderMode(rawValue: myLocationRenderMode) {
             delegate.setMyLocationRenderMode(myLocationRenderMode: renderMode)
         }
         if let logoViewMargins = options["logoViewMargins"] as? [Double] {
-            delegate.setLogoViewMargins(x: logoViewMargins[0], y: logoViewMargins[1])
+            delegate.setLogoViewMargins(xValue: logoViewMargins[0], yValue: logoViewMargins[1])
         }
         if let compassViewPosition = options["compassViewPosition"] as? UInt,
-           let position = NGLOrnamentPosition(rawValue: compassViewPosition)
-        {
+           let position = NGLOrnamentPosition(rawValue: compassViewPosition) {
             delegate.setCompassViewPosition(position: position)
         }
         if let compassViewMargins = options["compassViewMargins"] as? [Double] {
-            delegate.setCompassViewMargins(x: compassViewMargins[0], y: compassViewMargins[1])
+            delegate.setCompassViewMargins(xValue: compassViewMargins[0], yValue: compassViewMargins[1])
         }
         if let attributionButtonMargins = options["attributionButtonMargins"] as? [Double] {
             delegate.setAttributionButtonMargins(
-                x: attributionButtonMargins[0],
-                y: attributionButtonMargins[1]
+                xValue: attributionButtonMargins[0],
+                yValue: attributionButtonMargins[1]
             )
         }
         if let attributionButtonPosition = options["attributionButtonPosition"] as? UInt,
-           let position = NGLOrnamentPosition(rawValue: attributionButtonPosition)
-        {
+           let position = NGLOrnamentPosition(rawValue: attributionButtonPosition) {
             delegate.setAttributionButtonPosition(position: position)
         }
     }
@@ -110,11 +106,11 @@ class Convert {
                 heading: camera.heading
             )
         case "scrollBy":
-            guard let x = cameraUpdate[1] as? CGFloat else { return nil }
-            guard let y = cameraUpdate[2] as? CGFloat else { return nil }
+            guard let xValue = cameraUpdate[1] as? CGFloat else { return nil }
+            guard let yValue = cameraUpdate[2] as? CGFloat else { return nil }
             let camera = mapView.camera
             let mapPoint = mapView.convert(camera.centerCoordinate, toPointTo: mapView)
-            let movedPoint = CGPoint(x: mapPoint.x + x, y: mapPoint.y + y)
+            let movedPoint = CGPoint(x: mapPoint.x + xValue, y: mapPoint.y + yValue)
             camera.centerCoordinate = mapView.convert(movedPoint, toCoordinateFrom: mapView)
             return camera
         case "zoomBy":
@@ -188,8 +184,7 @@ class Convert {
         var coordinates: [CLLocationCoordinate2D] = []
 
         if let options = options as? [String: Any],
-           let geometry = options["geometry"] as? [[Double]], geometry.count > 0
-        {
+           let geometry = options["geometry"] as? [[Double]], geometry.count > 0 {
             for coordinate in geometry {
                 coordinates.append(CLLocationCoordinate2DMake(coordinate[0], coordinate[1]))
             }

@@ -1,4 +1,3 @@
-
 import Nbmap
 
 protocol NextbillionMapOptionsSink {
@@ -14,9 +13,9 @@ protocol NextbillionMapOptionsSink {
     func setMyLocationEnabled(myLocationEnabled: Bool)
     func setMyLocationTrackingMode(myLocationTrackingMode: NGLUserTrackingMode)
     func setMyLocationRenderMode(myLocationRenderMode: MyLocationRenderMode)
-    func setLogoViewMargins(x: Double, y: Double)
+    func setLogoViewMargins(xValue: Double, yValue: Double)
     func setCompassViewPosition(position: NGLOrnamentPosition)
-    func setCompassViewMargins(x: Double, y: Double)
-    func setAttributionButtonMargins(x: Double, y: Double)
+    func setCompassViewMargins(xValue: Double, yValue: Double)
+    func setAttributionButtonMargins(xValue: Double, yValue: Double)
     func setAttributionButtonPosition(position: NGLOrnamentPosition)
 }

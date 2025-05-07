@@ -7,31 +7,31 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = NbMapFactory(withRegistrar: registrar)
         registrar.register(instance, withId: "plugins.flutter.io/nb_maps_flutter")
-        
+
         let channel = FlutterMethodChannel(
             name: "plugins.flutter.io/nb_maps_flutter",
             binaryMessenger: registrar.messenger()
         )
-        
+
         let nextBillionChannel = FlutterMethodChannel(
             name: "plugins.flutter.io/nextbillion_init",
             binaryMessenger: registrar.messenger()
         )
-        
-        nextBillionChannel.setMethodCallHandler{ call, result in
+
+        nextBillionChannel.setMethodCallHandler { call, result in
             switch call.method {
             case "nextbillion/init_nextbillion":
                 if let args = call.arguments as? [String: Any] {
                     if let token = args["accessKey"] as? String? {
                         NGLAccountManager.accessToken = token
                     }
-                    
+
                     let libraryBundle = Bundle(for: SwiftNbMapsFlutterPlugin.self)
-                   
+
                     let version = libraryBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") ?? "Unknown"
                     let buildNumber = libraryBundle.object(forInfoDictionaryKey: "CFBundleVersion") ?? "Unknown"
-                 
-                    let crossPlatformInfo: String = "Flutter-\(version)-\(buildNumber)"
+
+                    let crossPlatformInfo = "Flutter-\(version)-\(buildNumber)"
                     NGLAccountManager.crossPlatformInfo = crossPlatformInfo
                 }
                 result(nil)
@@ -64,25 +64,22 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
                 result(nil)
             case "nextbillion/get_key_header_name":
                 result(NGLAccountManager.apiKeyHeaderName)
-
             case "nextbillion/get_nb_id":
-                 result(NGLAccountManager.nbId)
+                result(NGLAccountManager.nbId)
             case "nextbillion/get_user_id":
-                 result(NGLAccountManager.userId)
+                result(NGLAccountManager.userId)
             case "nextbillion/set_user_id":
                 if let args = call.arguments as? [String: Any] {
-                   if let userId = args["userId"] as? String? {
-                      NGLAccountManager.userId = userId
-                   }
+                    if let userId = args["userId"] as? String? {
+                        NGLAccountManager.userId = userId
+                    }
                 }
                 result(nil)
-
             default:
                 result(FlutterMethodNotImplemented)
             }
-            
         }
-        
+
         channel.setMethodCallHandler { methodCall, result in
             switch methodCall.method {
             case "setHttpHeaders":
@@ -160,13 +157,13 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
             }
         }
     }
-    
+
     private static func getTilesUrl() -> URL {
         guard var cachesUrl = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
         ).first,
-              let bundleId = Bundle.main
+            let bundleId = Bundle.main
             .object(forInfoDictionaryKey: kCFBundleIdentifierKey as String) as? String
         else {
             fatalError("Could not get map tiles directory")
@@ -176,7 +173,7 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
         cachesUrl.appendPathComponent("cache.db")
         return cachesUrl
     }
-    
+
     private static func installOfflineMapTiles(registrar: FlutterPluginRegistrar, tilesdb: String) {
         var tilesUrl = getTilesUrl()
         let bundlePath = getTilesDbPath(registrar: registrar, tilesdb: tilesdb)
@@ -201,10 +198,9 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
             NSLog("Error copying bundled tiles: \(error)")
         }
     }
-    
+
     private static func getTilesDbPath(registrar: FlutterPluginRegistrar,
-                                       tilesdb: String) -> String?
-    {
+                                       tilesdb: String) -> String? {
         if tilesdb.starts(with: "/") {
             return tilesdb
         } else {

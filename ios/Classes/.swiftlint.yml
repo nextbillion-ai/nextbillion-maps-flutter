@@ -1,0 +1,55 @@
+disabled_rules:
+  - trailing_whitespace
+  - private_over_fileprivate
+  - todo
+  - line_length
+  - cyclomatic_complexity
+  - trailing_comma
+
+opt_in_rules:
+  - force_cast
+  - force_try
+  - unused_optional_binding
+
+excluded:  # paths to ignore during linting. Takes precedence over `included`.
+  - Example-SwiftUITests
+  - build
+  - scripts
+
+vertical_whitespace:
+  max_empty_lines: 1
+
+#line_length:
+#  warning: 160  # Change this to a higher value, e.g., 150
+#  error: 200    # This sets a hard limit
+
+function_body_length:
+  warning: 150  # Change this to your preferred warning limit
+  error: 180    # Change this to your preferred max limit
+
+function_parameter_count:
+  warning: 9  # Warn when there are more than 6 parameters
+  error: 10   # Throw an error when there are more than 8 parameters
+
+shorthand_operator:
+  severity: warning  # You can add this to specify the warning severity
+
+#opening_brace:
+#  severity: warning  # Correct way to specify severity for this rule
+file_length:
+  warning: 2500
+  error: 2600
+
+type_body_length:
+  warning: 600   # Increase type body length limit
+  error: 650
+  
+identifier_name:
+  min_length: 2
+  max_length: 50  # Increase the maximum length as needed
+cyclomatic_complexity:
+  warning: 15  # Change this value to increase the allowed complexity
+  error: 20    # You can increase the threshold
+nesting:
+  type_level: 3  # Allows nesting up to 3 levels deep
+  function_level: 3  # Allows functions to be nested up to 3 levels
