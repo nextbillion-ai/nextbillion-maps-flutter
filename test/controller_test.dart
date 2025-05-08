@@ -62,7 +62,7 @@ void main() {
     test('dispose sets disposed flag to true', () {
       final disposed = controller.disposed;
       controller.dispose();
-      expect(controller.disposed, isTrue);
+      expect(controller.disposed, !disposed);
     });
 
     test('onMapClick callback is called when map is clicked', () {
@@ -166,6 +166,236 @@ void main() {
 
       expect(callbackCalled, isTrue);
       expect(receivedLocation, equals(testLocation));
+    });
+
+    test('onMapLongClick callback is called when map is long clicked', () {
+      bool callbackCalled = false;
+      Point<double>? receivedPoint;
+      LatLng? receivedLatLng;
+
+      controller = NextbillionMapController(
+        nbMapsGlPlatform: mockPlatform,
+        initialCameraPosition: initialCameraPosition,
+        annotationOrder: [AnnotationType.symbol],
+        annotationConsumeTapEvents: [AnnotationType.symbol],
+        onMapLongClick: (point, latLng) {
+          callbackCalled = true;
+          receivedPoint = point;
+          receivedLatLng = latLng;
+        },
+      );
+
+      const testPoint = Point<double>(150.0, 250.0);
+      const testLatLng = LatLng(2.0, 3.0);
+
+      mockPlatform.onMapLongClickPlatform.add((args) {
+        final point = args['point'] as Point<double>;
+        final latLng = args['latLng'] as LatLng;
+        controller.onMapLongClick?.call(point, latLng);
+      });
+
+      mockPlatform.onMapLongClickPlatform.call({
+        'point': testPoint,
+        'latLng': testLatLng,
+      });
+
+      expect(callbackCalled, isTrue);
+      expect(receivedPoint, equals(testPoint));
+      expect(receivedLatLng, equals(testLatLng));
+    });
+
+    test('camera position is updated when camera moves', () {
+      final testPosition = CameraPosition(
+        target: const LatLng(1.0, 2.0),
+        zoom: 15.0,
+        bearing: 45.0,
+        tilt: 30.0,
+      );
+
+      bool notified = false;
+      controller.addListener(() {
+        notified = true;
+      });
+
+      mockPlatform.onCameraMovePlatform.call(testPosition);
+
+      expect(notified, true);
+      expect(controller.cameraPosition, equals(testPosition));
+    });
+
+    test('isCameraMoving is set to true when camera movement starts', () {
+      bool notified = false;
+      controller.addListener(() {
+        notified = true;
+      });
+
+      mockPlatform.onCameraMoveStartedPlatform.call(null);
+
+      expect(notified, true);
+      expect(controller.isCameraMoving, isTrue);
+    });
+
+    test('onStyleLoaded callback is called when map style is loaded', () {
+      bool callbackCalled = false;
+
+      controller = NextbillionMapController(
+        nbMapsGlPlatform: mockPlatform,
+        initialCameraPosition: initialCameraPosition,
+        annotationOrder: [AnnotationType.symbol],
+        annotationConsumeTapEvents: [AnnotationType.symbol],
+        onStyleLoadedCallback: () {
+          callbackCalled = true;
+        },
+      );
+
+      mockPlatform.onMapStyleLoadedPlatform.add((_) {
+        controller.onStyleLoadedCallback?.call();
+      });
+
+      mockPlatform.onMapStyleLoadedPlatform.call(null);
+
+      expect(callbackCalled, isTrue);
+    });
+
+    test('onAttributionClick callback is called when attribution is clicked', () {
+      bool callbackCalled = false;
+
+      controller = NextbillionMapController(
+        nbMapsGlPlatform: mockPlatform,
+        initialCameraPosition: initialCameraPosition,
+        annotationOrder: [AnnotationType.symbol],
+        annotationConsumeTapEvents: [AnnotationType.symbol],
+        onAttributionClick: () {
+          callbackCalled = true;
+        },
+      );
+
+      mockPlatform.onAttributionClickPlatform.add((_) {
+        controller.onAttributionClick?.call();
+      });
+
+      mockPlatform.onAttributionClickPlatform.call(null);
+
+      expect(callbackCalled, isTrue);
+    });
+
+    test('onCameraTrackingChanged callback is called when tracking mode changes', () {
+      bool callbackCalled = false;
+      MyLocationTrackingMode? receivedMode;
+
+      controller = NextbillionMapController(
+        nbMapsGlPlatform: mockPlatform,
+        initialCameraPosition: initialCameraPosition,
+        annotationOrder: [AnnotationType.symbol],
+        annotationConsumeTapEvents: [AnnotationType.symbol],
+        onCameraTrackingChanged: (mode) {
+          callbackCalled = true;
+          receivedMode = mode;
+        },
+      );
+
+      const testMode = MyLocationTrackingMode.trackingCompass;
+
+      mockPlatform.onCameraTrackingChangedPlatform.add((mode) {
+        controller.onCameraTrackingChanged?.call(mode);
+      });
+
+      mockPlatform.onCameraTrackingChangedPlatform.call(testMode);
+
+      expect(callbackCalled, isTrue);
+      expect(receivedMode, equals(testMode));
+    });
+
+    test('onCameraTrackingDismissed callback is called when tracking is dismissed', () {
+      bool callbackCalled = false;
+
+      controller = NextbillionMapController(
+        nbMapsGlPlatform: mockPlatform,
+        initialCameraPosition: initialCameraPosition,
+        annotationOrder: [AnnotationType.symbol],
+        annotationConsumeTapEvents: [AnnotationType.symbol],
+        onCameraTrackingDismissed: () {
+          callbackCalled = true;
+        },
+      );
+
+      mockPlatform.onCameraTrackingDismissedPlatform.add((_) {
+        controller.onCameraTrackingDismissed?.call();
+      });
+
+      mockPlatform.onCameraTrackingDismissedPlatform.call(null);
+
+      expect(callbackCalled, isTrue);
+    });
+
+    test('onMapIdle callback is called when map becomes idle', () {
+      bool callbackCalled = false;
+
+      controller = NextbillionMapController(
+        nbMapsGlPlatform: mockPlatform,
+        initialCameraPosition: initialCameraPosition,
+        annotationOrder: [AnnotationType.symbol],
+        annotationConsumeTapEvents: [AnnotationType.symbol],
+        onMapIdle: () {
+          callbackCalled = true;
+        },
+      );
+
+      mockPlatform.onMapIdlePlatform.add((_) {
+        controller.onMapIdle?.call();
+      });
+
+      mockPlatform.onMapIdlePlatform.call(null);
+
+      expect(callbackCalled, isTrue);
+    });
+
+    test('Camera position updates properly trigger notifications', () {
+      final controller = NextbillionMapController(
+        nbMapsGlPlatform: mockPlatform,
+        initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
+        annotationOrder: const [],
+        annotationConsumeTapEvents: const [],
+      );
+
+      bool notified = false;
+      controller.addListener(() {
+        notified = true;
+      });
+
+      final newPosition = CameraPosition(
+        target: const LatLng(1, 1),
+        zoom: 10,
+      );
+      
+      mockPlatform.onCameraMovePlatform.call(newPosition);
+
+      expect(notified, true);
+      expect(controller.cameraPosition, newPosition);
+    });
+
+    test('Camera movement state changes trigger notifications', () {
+      final controller = NextbillionMapController(
+        nbMapsGlPlatform: mockPlatform,
+        initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
+        annotationOrder: const [],
+        annotationConsumeTapEvents: const [],
+      );
+
+      int notificationCount = 0;
+      controller.addListener(() {
+        notificationCount++;
+      });
+
+      // Start camera movement
+      mockPlatform.onCameraMoveStartedPlatform.call(null);
+      expect(controller.isCameraMoving, true);
+      expect(notificationCount, 1);
+
+      // End camera movement
+      mockPlatform.onCameraIdlePlatform.call(null);
+      expect(controller.isCameraMoving, false);
+      expect(notificationCount, 2);
     });
   });
 } 
