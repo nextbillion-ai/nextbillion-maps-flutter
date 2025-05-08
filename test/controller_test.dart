@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -205,8 +204,8 @@ void main() {
     });
 
     test('camera position is updated when camera moves', () {
-      final testPosition = CameraPosition(
-        target: const LatLng(1.0, 2.0),
+      const testPosition = CameraPosition(
+        target: LatLng(1.0, 2.0),
         zoom: 15.0,
         bearing: 45.0,
         tilt: 30.0,
@@ -363,8 +362,8 @@ void main() {
         notified = true;
       });
 
-      final newPosition = CameraPosition(
-        target: const LatLng(1, 1),
+      const newPosition = CameraPosition(
+        target: LatLng(1, 1),
         zoom: 10,
       );
       
@@ -398,4 +397,4 @@ void main() {
       expect(notificationCount, 2);
     });
   });
-} 
+}
