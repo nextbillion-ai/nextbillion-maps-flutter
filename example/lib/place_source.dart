@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 class PlaceSourcePage extends ExamplePage {
-  PlaceSourcePage() : super(const Icon(Icons.place), 'Place source');
+  const PlaceSourcePage() : super(const Icon(Icons.place), 'Place source');
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +25,17 @@ class PlaceSymbolBody extends StatefulWidget {
 class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   PlaceSymbolBodyState();
 
-  static const SOURCE_ID = 'sydney_source';
-  static const LAYER_ID = 'sydney_layer';
+  static const sourceId = 'sydney_source';
+  static const layerId = 'sydney_layer';
 
   bool sourceAdded = false;
   bool layerAdded = false;
   late NextbillionMapController controller;
 
   void _onMapCreated(NextbillionMapController controller) {
-    this.controller = controller;
+    setState(() {
+      this.controller = controller;
+    });
   }
 
   @override
@@ -126,56 +128,56 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                 Column(
                   children: <Widget>[
                     TextButton(
-                      child: const Text('Add source (asset image)'),
                       onPressed: sourceAdded
                           ? null
                           : () {
-                              addImageSourceFromAsset(SOURCE_ID,
+                              addImageSourceFromAsset(sourceId,
                                       'assets/symbols/custom-icon.png')
                                   .then((value) {
                                 setState(() => sourceAdded = true);
                               });
                             },
+                      child: const Text('Add source (asset image)'),
                     ),
                     TextButton(
-                      child: const Text('Update source (asset image)'),
                       onPressed: !sourceAdded
                           ? null
                           : () {
-                              updateImageSourceFromAsset(SOURCE_ID,
+                              updateImageSourceFromAsset(sourceId,
                                       'assets/symbols/custom-icon.png')
                                   .then((value) {
                                 setState(() => sourceAdded = true);
                               });
                             },
+                      child: const Text('Update source (asset image)'),
                     ),
                     TextButton(
-                      child: const Text('Remove source (asset image)'),
                       onPressed: sourceAdded
                           ? () async {
-                              await removeLayer(LAYER_ID);
-                              removeImageSource(SOURCE_ID).then((value) {
+                              await removeLayer(layerId);
+                              removeImageSource(sourceId).then((value) {
                                 setState(() => sourceAdded = false);
                               });
                             }
                           : null,
+                      child: const Text('Remove source (asset image)'),
                     ),
                     TextButton(
+                      onPressed: sourceAdded
+                          ? () => addLayer(layerId, sourceId)
+                          : null,
                       child: const Text('Show layer'),
-                      onPressed: sourceAdded
-                          ? () => addLayer(LAYER_ID, SOURCE_ID)
-                          : null,
                     ),
                     TextButton(
+                      onPressed: sourceAdded
+                          ? () => addLayerBelow(layerId, sourceId, 'water')
+                          : null,
                       child: const Text('Show layer below water'),
-                      onPressed: sourceAdded
-                          ? () => addLayerBelow(LAYER_ID, SOURCE_ID, 'water')
-                          : null,
                     ),
                     TextButton(
-                      child: const Text('Hide layer'),
                       onPressed:
-                          sourceAdded ? () => removeLayer(LAYER_ID) : null,
+                          sourceAdded ? () => removeLayer(layerId) : null,
+                      child: const Text('Hide layer'),
                     ),
                   ],
                 ),

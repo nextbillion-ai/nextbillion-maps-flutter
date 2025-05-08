@@ -1,11 +1,11 @@
-import 'package:test/test.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('VectorSourceProperties', () {
     test('toJson should convert VectorSourceProperties to a map correctly', () {
       // Arrange
-      VectorSourceProperties properties = VectorSourceProperties(
+      const properties = VectorSourceProperties(
         url: 'https://example.com/vector',
         tiles: ['https://example.com/tile1', 'https://example.com/tile2'],
         bounds: [-90, -180, 90, 180],
@@ -17,7 +17,7 @@ void main() {
       );
 
       // Act
-      Map<String, dynamic> result = properties.toJson();
+      final result = properties.toJson();
 
       // Assert
       expect(result['type'], equals('vector'));
@@ -36,7 +36,7 @@ void main() {
     test('fromJson should convert a map to VectorSourceProperties correctly',
         () {
       // Arrange
-      Map<String, dynamic> json = {
+      final json = {
         'type': 'vector',
         'url': 'https://example.com/vector',
         'tiles': ['https://example.com/tile1', 'https://example.com/tile2'],
@@ -49,7 +49,7 @@ void main() {
       };
 
       // Act
-      VectorSourceProperties result = VectorSourceProperties.fromJson(json);
+      final result = VectorSourceProperties.fromJson(json);
 
       // Assert
       expect(result.url, equals('https://example.com/vector'));
@@ -65,7 +65,7 @@ void main() {
     });
 
     test('copyWith returns a copy with updated values', () {
-      VectorSourceProperties properties = VectorSourceProperties(
+      const properties = VectorSourceProperties(
         url: 'https://example.com/vector',
         tiles: ['https://example.com/tile1', 'https://example.com/tile2'],
         bounds: [-90, -180, 90, 180],
@@ -98,7 +98,7 @@ void main() {
     });
 
     test('copyWith returns a copy with unchanged values when not provided', () {
-      VectorSourceProperties properties = VectorSourceProperties(
+      const properties = VectorSourceProperties(
         url: 'https://example.com/vector',
         tiles: ['https://example.com/tile1', 'https://example.com/tile2'],
         bounds: [-90, -180, 90, 180],
@@ -118,7 +118,7 @@ void main() {
   group('RasterSourceProperties', () {
     test('toJson should convert RasterSourceProperties to a map correctly', () {
       // Arrange
-      RasterSourceProperties properties = RasterSourceProperties(
+      const properties = RasterSourceProperties(
         url: 'https://example.com/raster',
         tiles: ['https://example.com/tile1', 'https://example.com/tile2'],
         bounds: [-90, -180, 90, 180],
@@ -130,7 +130,7 @@ void main() {
       );
 
       // Act
-      Map<String, dynamic> result = properties.toJson();
+      final result = properties.toJson();
 
       // Assert
       expect(result['type'], equals('raster'));
@@ -149,7 +149,7 @@ void main() {
     test('fromJson should convert a map to RasterSourceProperties correctly',
         () {
       // Arrange
-      Map<String, dynamic> json = {
+      final json = {
         'type': 'raster',
         'url': 'https://example.com/raster',
         'tiles': ['https://example.com/tile1', 'https://example.com/tile2'],
@@ -162,7 +162,7 @@ void main() {
       };
 
       // Act
-      RasterSourceProperties result = RasterSourceProperties.fromJson(json);
+      final result = RasterSourceProperties.fromJson(json);
 
       // Assert
       expect(result.url, equals('https://example.com/raster'));
@@ -178,7 +178,7 @@ void main() {
     });
 
     test('copyWith returns a copy with updated values', () {
-      RasterSourceProperties properties = RasterSourceProperties(
+      const properties = RasterSourceProperties(
         url: 'https://example.com/raster',
         tiles: ['https://example.com/tile1', 'https://example.com/tile2'],
         bounds: [-90, -180, 90, 180],
@@ -205,7 +205,7 @@ void main() {
     });
 
     test('copyWith returns a copy with unchanged values when not provided', () {
-      RasterSourceProperties properties = RasterSourceProperties(
+      const properties = RasterSourceProperties(
         url: 'https://example.com/raster',
         tiles: ['https://example.com/tile1', 'https://example.com/tile2'],
         bounds: [-90, -180, 90, 180],
@@ -226,7 +226,7 @@ void main() {
     test('toJson should convert RasterDemSourceProperties to a map correctly',
         () {
       // Arrange
-      RasterDemSourceProperties properties = RasterDemSourceProperties(
+      const properties = RasterDemSourceProperties(
         url: 'https://example.com/raster-dem',
         tiles: ['https://example.com/tile1', 'https://example.com/tile2'],
         bounds: [-90, -180, 90, 180],
@@ -238,7 +238,7 @@ void main() {
       );
 
       // Act
-      Map<String, dynamic> result = properties.toJson();
+      final result = properties.toJson();
 
       // Assert
       expect(result['type'], equals('raster-dem'));
@@ -257,21 +257,20 @@ void main() {
     test('fromJson should convert a map to RasterDemSourceProperties correctly',
         () {
       // Arrange
-      Map<String, dynamic> json = {
+      final json = {
         'type': 'raster-dem',
         'url': 'https://example.com/raster-dem',
         'tiles': ['https://example.com/tile1', 'https://example.com/tile2'],
         'bounds': <double>[-90, -180, 90, 180],
-        'minzoom': 5.toDouble(),
-        'maxzoom': 10.toDouble(),
+        'minzoom': 5.0,
+        'maxzoom': 10.0,
         'tileSize': 256.toDouble(),
         'attribution': 'Map data © OpenStreetMap contributors',
         'encoding': 'terrarium',
       };
 
       // Act
-      RasterDemSourceProperties result =
-          RasterDemSourceProperties.fromJson(json);
+      final result = RasterDemSourceProperties.fromJson(json);
 
       // Assert
       expect(result.url, equals('https://example.com/raster-dem'));
@@ -287,7 +286,7 @@ void main() {
     });
 
     test('copyWith returns a copy with updated values', () {
-      RasterDemSourceProperties properties = RasterDemSourceProperties(
+      const properties = RasterDemSourceProperties(
         url: 'https://example.com/raster-dem',
         tiles: ['https://example.com/tile1', 'https://example.com/tile2'],
         bounds: [-90, -180, 90, 180],
@@ -310,11 +309,11 @@ void main() {
       );
 
       expect(copy.url, isNot(properties.url));
-      expect(copy.tiles, isNot(properties.tiles));
+      expect(copy.bounds, isNot(properties.bounds));
     });
 
     test('copyWith returns a copy with unchanged values when not provided', () {
-      RasterDemSourceProperties properties = RasterDemSourceProperties(
+      const properties = RasterDemSourceProperties(
         url: 'https://example.com/raster-dem',
         tiles: ['https://example.com/tile1', 'https://example.com/tile2'],
         bounds: [-90, -180, 90, 180],
@@ -335,7 +334,7 @@ void main() {
     test('toJson should convert GeojsonSourceProperties to a map correctly',
         () {
       // Arrange
-      GeojsonSourceProperties properties = GeojsonSourceProperties(
+      const properties = GeojsonSourceProperties(
         data: {
           'type': 'Feature',
           'geometry': {
@@ -348,7 +347,6 @@ void main() {
         buffer: 256,
         tolerance: 0.5,
         cluster: true,
-        clusterRadius: 50,
         clusterMaxZoom: 14,
         clusterProperties: {
           'sum': [
@@ -363,7 +361,7 @@ void main() {
       );
 
       // Act
-      Map<String, dynamic> result = properties.toJson();
+      final result = properties.toJson();
 
       // Assert
       expect(result['type'], equals('geojson'));
@@ -401,7 +399,7 @@ void main() {
     test('fromJson should convert a map to GeojsonSourceProperties correctly',
         () {
       // Arrange
-      Map<String, dynamic> json = {
+      final json = {
         'type': 'geojson',
         'data': {
           'type': 'Feature',
@@ -410,13 +408,13 @@ void main() {
             'coordinates': [0, 0]
           }
         },
-        'maxzoom': 15.toDouble(),
+        'maxzoom': 15.0,
         'attribution': 'Map data © OpenStreetMap contributors',
-        'buffer': 256.toDouble(),
+        'buffer': 256.0,
         'tolerance': 0.5,
         'cluster': true,
-        'clusterRadius': 50.toDouble(),
-        'clusterMaxZoom': 14.toDouble(),
+        'clusterRadius': 50.0,
+        'clusterMaxZoom': 14.0,
         'clusterProperties': {
           'sum': [
             '+',
@@ -430,7 +428,7 @@ void main() {
       };
 
       // Act
-      GeojsonSourceProperties result = GeojsonSourceProperties.fromJson(json);
+      final result = GeojsonSourceProperties.fromJson(json);
 
       // Assert
       expect(
@@ -465,7 +463,7 @@ void main() {
     });
 
     test('copyWith returns a copy with updated values', () {
-      GeojsonSourceProperties properties = GeojsonSourceProperties(
+      const properties = GeojsonSourceProperties(
         data: {
           'type': 'Feature',
           'geometry': {
@@ -478,7 +476,6 @@ void main() {
         buffer: 256,
         tolerance: 0.5,
         cluster: true,
-        clusterRadius: 50,
         clusterMaxZoom: 14,
         clusterProperties: {
           'sum': [
@@ -517,7 +514,7 @@ void main() {
     });
 
     test('copyWith returns a copy with unchanged values when not provided', () {
-      GeojsonSourceProperties properties = GeojsonSourceProperties(
+      const properties = GeojsonSourceProperties(
         data: {
           'type': 'Feature',
           'geometry': {
@@ -530,7 +527,6 @@ void main() {
         buffer: 256,
         tolerance: 0.5,
         cluster: true,
-        clusterRadius: 50,
         clusterMaxZoom: 14,
         clusterProperties: {
           'sum': [
@@ -554,7 +550,7 @@ void main() {
   group('VideoSourceProperties', () {
     test('toJson should convert VideoSourceProperties to a map correctly', () {
       // Arrange
-      VideoSourceProperties properties = VideoSourceProperties(
+      const properties = VideoSourceProperties(
         urls: ['https://example.com/video1', 'https://example.com/video2'],
         coordinates: [
           [-90, -180],
@@ -563,7 +559,7 @@ void main() {
       );
 
       // Act
-      Map<String, dynamic> result = properties.toJson();
+      final result = properties.toJson();
 
       // Assert
       expect(result['type'], equals('video'));
@@ -580,7 +576,7 @@ void main() {
     test('fromJson should convert a map to VideoSourceProperties correctly',
         () {
       // Arrange
-      Map<String, dynamic> json = {
+      final json = {
         'type': 'video',
         'urls': ['https://example.com/video1', 'https://example.com/video2'],
         'coordinates': [
@@ -590,7 +586,7 @@ void main() {
       };
 
       // Act
-      VideoSourceProperties result = VideoSourceProperties.fromJson(json);
+      final result = VideoSourceProperties.fromJson(json);
 
       // Assert
       expect(result.urls,
@@ -604,7 +600,7 @@ void main() {
     });
 
     test('copyWith returns a copy with updated values', () {
-      VideoSourceProperties properties = VideoSourceProperties(
+      const properties = VideoSourceProperties(
         urls: ['https://example.com/video1', 'https://example.com/video2'],
         coordinates: [
           [-90, -180],
@@ -625,7 +621,7 @@ void main() {
     });
 
     test('copyWith returns a copy with unchanged values when not provided', () {
-      VideoSourceProperties properties = VideoSourceProperties(
+      const properties = VideoSourceProperties(
         urls: ['https://example.com/video1', 'https://example.com/video2'],
         coordinates: [
           [-90, -180],
@@ -642,7 +638,7 @@ void main() {
   group('ImageSourceProperties', () {
     test('toJson should convert ImageSourceProperties to a map correctly', () {
       // Arrange
-      ImageSourceProperties properties = ImageSourceProperties(
+      const properties = ImageSourceProperties(
         url: 'https://example.com/image',
         coordinates: [
           [-90, -180],
@@ -651,7 +647,7 @@ void main() {
       );
 
       // Act
-      Map<String, dynamic> result = properties.toJson();
+      final result = properties.toJson();
 
       // Assert
       expect(result['type'], equals('image'));
@@ -667,7 +663,7 @@ void main() {
     test('fromJson should convert a map to ImageSourceProperties correctly',
         () {
       // Arrange
-      Map<String, dynamic> json = {
+      final json = {
         'type': 'image',
         'url': 'https://example.com/image',
         'coordinates': [
@@ -677,7 +673,7 @@ void main() {
       };
 
       // Act
-      ImageSourceProperties result = ImageSourceProperties.fromJson(json);
+      final result = ImageSourceProperties.fromJson(json);
 
       // Assert
       expect(result.url, equals('https://example.com/image'));
@@ -690,7 +686,7 @@ void main() {
     });
 
     test('copyWith returns a copy with updated values', () {
-      ImageSourceProperties properties = ImageSourceProperties(
+      const properties = ImageSourceProperties(
         url: 'https://example.com/image',
         coordinates: [
           [-90, -180],
@@ -711,7 +707,7 @@ void main() {
     });
 
     test('copyWith returns a copy with unchanged values when not provided', () {
-      ImageSourceProperties properties = ImageSourceProperties(
+      const properties = ImageSourceProperties(
         url: 'https://example.com/image',
         coordinates: [
           [-90, -180],

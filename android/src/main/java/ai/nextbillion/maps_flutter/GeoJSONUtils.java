@@ -1,5 +1,8 @@
 package ai.nextbillion.maps_flutter;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +16,7 @@ import ai.nextbillion.maps.geometry.LatLng;
 import ai.nextbillion.maps.geometry.LatLngBounds;
 
 public class GeoJSONUtils {
-  public static LatLng toLatLng(Point point) {
+  public static LatLng toLatLng(@Nullable Point point) {
     if (point == null) {
       return null;
     }
@@ -29,11 +32,15 @@ public class GeoJSONUtils {
     return GeometryCollection.fromGeometries(geometries);
   }
 
-  public static LatLngBounds toLatLngBounds(FeatureCollection featureCollection) {
+  @Nullable
+  public static LatLngBounds toLatLngBounds(@NonNull FeatureCollection featureCollection) {
     List<Feature> features = featureCollection.features();
 
-    double[] bbox = TurfMeasurement.bbox(toGeometryCollection(features));
+    if (features == null) {
+      return null;
+    }
+    double[] box = TurfMeasurement.bbox(toGeometryCollection(features));
 
-    return LatLngBounds.from(bbox[3], bbox[2], bbox[1], bbox[0]);
+    return LatLngBounds.from(box[3], box[2], box[1], box[0]);
   }
 }

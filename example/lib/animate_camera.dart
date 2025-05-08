@@ -1,10 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 class AnimateCameraPage extends ExamplePage {
-  AnimateCameraPage()
+  const AnimateCameraPage()
       : super(const Icon(Icons.map), 'Camera control, animated');
 
   @override
@@ -23,7 +24,9 @@ class AnimateCameraState extends State<AnimateCamera> {
   late NextbillionMapController mapController;
 
   void _onMapCreated(NextbillionMapController controller) {
-    mapController = controller;
+    setState(() {
+      mapController = controller;
+    });
   }
 
   @override
@@ -61,8 +64,12 @@ class AnimateCameraState extends State<AnimateCamera> {
                             ),
                           ),
                         )
-                        .then((result) => print(
-                            "mapController.animateCamera() returned $result"));
+                        .then((result) {
+                      if (kDebugMode) {
+                        print(
+                          "mapController.animateCamera() returned $result");
+
+                      }});
                   },
                   child: const Text('newCameraPosition'),
                 ),
@@ -73,10 +80,14 @@ class AnimateCameraState extends State<AnimateCamera> {
                           CameraUpdate.newLatLng(
                             const LatLng(56.1725505, 10.1850512),
                           ),
-                          duration: Duration(seconds: 5),
+                          duration: const Duration(seconds: 5),
                         )
-                        .then((result) => print(
-                            "mapController.animateCamera() returned $result"));
+                        .then((result) {
+                      if (kDebugMode) {
+                        print(
+                          "mapController.animateCamera() returned $result");
+
+                      }});
                   },
                   child: const Text('newLatLng'),
                 ),

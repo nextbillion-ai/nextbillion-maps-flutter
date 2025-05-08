@@ -1,13 +1,13 @@
 import 'dart:ui';
 
-import 'package:test/test.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('CameraPosition', () {
     test('toMap should convert CameraPosition to a map correctly', () {
       // Arrange
-      final cameraPosition = CameraPosition(
+      const CameraPosition cameraPosition = CameraPosition(
         bearing: 90.0,
         target: LatLng(37.7749, -122.4194),
         tilt: 45.0,
@@ -15,7 +15,7 @@ void main() {
       );
 
       // Act
-      final result = cameraPosition.toMap();
+      final Map<String, dynamic> result = cameraPosition.toMap();
 
       // Assert
       expect(result['bearing'], equals(90.0));
@@ -26,32 +26,32 @@ void main() {
 
     test('fromMap should convert a map to CameraPosition correctly', () {
       // Arrange
-      final json = {
+      final Map<String, dynamic> json = <String, dynamic>{
         'bearing': 90.0,
-        'target': LatLng(37.7749, -122.4194).toJson(),
+        'target': const LatLng(37.7749, -122.4194).toJson(),
         'tilt': 45.0,
         'zoom': 10.0,
       };
 
       // Act
-      final result = CameraPosition.fromMap(json);
+      final CameraPosition? result = CameraPosition.fromMap(json);
 
       // Assert
       expect(result?.bearing, equals(90.0));
-      expect(result?.target, equals(LatLng(37.7749, -122.4194)));
+      expect(result?.target, equals(const LatLng(37.7749, -122.4194)));
       expect(result?.tilt, equals(45.0));
       expect(result?.zoom, equals(10.0));
     });
 
     test('CameraPosition instances with the same values should be equal', () {
       // Arrange
-      final cameraPosition1 = CameraPosition(
+      const CameraPosition cameraPosition1 = CameraPosition(
         bearing: 90.0,
         target: LatLng(37.7749, -122.4194),
         tilt: 45.0,
         zoom: 10.0,
       );
-      final cameraPosition2 = CameraPosition(
+      const CameraPosition cameraPosition2 = CameraPosition(
         bearing: 90.0,
         target: LatLng(37.7749, -122.4194),
         tilt: 45.0,
@@ -59,7 +59,7 @@ void main() {
       );
 
       // Act
-      final result = cameraPosition1 == cameraPosition2;
+      final bool result = cameraPosition1 == cameraPosition2;
 
       // Assert
       expect(result, isTrue);
@@ -69,13 +69,13 @@ void main() {
         'hashCode should return the same value for equal CameraPosition instances',
         () {
       // Arrange
-      final cameraPosition1 = CameraPosition(
+      const CameraPosition cameraPosition1 = CameraPosition(
         bearing: 90.0,
         target: LatLng(37.7749, -122.4194),
         tilt: 45.0,
         zoom: 10.0,
       );
-      final cameraPosition2 = CameraPosition(
+      const CameraPosition cameraPosition2 = CameraPosition(
         bearing: 90.0,
         target: LatLng(37.7749, -122.4194),
         tilt: 45.0,
@@ -83,8 +83,8 @@ void main() {
       );
 
       // Act
-      final hashCode1 = cameraPosition1.hashCode;
-      final hashCode2 = cameraPosition2.hashCode;
+      final int hashCode1 = cameraPosition1.hashCode;
+      final int hashCode2 = cameraPosition2.hashCode;
 
       // Assert
       expect(hashCode1, equals(hashCode2));
@@ -93,7 +93,7 @@ void main() {
     test('toString should return a string representation of CameraPosition',
         () {
       // Arrange
-      final cameraPosition = CameraPosition(
+      const CameraPosition cameraPosition = CameraPosition(
         bearing: 90.0,
         target: LatLng(37.7749, -122.4194),
         tilt: 45.0,
@@ -101,7 +101,7 @@ void main() {
       );
 
       // Act
-      final result = cameraPosition.toString();
+      final String result = cameraPosition.toString();
 
       // Assert
       expect(
@@ -117,7 +117,7 @@ void main() {
         'newCameraPosition should create a CameraUpdate with newCameraPosition action',
         () {
       // Arrange
-      final cameraPosition = CameraPosition(
+      const CameraPosition cameraPosition = CameraPosition(
         bearing: 90.0,
         target: LatLng(37.7749, -122.4194),
         tilt: 45.0,
@@ -125,7 +125,8 @@ void main() {
       );
 
       // Act
-      final result = CameraUpdate.newCameraPosition(cameraPosition);
+      final CameraUpdate result =
+          CameraUpdate.newCameraPosition(cameraPosition);
 
       // Assert
       expect(result.toJson(),
@@ -134,10 +135,10 @@ void main() {
 
     test('newLatLng should create a CameraUpdate with newLatLng action', () {
       // Arrange
-      final latLng = LatLng(37.7749, -122.4194);
+      const LatLng latLng = LatLng(37.7749, -122.4194);
 
       // Act
-      final result = CameraUpdate.newLatLng(latLng);
+      final CameraUpdate result = CameraUpdate.newLatLng(latLng);
 
       // Assert
       expect(result.toJson(), equals(['newLatLng', latLng.toJson()]));
@@ -147,17 +148,17 @@ void main() {
         'newLatLngBounds should create a CameraUpdate with newLatLngBounds action',
         () {
       // Arrange
-      final bounds = LatLngBounds(
-        southwest: LatLng(37.7749, -122.4194),
-        northeast: LatLng(37.8095, -122.3927),
+      final LatLngBounds bounds = LatLngBounds(
+        southwest: const LatLng(37.7749, -122.4194),
+        northeast: const LatLng(37.8095, -122.3927),
       );
-      final left = 10.0;
-      final top = 20.0;
-      final right = 30.0;
-      final bottom = 40.0;
+      const double left = 10.0;
+      const double top = 20.0;
+      const double right = 30.0;
+      const double bottom = 40.0;
 
       // Act
-      final result = CameraUpdate.newLatLngBounds(bounds,
+      final CameraUpdate result = CameraUpdate.newLatLngBounds(bounds,
           left: left, top: top, right: right, bottom: bottom);
 
       // Assert
@@ -170,11 +171,11 @@ void main() {
     test('newLatLngZoom should create a CameraUpdate with newLatLngZoom action',
         () {
       // Arrange
-      final latLng = LatLng(37.7749, -122.4194);
-      final zoom = 10.0;
+      const LatLng latLng = LatLng(37.7749, -122.4194);
+      const double zoom = 10.0;
 
       // Act
-      final result = CameraUpdate.newLatLngZoom(latLng, zoom);
+      final CameraUpdate result = CameraUpdate.newLatLngZoom(latLng, zoom);
 
       // Assert
       expect(result.toJson(), equals(['newLatLngZoom', latLng.toJson(), zoom]));
@@ -182,11 +183,11 @@ void main() {
 
     test('scrollBy should create a CameraUpdate with scrollBy action', () {
       // Arrange
-      final dx = 50.0;
-      final dy = 75.0;
+      const double dx = 50.0;
+      const double dy = 75.0;
 
       // Act
-      final result = CameraUpdate.scrollBy(dx, dy);
+      final CameraUpdate result = CameraUpdate.scrollBy(dx, dy);
 
       // Assert
       expect(result.toJson(), equals(['scrollBy', dx, dy]));
@@ -194,11 +195,11 @@ void main() {
 
     test('zoomBy should create a CameraUpdate with zoomBy action', () {
       // Arrange
-      final amount = 2.0;
-      final focus = Offset(100.0, 200.0);
+      const double amount = 2.0;
+      const Offset focus = Offset(100.0, 200.0);
 
       // Act
-      final result = CameraUpdate.zoomBy(amount, focus);
+      final CameraUpdate result = CameraUpdate.zoomBy(amount, focus);
 
       // Assert
       expect(
@@ -212,7 +213,7 @@ void main() {
 
     test('zoomIn should create a CameraUpdate with zoomIn action', () {
       // Act
-      final result = CameraUpdate.zoomIn();
+      final CameraUpdate result = CameraUpdate.zoomIn();
 
       // Assert
       expect(result.toJson(), equals(['zoomIn']));
@@ -220,7 +221,7 @@ void main() {
 
     test('zoomOut should create a CameraUpdate with zoomOut action', () {
       // Act
-      final result = CameraUpdate.zoomOut();
+      final CameraUpdate result = CameraUpdate.zoomOut();
 
       // Assert
       expect(result.toJson(), equals(['zoomOut']));
@@ -228,10 +229,10 @@ void main() {
 
     test('zoomTo should create a CameraUpdate with zoomTo action', () {
       // Arrange
-      final zoom = 10.0;
+      const double zoom = 10.0;
 
       // Act
-      final result = CameraUpdate.zoomTo(zoom);
+      final CameraUpdate result = CameraUpdate.zoomTo(zoom);
 
       // Assert
       expect(result.toJson(), equals(['zoomTo', zoom]));
@@ -239,10 +240,10 @@ void main() {
 
     test('bearingTo should create a CameraUpdate with bearingTo action', () {
       // Arrange
-      final bearing = 90.0;
+      const double bearing = 90.0;
 
       // Act
-      final result = CameraUpdate.bearingTo(bearing);
+      final CameraUpdate result = CameraUpdate.bearingTo(bearing);
 
       // Assert
       expect(result.toJson(), equals(['bearingTo', bearing]));
@@ -250,10 +251,10 @@ void main() {
 
     test('tiltTo should create a CameraUpdate with tiltTo action', () {
       // Arrange
-      final tilt = 45.0;
+      const double tilt = 45.0;
 
       // Act
-      final result = CameraUpdate.tiltTo(tilt);
+      final CameraUpdate result = CameraUpdate.tiltTo(tilt);
 
       // Assert
       expect(result.toJson(), equals(['tiltTo', tilt]));

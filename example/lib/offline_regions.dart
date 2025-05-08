@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 import 'package:nb_maps_flutter_example/main.dart';
 
-import 'offline_region_map.dart';
-import 'page.dart';
+import 'package:nb_maps_flutter_example/offline_region_map.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 final LatLngBounds hawaiiBounds = LatLngBounds(
   southwest: const LatLng(17.26672, -161.14746),
@@ -26,19 +26,19 @@ final List<OfflineRegionDefinition> regionDefinitions = [
     bounds: hawaiiBounds,
     minZoom: 3.0,
     maxZoom: 8.0,
-    mapStyleUrl: NbMapStyles.NBMAP_STREETS,
+    mapStyleUrl: NbMapStyles.nbmapStreets,
   ),
   OfflineRegionDefinition(
     bounds: santiagoBounds,
     minZoom: 10.0,
     maxZoom: 16.0,
-    mapStyleUrl: NbMapStyles.NBMAP_STREETS,
+    mapStyleUrl: NbMapStyles.nbmapStreets,
   ),
   OfflineRegionDefinition(
     bounds: aucklandBounds,
     minZoom: 13.0,
     maxZoom: 16.0,
-    mapStyleUrl: NbMapStyles.NBMAP_STREETS,
+    mapStyleUrl: NbMapStyles.nbmapStreets,
   ),
 ];
 
@@ -99,7 +99,7 @@ final List<OfflineRegionListItem> allRegions = [
 ];
 
 class OfflineRegionsPage extends ExamplePage {
-  OfflineRegionsPage() : super(const Icon(Icons.map), 'Offline Regions');
+  const OfflineRegionsPage() : super(const Icon(Icons.map), 'Offline Regions');
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +115,7 @@ class OfflineRegionBody extends StatefulWidget {
 }
 
 class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
-  List<OfflineRegionListItem> _items = [];
+  final List<OfflineRegionListItem> _items = [];
 
   @override
   void initState() {
@@ -128,13 +128,13 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     return Stack(
       children: <Widget>[
         ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: _items.length,
           itemBuilder: (context, index) => Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               IconButton(
-                icon: Icon(Icons.map),
+                icon: const Icon(Icons.map),
                 onPressed: () => _goToMap(_items[index]),
               ),
               Column(
@@ -143,27 +143,25 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
                 children: <Widget>[
                   Text(
                     _items[index].name,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
                   ),
                   Text(
                     'Est. tiles: ${_items[index].estimatedTiles}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                     ),
                   ),
                 ],
               ),
               const Spacer(),
-              _items[index].isDownloading
-                  ? Container(
-                      child: CircularProgressIndicator(),
+              if (_items[index].isDownloading) const SizedBox(
                       height: 16,
                       width: 16,
-                    )
-                  : IconButton(
+                      child: CircularProgressIndicator(),
+                    ) else IconButton(
                       icon: Icon(
                         _items[index].isDownloaded
                             ? Icons.delete
@@ -180,11 +178,11 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     );
   }
 
-  void _updateListOfRegions() async {
-    List<OfflineRegion> offlineRegions =
-        await getListOfRegions(accessToken: MapsDemo.ACCESS_KEY);
-    List<OfflineRegionListItem> regionItems = [];
-    for (var item in allRegions) {
+  Future<void> _updateListOfRegions() async {
+    final List<OfflineRegion> offlineRegions =
+        await getListOfRegions(accessToken: MapsDemo.accessKey);
+    final List<OfflineRegionListItem> regionItems = [];
+    for (final item in allRegions) {
       final offlineRegion = offlineRegions.firstWhereOrNull(
           (offlineRegion) => offlineRegion.metadata['name'] == item.name);
       if (offlineRegion != null) {
@@ -199,7 +197,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
     });
   }
 
-  void _downloadRegion(OfflineRegionListItem item, int index) async {
+  Future<void> _downloadRegion(OfflineRegionListItem item, int index) async {
     setState(() {
       _items.removeAt(index);
       _items.insert(index, item.copyWith(isDownloading: true));
@@ -211,7 +209,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
         metadata: {
           'name': regionNames[index],
         },
-        accessToken: MapsDemo.ACCESS_KEY,
+        accessToken: MapsDemo.accessKey,
       );
       setState(() {
         _items.removeAt(index);
@@ -229,14 +227,13 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
             index,
             item.copyWith(
               isDownloading: false,
-              downloadedId: null,
             ));
       });
       return;
     }
   }
 
-  void _deleteRegion(OfflineRegionListItem item, int index) async {
+  Future<void> _deleteRegion(OfflineRegionListItem item, int index) async {
     setState(() {
       _items.removeAt(index);
       _items.insert(index, item.copyWith(isDownloading: true));
@@ -244,7 +241,7 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
 
     await deleteOfflineRegion(
       item.downloadedId!,
-      accessToken: MapsDemo.ACCESS_KEY,
+      accessToken: MapsDemo.accessKey,
     );
 
     setState(() {
@@ -253,12 +250,11 @@ class _OfflineRegionsBodyState extends State<OfflineRegionBody> {
           index,
           item.copyWith(
             isDownloading: false,
-            downloadedId: null,
           ));
     });
   }
 
-  _goToMap(OfflineRegionListItem item) {
+  void _goToMap(OfflineRegionListItem item) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => OfflineRegionMap(item),

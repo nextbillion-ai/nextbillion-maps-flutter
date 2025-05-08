@@ -13,8 +13,7 @@ class NbMapFactory: NSObject, FlutterPlatformViewFactory {
     }
 
     func create(withFrame frame: CGRect, viewIdentifier viewId: Int64,
-                arguments args: Any?) -> FlutterPlatformView
-    {
+                arguments args: Any?) -> FlutterPlatformView {
         return NextbillionMapController(
             withFrame: frame,
             viewIdentifier: viewId,

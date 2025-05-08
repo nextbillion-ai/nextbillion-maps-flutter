@@ -6,39 +6,38 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
 
   @visibleForTesting
   Future<dynamic> handleMethodCall(MethodCall call) async {
+    final arguments = call.arguments as Map?;
     switch (call.method) {
       case 'infoWindow#onTap':
-        final String? symbolId = call.arguments['symbol'];
+        final String? symbolId = arguments?['symbol'] as String?;
         if (symbolId != null) {
           onInfoWindowTappedPlatform(symbolId);
         }
-        break;
 
       case 'feature#onTap':
-        final id = call.arguments['id'];
-        final double x = call.arguments['x'];
-        final double y = call.arguments['y'];
-        final double lng = call.arguments['lng'];
-        final double lat = call.arguments['lat'];
+        final id = arguments?['id'];
+        final double x = arguments?['x'] as double;
+        final double y = arguments?['y'] as double;
+        final double lng = arguments?['lng'] as double;
+        final double lat = arguments?['lat'] as double;
         onFeatureTappedPlatform({
           'id': id,
           'point': Point<double>(x, y),
           'latLng': LatLng(lat, lng)
         });
-        break;
       case 'feature#onDrag':
-        final id = call.arguments['id'];
-        final double x = call.arguments['x'];
-        final double y = call.arguments['y'];
-        final double originLat = call.arguments['originLat'];
-        final double originLng = call.arguments['originLng'];
+        final id = arguments?['id'];
+        final double x = arguments?['x'] as double;
+        final double y = arguments?['y'] as double;
+        final double originLat = arguments?['originLat'] as double;
+        final double originLng = arguments?['originLng'] as double;
 
-        final double currentLat = call.arguments['currentLat'];
-        final double currentLng = call.arguments['currentLng'];
+        final double currentLat = arguments?['currentLat'] as double;
+        final double currentLng = arguments?['currentLng'] as double;
 
-        final double deltaLat = call.arguments['deltaLat'];
-        final double deltaLng = call.arguments['deltaLng'];
-        final String eventType = call.arguments['eventType'];
+        final double deltaLat = arguments?['deltaLat'] as double;
+        final double deltaLng = arguments?['deltaLng'] as double;
+        final String eventType = arguments?['eventType'] as String;
 
         onFeatureDraggedPlatform({
           'id': id,
@@ -48,82 +47,74 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
           'delta': LatLng(deltaLat, deltaLng),
           'eventType': eventType,
         });
-        break;
 
       case 'camera#onMoveStarted':
         onCameraMoveStartedPlatform(null);
-        break;
       case 'camera#onMove':
-        final cameraPosition =
-            CameraPosition.fromMap(call.arguments['position'])!;
-        onCameraMovePlatform(cameraPosition);
-        break;
+        final position = arguments?['position'] as Map<String, dynamic>?;
+        final cameraPosition = CameraPosition.fromMap(position);
+        if (cameraPosition != null) {
+          onCameraMovePlatform.call(cameraPosition);
+        } else {}
       case 'camera#onIdle':
-        final cameraPosition =
-            CameraPosition.fromMap(call.arguments['position']);
+        final position = arguments?['position'] as Map<String, dynamic>?;
+        final cameraPosition = CameraPosition.fromMap(position);
         onCameraIdlePlatform(cameraPosition);
-        break;
       case 'map#onStyleLoaded':
         onMapStyleLoadedPlatform(null);
-        break;
       case 'map#onMapClick':
-        final double x = call.arguments['x'];
-        final double y = call.arguments['y'];
-        final double lng = call.arguments['lng'];
-        final double lat = call.arguments['lat'];
+        final double x = arguments?['x'] as double;
+        final double y = arguments?['y'] as double;
+        final double lng = arguments?['lng'] as double;
+        final double lat = arguments?['lat'] as double;
         onMapClickPlatform(
             {'point': Point<double>(x, y), 'latLng': LatLng(lat, lng)});
-        break;
       case 'map#onMapLongClick':
-        final double x = call.arguments['x'];
-        final double y = call.arguments['y'];
-        final double lng = call.arguments['lng'];
-        final double lat = call.arguments['lat'];
+        final double x = arguments?['x'] as double;
+        final double y = arguments?['y'] as double;
+        final double lng = arguments?['lng'] as double;
+        final double lat = arguments?['lat'] as double;
         onMapLongClickPlatform(
             {'point': Point<double>(x, y), 'latLng': LatLng(lat, lng)});
 
-        break;
       case 'map#onAttributionClick':
         onAttributionClickPlatform(null);
-        break;
       case 'map#onCameraTrackingChanged':
-        final int mode = call.arguments['mode'];
+        final int mode = arguments?['mode'] as int;
         onCameraTrackingChangedPlatform(MyLocationTrackingMode.values[mode]);
-        break;
       case 'map#onCameraTrackingDismissed':
         onCameraTrackingDismissedPlatform(null);
-        break;
       case 'map#onIdle':
         onMapIdlePlatform(null);
-        break;
       case 'map#onUserLocationUpdated':
-        final dynamic userLocation = call.arguments['userLocation'];
-        final dynamic heading = call.arguments['heading'];
+        final userLocation = arguments?['userLocation'] as Map<String, dynamic>;
+        final heading = arguments?['heading'] as Map<String, dynamic>?;
+
+        final List<dynamic> positionDynamic = userLocation['position'] as List<dynamic>;
+        final List<double> position = positionDynamic.cast<double>();
+        final LatLng latLng = LatLng(position[0], position[1]);
+
         onUserLocationUpdatedPlatform(UserLocation(
-            position: LatLng(
-              userLocation['position'][0],
-              userLocation['position'][1],
-            ),
-            altitude: userLocation['altitude'],
-            bearing: userLocation['bearing'],
-            speed: userLocation['speed'],
-            horizontalAccuracy: userLocation['horizontalAccuracy'],
-            verticalAccuracy: userLocation['verticalAccuracy'],
+            position: latLng,
+            altitude: userLocation['altitude'] as double,
+            bearing: userLocation['bearing'] as double,
+            speed: userLocation['speed'] as double,
+            horizontalAccuracy: userLocation['horizontalAccuracy'] as double,
+            verticalAccuracy: userLocation['verticalAccuracy'] as double,
             heading: heading == null
                 ? null
                 : UserHeading(
-                    magneticHeading: heading['magneticHeading'],
-                    trueHeading: heading['trueHeading'],
-                    headingAccuracy: heading['headingAccuracy'],
-                    x: heading['x'],
-                    y: heading['y'],
-                    z: heading['x'],
+                    magneticHeading: heading['magneticHeading'] as double,
+                    trueHeading: heading['trueHeading'] as double,
+                    headingAccuracy: heading['headingAccuracy'] as double,
+                    x: heading['x'] as double,
+                    y: heading['y'] as double,
+                    z: heading['x'] as double,
                     timestamp: DateTime.fromMillisecondsSinceEpoch(
-                        heading['timestamp']),
+                        heading['timestamp'] as int),
                   ),
             timestamp: DateTime.fromMillisecondsSinceEpoch(
-                userLocation['timestamp'])));
-        break;
+                userLocation['timestamp'] as int)));
       default:
         throw MissingPluginException();
     }
@@ -211,7 +202,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   @override
   Future<CameraPosition?> updateMapOptions(
       Map<String, dynamic> optionsUpdate) async {
-    final dynamic json = await _channel.invokeMethod(
+    final Map<String, dynamic>? json = await _channel.invokeMethod(
       'map#update',
       <String, dynamic>{
         'options': optionsUpdate,
@@ -221,7 +212,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   }
 
   @override
-  Future<bool?> animateCamera(cameraUpdate, {Duration? duration}) async {
+  Future<bool?> animateCamera(CameraUpdate cameraUpdate, {Duration? duration}) async {
     return await _channel.invokeMethod('camera#animate', <String, dynamic>{
       'cameraUpdate': cameraUpdate.toJson(),
       'duration': duration?.inMilliseconds,
@@ -278,14 +269,22 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
 
   @override
   Future<bool> getTelemetryEnabled() async {
-    return await _channel.invokeMethod('map#getTelemetryEnabled');
+    try {
+      final result = await _channel.invokeMethod('map#getTelemetryEnabled');
+      return result as bool? ?? false;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error getting telemetry enabled: $e");
+      }
+      return false;
+    }
   }
 
   @override
-  Future<List> queryRenderedFeatures(
+  Future<List<dynamic>> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
     try {
-      final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
+      final Map? reply = await _channel.invokeMethod<Map<dynamic, dynamic>>(
         'map#queryRenderedFeatures',
         <String, Object?>{
           'x': point.x,
@@ -294,17 +293,23 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
           'filter': filter,
         },
       );
-      return reply['features'].map((feature) => jsonDecode(feature)).toList();
+      final features = reply?['features'] as List<dynamic>?;
+      final decodeFeatures =  features?.map((feature) => jsonDecode(feature as String)).toList();
+      if(decodeFeatures == null) {
+        return [];
+      }
+      return decodeFeatures;
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
+
 
   @override
   Future<List> queryRenderedFeaturesInRect(
       Rect rect, List<String> layerIds, String? filter) async {
     try {
-      final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
+      final Map<dynamic, dynamic>? reply = await _channel.invokeMethod(
         'map#queryRenderedFeatures',
         <String, Object?>{
           'left': rect.left,
@@ -315,9 +320,14 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
           'filter': filter,
         },
       );
-      return reply['features'].map((feature) => jsonDecode(feature)).toList();
+      final features = reply?['features'] as List<dynamic>?;
+      final decodeFeatures =  features?.map((feature) => jsonDecode(feature as String)).toList();
+      if(decodeFeatures == null) {
+        return [];
+      }
+      return decodeFeatures;
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -327,16 +337,20 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
       await _channel.invokeMethod('map#invalidateAmbientCache');
       return null;
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
   @override
-  Future<LatLng> requestMyLocationLatLng() async {
+  Future<LatLng?> requestMyLocationLatLng() async {
     try {
-      final Map<dynamic, dynamic> reply = await _channel.invokeMethod(
-          'locationComponent#getLastLocation', null);
-      double latitude = 0.0, longitude = 0.0;
+      final Map<dynamic, dynamic>? reply = await _channel.invokeMethod(
+          'locationComponent#getLastLocation');
+      double latitude = 0.0;
+      double longitude = 0.0;
+      if(reply == null) {
+        return null;
+      }
       if (reply.containsKey('latitude') && reply['latitude'] != null) {
         latitude = double.parse(reply['latitude'].toString());
       }
@@ -345,23 +359,32 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
       }
       return LatLng(latitude, longitude);
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
   @override
-  Future<LatLngBounds> getVisibleRegion() async {
+  Future<LatLngBounds?> getVisibleRegion() async {
     try {
-      final Map<dynamic, dynamic> reply =
-          await _channel.invokeMethod('map#getVisibleRegion', null);
+      final Map<dynamic, dynamic>? reply =
+      await _channel.invokeMethod('map#getVisibleRegion');
+      if (reply == null) {
+        return null;
+      }
       final southwest = reply['sw'] as List<dynamic>;
       final northeast = reply['ne'] as List<dynamic>;
       return LatLngBounds(
-        southwest: LatLng(southwest[0], southwest[1]),
-        northeast: LatLng(northeast[0], northeast[1]),
+        southwest: LatLng(
+          (southwest[0] as num).toDouble(),
+          (southwest[1] as num).toDouble(),
+        ),
+        northeast: LatLng(
+          (northeast[0] as num).toDouble(),
+          (northeast[1] as num).toDouble(),
+        ),
       );
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -376,7 +399,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
         'sdf': sdf
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -389,10 +412,12 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
         'imageSourceId': imageSourceId,
         'bytes': bytes,
         'length': bytes.length,
-        'coordinates': coordinates.toList()
+        'coordinates': coordinates.toList().map((point) {
+          return (point as List<dynamic>).map((e) => e as double).toList();
+        }).toList(),
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -408,42 +433,50 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
         'coordinates': coordinates?.toList()
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
   @override
-  Future<Point> toScreenLocation(LatLng latLng) async {
+  Future<Point?> toScreenLocation(LatLng latLng) async {
     try {
-      var screenPosMap =
+      final Map<dynamic, dynamic>? screenPosMap  =
           await _channel.invokeMethod('map#toScreenLocation', <String, dynamic>{
         'latitude': latLng.latitude,
         'longitude': latLng.longitude,
       });
-      return Point(screenPosMap['x'], screenPosMap['y']);
+      if(screenPosMap == null) {
+        return null;
+      }
+      final x = screenPosMap['x'] as double;
+      final y = screenPosMap['y'] as double;
+      return Point(x, y);
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
   @override
   Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
     try {
-      var coordinates = Float64List.fromList(latLngs
+      final coordinates = Float64List.fromList(latLngs
           .map((e) => [e.latitude, e.longitude])
           .expand((e) => e)
           .toList());
-      Float64List result = await _channel.invokeMethod(
+      final Float64List? result = await _channel.invokeMethod(
           'map#toScreenLocationBatch', {"coordinates": coordinates});
 
-      var points = <Point>[];
+      final points = <Point>[];
+      if (result == null) {
+        return points;
+      }
       for (int i = 0; i < result.length; i += 2) {
         points.add(Point(result[i], result[i + 1]));
       }
 
       return points;
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -455,7 +488,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
         <String, Object>{'sourceId': sourceId},
       );
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -470,7 +503,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
         'maxzoom': maxzoom
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -487,7 +520,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
         'maxzoom': maxzoom
       });
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -497,7 +530,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
       return await _channel.invokeMethod(
           'style#removeLayer', <String, Object>{'layerId': layerId});
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -507,7 +540,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
       return await _channel.invokeMethod('style#setFilter',
           <String, Object>{'layerId': layerId, 'filter': jsonEncode(filter)});
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -517,34 +550,42 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
       return await _channel.invokeMethod('style#setVisibility',
           <String, Object>{'layerId': layerId, 'isVisible': isVisible});
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
   @override
-  Future<LatLng> toLatLng(Point screenLocation) async {
+  Future<LatLng?> toLatLng(Point screenLocation) async {
     try {
-      var latLngMap =
+      final Map<dynamic, dynamic>? latLngMap =
           await _channel.invokeMethod('map#toLatLng', <String, dynamic>{
         'x': screenLocation.x,
         'y': screenLocation.y,
       });
-      return LatLng(latLngMap['latitude'], latLngMap['longitude']);
+      if(latLngMap == null ) {
+        return null;
+      }
+      final latitude = (latLngMap['latitude'] as num).toDouble() ;
+      final longitude = (latLngMap['longitude'] as num).toDouble();
+      return LatLng(latitude, longitude);
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
   @override
-  Future<double> getMetersPerPixelAtLatitude(double latitude) async {
+  Future<double?> getMetersPerPixelAtLatitude(double latitude) async {
     try {
-      var latLngMap = await _channel
+      final Map<String, dynamic>? latLngMap = await _channel
           .invokeMethod('map#getMetersPerPixelAtLatitude', <String, dynamic>{
         'latitude': latitude,
       });
-      return latLngMap['metersperpixel'];
+      if(latLngMap == null) {
+        return null;
+      }
+      return (latLngMap['metersperpixel'] as num).toDouble();
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
@@ -752,6 +793,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
     });
   }
 
+  @override
   Future<void> setFeatureForGeoJsonSource(
       String sourceId, Map<String, dynamic> geojsonFeature) async {
     await _channel.invokeMethod('source#setFeature', <String, dynamic>{
@@ -767,19 +809,19 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   void resizeWebMap() {}
 
   @override
-  Future<String> takeSnapshot(SnapshotOptions snapshotOptions) async {
+  Future<String?> takeSnapshot(SnapshotOptions snapshotOptions) async {
     try {
       debugPrint("${snapshotOptions.toJson()}");
-      var uri = await _channel.invokeMethod(
+      final String? uri = await _channel.invokeMethod(
           'snapshot#takeSnapshot', snapshotOptions.toJson());
       return uri;
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 
   @override
-  Future<String> findBelowLayerId(List<String> belowAt) async {
+  Future<String?> findBelowLayerId(List<String> belowAt) async {
     return await _channel
         .invokeMethod('style#findBelowLayer', {"belowAt": belowAt});
   }
@@ -787,11 +829,11 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   @override
   Future<void> setStyleString(String styleString) async {
     try {
-      var uri = await _channel
+      final uri = await _channel
           .invokeMethod('style#setStyleString', {"styleString": styleString});
       return uri;
     } on PlatformException catch (e) {
-      return new Future.error(e);
+      return Future.error(e);
     }
   }
 }

@@ -1,6 +1,9 @@
 package ai.nextbillion.maps_flutter;
 
 import android.net.Uri;
+import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 
@@ -24,7 +27,6 @@ import ai.nextbillion.maps.style.sources.TileSet;
 import ai.nextbillion.maps.style.sources.VectorSource;
 
 class SourcePropertyConverter {
-  private static final String TAG = "SourcePropertyConverter";
 
   static TileSet buildTileset(Map<String, Object> data) {
     final Object tiles = data.get("tiles");
@@ -33,13 +35,12 @@ class SourcePropertyConverter {
     if (tiles == null) {
       return null;
     }
-
     final TileSet tileSet =
         new TileSet("2.1.0", (String[]) Convert.toList(tiles).toArray(new String[0]));
 
     final Object bounds = data.get("bounds");
     if (bounds != null) {
-      List<Float> boundsFloat = new ArrayList<Float>();
+      List<Float> boundsFloat = new ArrayList<>();
       for (Object item : Convert.toList(bounds)) {
         boundsFloat.add(Convert.toFloat(item));
       }
@@ -113,7 +114,7 @@ class SourcePropertyConverter {
     return options;
   }
 
-  static GeoJsonSource buildGeojsonSource(String id, Map<String, Object> properties) {
+  static  @Nullable GeoJsonSource buildGeojsonSource(String id, Map<String, Object> properties) {
     final Object data = properties.get("data");
     final GeoJsonOptions options = buildGeojsonOptions(properties);
     if (data != null) {
@@ -122,6 +123,7 @@ class SourcePropertyConverter {
           final URI uri = new URI(Convert.toString(data));
           return new GeoJsonSource(id, uri, options);
         } catch (URISyntaxException e) {
+          Log.e("SourcePropertyConverter",e.toString());
         }
       } else {
         Gson gson = new Gson();
@@ -133,9 +135,12 @@ class SourcePropertyConverter {
     return null;
   }
 
-  static ImageSource buildImageSource(String id, Map<String, Object> properties) {
+  static  @Nullable ImageSource buildImageSource(String id, Map<String, Object> properties) {
     final Object url = properties.get("url");
     List<LatLng> coordinates = Convert.toLatLngList(properties.get("coordinates"), true);
+    if (coordinates == null || coordinates.size() < 3) {
+      return null;
+    }
     final LatLngQuad quad =
         new LatLngQuad(
             coordinates.get(0), coordinates.get(1), coordinates.get(2), coordinates.get(3));
@@ -143,11 +148,12 @@ class SourcePropertyConverter {
       final URI uri = new URI(Convert.toString(url));
       return new ImageSource(id, quad, uri);
     } catch (URISyntaxException e) {
+      Log.e("SourcePropertyConverter",e.toString());
     }
     return null;
   }
 
-  static VectorSource buildVectorSource(String id, Map<String, Object> properties) {
+  static  @Nullable VectorSource buildVectorSource(String id, Map<String, Object> properties) {
     final Object url = properties.get("url");
     if (url != null) {
       final Uri uri = Uri.parse(Convert.toString(url));
@@ -162,13 +168,14 @@ class SourcePropertyConverter {
     return tileSet != null ? new VectorSource(id, tileSet) : null;
   }
 
-  static RasterSource buildRasterSource(String id, Map<String, Object> properties) {
+  static  @Nullable RasterSource buildRasterSource(String id, Map<String, Object> properties) {
     final Object url = properties.get("url");
     if (url != null) {
       try {
         final URI uri = new URI(Convert.toString(url));
         return new RasterSource(id, uri);
       } catch (URISyntaxException e) {
+        Log.e("SourcePropertyConverter",e.toString());
       }
     }
 
@@ -176,13 +183,14 @@ class SourcePropertyConverter {
     return tileSet != null ? new RasterSource(id, tileSet) : null;
   }
 
-  static RasterDemSource buildRasterDemSource(String id, Map<String, Object> properties) {
+  static  @Nullable RasterDemSource buildRasterDemSource(String id, Map<String, Object> properties) {
     final Object url = properties.get("url");
     if (url != null) {
       try {
         final URI uri = new URI(Convert.toString(url));
         return new RasterDemSource(id, uri);
       } catch (URISyntaxException e) {
+        Log.e("SourcePropertyConverter",e.toString());
       }
     }
 

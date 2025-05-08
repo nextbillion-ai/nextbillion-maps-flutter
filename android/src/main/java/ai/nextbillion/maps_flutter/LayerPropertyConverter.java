@@ -16,13 +16,13 @@ import ai.nextbillion.maps.style.layers.PropertyValue;
 import static ai.nextbillion.maps_flutter.Convert.toMap;
 
 class LayerPropertyConverter {
-  static PropertyValue[] interpretSymbolLayerProperties(Object o) {
+  /** @noinspection unchecked*/
+  static PropertyValue<?>[] interpretSymbolLayerProperties(Object o) {
     final Map<String, String> data = (Map<String, String>) toMap(o);
-    final List<PropertyValue> properties = new LinkedList();
-    final JsonParser parser = new JsonParser();
+    final List<PropertyValue<?>> properties = new LinkedList<>();
 
     for (Map.Entry<String, String> entry : data.entrySet()) {
-      final JsonElement jsonElement = parser.parse(entry.getValue());
+      final JsonElement jsonElement = JsonParser.parseString(entry.getValue());
       Expression expression = Expression.Converter.convert(jsonElement);
       switch (entry.getKey()) {
         case "icon-opacity":
@@ -202,16 +202,17 @@ class LayerPropertyConverter {
       }
     }
 
-    return properties.toArray(new PropertyValue[properties.size()]);
+    return properties.toArray(new PropertyValue<?>[0]);
+
   }
 
-  static PropertyValue[] interpretCircleLayerProperties(Object o) {
+  static PropertyValue<?>[] interpretCircleLayerProperties(Object o) {
+    @SuppressWarnings("unchecked")
     final Map<String, String> data = (Map<String, String>) toMap(o);
-    final List<PropertyValue> properties = new LinkedList();
-    final JsonParser parser = new JsonParser();
+    final List<PropertyValue<?>> properties = new LinkedList<>();
 
     for (Map.Entry<String, String> entry : data.entrySet()) {
-      final JsonElement jsonElement = parser.parse(entry.getValue());
+      JsonElement jsonElement = JsonParser.parseString(entry.getValue());
       Expression expression = Expression.Converter.convert(jsonElement);
       switch (entry.getKey()) {
         case "circle-radius":
@@ -258,16 +259,16 @@ class LayerPropertyConverter {
       }
     }
 
-    return properties.toArray(new PropertyValue[properties.size()]);
+    return properties.toArray(new PropertyValue<?>[0]);
   }
 
-  static PropertyValue[] interpretLineLayerProperties(Object o) {
+  static PropertyValue<?>[] interpretLineLayerProperties(Object o) {
+    @SuppressWarnings("unchecked")
     final Map<String, String> data = (Map<String, String>) toMap(o);
-    final List<PropertyValue> properties = new LinkedList();
-    final JsonParser parser = new JsonParser();
+    final List<PropertyValue<?>> properties = new LinkedList<>();
 
     for (Map.Entry<String, String> entry : data.entrySet()) {
-      final JsonElement jsonElement = parser.parse(entry.getValue());
+      JsonElement jsonElement = JsonParser.parseString(entry.getValue());
       Expression expression = Expression.Converter.convert(jsonElement);
       switch (entry.getKey()) {
         case "line-opacity":
@@ -326,16 +327,16 @@ class LayerPropertyConverter {
       }
     }
 
-    return properties.toArray(new PropertyValue[properties.size()]);
+    return properties.toArray(new PropertyValue<?>[0]);
   }
 
-  static PropertyValue[] interpretFillLayerProperties(Object o) {
+  static PropertyValue<?>[] interpretFillLayerProperties(Object o) {
+    @SuppressWarnings("unchecked")
     final Map<String, String> data = (Map<String, String>) toMap(o);
-    final List<PropertyValue> properties = new LinkedList();
-    final JsonParser parser = new JsonParser();
+    final List<PropertyValue<?>> properties = new LinkedList<>();
 
     for (Map.Entry<String, String> entry : data.entrySet()) {
-      final JsonElement jsonElement = parser.parse(entry.getValue());
+      JsonElement jsonElement = JsonParser.parseString(entry.getValue());
       Expression expression = Expression.Converter.convert(jsonElement);
       switch (entry.getKey()) {
         case "fill-antialias":
@@ -370,16 +371,16 @@ class LayerPropertyConverter {
       }
     }
 
-    return properties.toArray(new PropertyValue[properties.size()]);
+    return properties.toArray(new PropertyValue<?>[0]);
   }
 
-  static PropertyValue[] interpretFillExtrusionLayerProperties(Object o) {
+  static PropertyValue<?>[] interpretFillExtrusionLayerProperties(Object o) {
+    @SuppressWarnings("unchecked")
     final Map<String, String> data = (Map<String, String>) toMap(o);
-    final List<PropertyValue> properties = new LinkedList();
-    final JsonParser parser = new JsonParser();
+    final List<PropertyValue<?>> properties = new LinkedList<>();
 
     for (Map.Entry<String, String> entry : data.entrySet()) {
-      final JsonElement jsonElement = parser.parse(entry.getValue());
+      JsonElement jsonElement = JsonParser.parseString(entry.getValue());
       Expression expression = Expression.Converter.convert(jsonElement);
       switch (entry.getKey()) {
         case "fill-extrusion-opacity":
@@ -414,16 +415,16 @@ class LayerPropertyConverter {
       }
     }
 
-    return properties.toArray(new PropertyValue[properties.size()]);
+    return properties.toArray(new PropertyValue<?>[0]);
   }
 
-  static PropertyValue[] interpretRasterLayerProperties(Object o) {
+  static PropertyValue<?>[] interpretRasterLayerProperties(Object o) {
+    @SuppressWarnings("unchecked")
     final Map<String, String> data = (Map<String, String>) toMap(o);
-    final List<PropertyValue> properties = new LinkedList();
-    final JsonParser parser = new JsonParser();
+    final List<PropertyValue<?>> properties = new LinkedList<>();
 
     for (Map.Entry<String, String> entry : data.entrySet()) {
-      final JsonElement jsonElement = parser.parse(entry.getValue());
+      JsonElement jsonElement = JsonParser.parseString(entry.getValue());
       Expression expression = Expression.Converter.convert(jsonElement);
       switch (entry.getKey()) {
         case "raster-opacity":
@@ -458,16 +459,16 @@ class LayerPropertyConverter {
       }
     }
 
-    return properties.toArray(new PropertyValue[properties.size()]);
+    return properties.toArray(new PropertyValue<?>[0]);
   }
 
-  static PropertyValue[] interpretHillshadeLayerProperties(Object o) {
+  static PropertyValue<?>[] interpretHillshadeLayerProperties(Object o) {
+    @SuppressWarnings("unchecked")
     final Map<String, String> data = (Map<String, String>) toMap(o);
-    final List<PropertyValue> properties = new LinkedList();
-    final JsonParser parser = new JsonParser();
+    final List<PropertyValue<?>> properties = new LinkedList<>();
 
     for (Map.Entry<String, String> entry : data.entrySet()) {
-      final JsonElement jsonElement = parser.parse(entry.getValue());
+      JsonElement jsonElement = JsonParser.parseString(entry.getValue());
       Expression expression = Expression.Converter.convert(jsonElement);
       switch (entry.getKey()) {
         case "hillshade-illumination-direction":
@@ -496,16 +497,16 @@ class LayerPropertyConverter {
       }
     }
 
-    return properties.toArray(new PropertyValue[properties.size()]);
+    return properties.toArray(new PropertyValue<?>[0]);
   }
 
-  static PropertyValue[] interpretHeatmapLayerProperties(Object o) {
+  static PropertyValue<?>[] interpretHeatmapLayerProperties(Object o) {
+    @SuppressWarnings("unchecked")
     final Map<String, String> data = (Map<String, String>) toMap(o);
-    final List<PropertyValue> properties = new LinkedList();
-    final JsonParser parser = new JsonParser();
+    final List<PropertyValue<?>> properties = new LinkedList<>();
 
     for (Map.Entry<String, String> entry : data.entrySet()) {
-      final JsonElement jsonElement = parser.parse(entry.getValue());
+      JsonElement jsonElement = JsonParser.parseString(entry.getValue());
       Expression expression = Expression.Converter.convert(jsonElement);
       switch (entry.getKey()) {
         case "heatmap-radius":
@@ -531,6 +532,6 @@ class LayerPropertyConverter {
       }
     }
 
-    return properties.toArray(new PropertyValue[properties.size()]);
+    return properties.toArray(new PropertyValue<?>[0]);
   }
 }

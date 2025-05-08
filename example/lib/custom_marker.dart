@@ -6,16 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart'; // ignore: unnecessary_import
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 const randomMarkerNum = 10;
 
 class CustomMarkerPage extends ExamplePage {
-  CustomMarkerPage() : super(const Icon(Icons.place), 'Custom marker');
+  const CustomMarkerPage() : super(const Icon(Icons.place), 'Custom marker');
 
   @override
   Widget build(BuildContext context) {
-    return CustomMarker();
+    return const CustomMarker();
   }
 }
 
@@ -27,11 +27,11 @@ class CustomMarker extends StatefulWidget {
 }
 
 class CustomMarkerState extends State<CustomMarker> {
-  final Random _rnd = new Random();
+  final Random _rnd = Random();
 
   late NextbillionMapController _mapController;
-  List<Marker> _markers = [];
-  List<_MarkerState> _markerStates = [];
+  final List<Marker> _markers = [];
+  final List<_MarkerState> _markerStates = [];
 
   void _addMarkerStates(_MarkerState markerState) {
     _markerStates.add(markerState);
@@ -47,7 +47,9 @@ class CustomMarkerState extends State<CustomMarker> {
   }
 
   void _onStyleLoadedCallback() {
-    print('onStyleLoadedCallback');
+    if (kDebugMode) {
+      print('onStyleLoadedCallback');
+    }
   }
 
   void _onMapLongClickCallback(Point<double> point, LatLng coordinates) {
@@ -84,60 +86,57 @@ class CustomMarkerState extends State<CustomMarker> {
 
   @override
   Widget build(BuildContext context) {
-    return new Container(
-      child: Stack(children: [
-        NBMap(
-          trackCameraPosition: true,
-          onMapCreated: _onMapCreated,
-          onMapLongClick: _onMapLongClickCallback,
-          onCameraIdle: _onCameraIdleCallback,
-          onStyleLoadedCallback: _onStyleLoadedCallback,
-          initialCameraPosition:
-              const CameraPosition(target: LatLng(35.0, 135.0), zoom: 5),
-        ),
-        IgnorePointer(
-            ignoring: true,
-            child: Stack(
-              children: _markers,
-            )),
-        FloatingActionButton(
-          onPressed: () {
-            // Generate random markers
-            var param = <LatLng>[];
-            for (var i = 0; i < randomMarkerNum; i++) {
-              final lat = _rnd.nextDouble() * 20 + 30;
-              final lng = _rnd.nextDouble() * 20 + 125;
-              param.add(LatLng(lat, lng));
-            }
+    return Stack(children: [
+      NBMap(
+        trackCameraPosition: true,
+        onMapCreated: _onMapCreated,
+        onMapLongClick: _onMapLongClickCallback,
+        onCameraIdle: _onCameraIdleCallback,
+        onStyleLoadedCallback: _onStyleLoadedCallback,
+        initialCameraPosition:
+            const CameraPosition(target: LatLng(35.0, 135.0), zoom: 5),
+      ),
+      IgnorePointer(
+          child: Stack(
+            children: _markers,
+          )),
+      FloatingActionButton(
+        onPressed: () {
+          // Generate random markers
+          final param = <LatLng>[];
+          for (var i = 0; i < randomMarkerNum; i++) {
+            final lat = _rnd.nextDouble() * 20 + 30;
+            final lng = _rnd.nextDouble() * 20 + 125;
+            param.add(LatLng(lat, lng));
+          }
 
-            _mapController.toScreenLocationBatch(param).then((value) {
-              if (value == null) {
-                return;
-              }
-              for (var i = 0; i < randomMarkerNum; i++) {
-                var point =
-                    Point<double>(value[i].x as double, value[i].y as double);
-                _addMarker(point, param[i]);
-              }
-            });
-          },
-          child: Icon(Icons.add),
-        ),
-      ]),
-    );
+          _mapController.toScreenLocationBatch(param).then((value) {
+            if (value == null) {
+              return;
+            }
+            for (var i = 0; i < randomMarkerNum; i++) {
+              final point =
+                  Point<double>(value[i].x as double, value[i].y as double);
+              _addMarker(point, param[i]);
+            }
+          });
+        },
+        child: const Icon(Icons.add),
+      ),
+    ]);
   }
 
   // ignore: unused_element
-  void _measurePerformance() {
-    final trial = 10;
+  Future<void> _measurePerformance() async {
+    const trial = 10;
     final batches = [500, 1000, 1500, 2000, 2500, 3000];
-    var results = Map<int, List<double>>();
+    final results = <int, List<double>>{};
     for (final batch in batches) {
       results[batch] = [0.0, 0.0];
     }
 
-    _mapController.toScreenLocation(LatLng(0, 0));
-    Stopwatch sw = Stopwatch();
+    _mapController.toScreenLocation(const LatLng(0, 0));
+    final Stopwatch sw = Stopwatch();
 
     for (final batch in batches) {
       //
@@ -145,25 +144,26 @@ class CustomMarkerState extends State<CustomMarker> {
       //
       for (var i = 0; i < trial; i++) {
         sw.start();
-        var list = <Future<Point<num>>>[];
+        final list = <Future<Point<num>>>[];
         for (var j = 0; j < batch; j++) {
-          var p = _mapController
+          final p = _mapController
               .toScreenLocation(LatLng(j.toDouble() % 80, j.toDouble() % 300));
 
-          list.add(p);
+          list.add(p.then((value) => value!));  // force unwrap here
         }
-        Future.wait(list);
+        await Future.wait(list);
         sw.stop();
         results[batch]![0] += sw.elapsedMilliseconds;
         sw.reset();
       }
+
 
       //
       // batch
       //
       for (var i = 0; i < trial; i++) {
         sw.start();
-        var param = <LatLng>[];
+        final param = <LatLng>[];
         for (var j = 0; j < batch; j++) {
           param.add(LatLng(j.toDouble() % 80, j.toDouble() % 300));
         }
@@ -173,61 +173,59 @@ class CustomMarkerState extends State<CustomMarker> {
         sw.reset();
       }
 
-      print(
+      if (kDebugMode) {
+        print(
           'batch=$batch,primitive=${results[batch]![0] / trial}ms, batch=${results[batch]![1] / trial}ms');
+      }
     }
   }
 }
 
 class Marker extends StatefulWidget {
-  final Point _initialPosition;
-  final LatLng _coordinate;
-  final void Function(_MarkerState) _addMarkerState;
+  final Point initialPosition;
+  final LatLng coordinate;
+  final void Function(_MarkerState) addMarkerState;
 
   Marker(
-      String key, this._coordinate, this._initialPosition, this._addMarkerState)
-      : super(key: Key(key));
+      String key,
+      this.coordinate,
+      this.initialPosition,
+      this.addMarkerState,
+      ) : super(key: Key(key));
 
   @override
-  State<StatefulWidget> createState() {
-    final state = _MarkerState(_initialPosition);
-    _addMarkerState(state);
-    return state;
-  }
+  State<Marker> createState() => _MarkerState();
 }
 
-class _MarkerState extends State with TickerProviderStateMixin {
-  final _iconSize = 20.0;
+class _MarkerState extends State<Marker> with TickerProviderStateMixin {
+  final double _iconSize = 20.0;
+  late Point _position;
 
-  Point _position;
-
-  _MarkerState(this._position);
+  _MarkerState();
 
   @override
   void initState() {
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
+    _position = widget.initialPosition;
+    widget.addMarkerState(this);
   }
 
   @override
   Widget build(BuildContext context) {
     var ratio = 1.0;
 
-    // web does not support Platform._operatingSystem
     if (!kIsWeb) {
-      // iOS returns logical pixel while Android returns screen pixel
       ratio = Platform.isIOS ? 1.0 : MediaQuery.of(context).devicePixelRatio;
     }
 
     return Positioned(
-        left: _position.x / ratio - _iconSize / 2,
-        top: _position.y / ratio - _iconSize / 2,
-        child: Image.asset('assets/symbols/2.0x/custom-icon.png',
-            height: _iconSize));
+      left: _position.x / ratio - _iconSize / 2,
+      top: _position.y / ratio - _iconSize / 2,
+      child: Image.asset(
+        'assets/symbols/2.0x/custom-icon.png',
+        height: _iconSize,
+      ),
+    );
   }
 
   void updatePosition(Point<num> point) {
@@ -237,6 +235,6 @@ class _MarkerState extends State with TickerProviderStateMixin {
   }
 
   LatLng getCoordinate() {
-    return (widget as Marker)._coordinate;
+    return widget.coordinate;
   }
 }

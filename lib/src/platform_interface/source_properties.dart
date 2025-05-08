@@ -59,9 +59,10 @@ class VectorSourceProperties implements SourceProperties {
   final String? attribution;
 
   /// A property to use as a feature id (for feature state). Either a
-  /// property name, or an object of the form `{<sourceLayer>:
-  /// <propertyName>}`. If specified as a string for a vector tile source,
+  /// property name, or an object of the form `{<sourceLayer>: <propertyName>}`.
+  /// If specified as a string for a vector tile source,
   /// the same property is used across all its source layers.
+
   ///
   /// Type: promoteId
   final String? promoteId;
@@ -98,6 +99,7 @@ class VectorSourceProperties implements SourceProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -121,14 +123,14 @@ class VectorSourceProperties implements SourceProperties {
 
   factory VectorSourceProperties.fromJson(Map<String, dynamic> json) {
     return VectorSourceProperties(
-      url: json['url'],
-      tiles: json['tiles'],
-      bounds: json['bounds'],
-      scheme: json['scheme'],
-      minzoom: json['minzoom'],
-      maxzoom: json['maxzoom'],
-      attribution: json['attribution'],
-      promoteId: json['promoteId'],
+      url: json['url'] as String?,
+      tiles: (json['tiles'] as List?)?.cast<String>(),
+      bounds: (json['bounds'] as List?)?.cast<double>(),
+      scheme: json['scheme'] as String?,
+      minzoom: (json['minzoom'] as num?)?.toDouble(),
+      maxzoom: (json['maxzoom'] as num?)?.toDouble(),
+      attribution: json['attribution'] as String?,
+      promoteId: json['promoteId'] as String?,
     );
   }
 }
@@ -227,6 +229,7 @@ class RasterSourceProperties implements SourceProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -250,14 +253,14 @@ class RasterSourceProperties implements SourceProperties {
 
   factory RasterSourceProperties.fromJson(Map<String, dynamic> json) {
     return RasterSourceProperties(
-      url: json['url'],
-      tiles: json['tiles'],
-      bounds: json['bounds'],
-      minzoom: json['minzoom'],
-      maxzoom: json['maxzoom'],
-      tileSize: json['tileSize'],
-      scheme: json['scheme'],
-      attribution: json['attribution'],
+      url: json['url'] as String?,
+      tiles: (json['tiles'] as List?)?.cast<String>(),
+      bounds: (json['bounds'] as List?)?.cast<double>(),
+      minzoom: (json['minzoom'] as num?)?.toDouble(),
+      maxzoom: (json['maxzoom'] as num?)?.toDouble(),
+      tileSize: (json['tileSize'] as num?)?.toDouble(),
+      scheme: json['scheme'] as String?,
+      attribution: json['attribution'] as String?,
     );
   }
 }
@@ -351,6 +354,7 @@ class RasterDemSourceProperties implements SourceProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -374,14 +378,14 @@ class RasterDemSourceProperties implements SourceProperties {
 
   factory RasterDemSourceProperties.fromJson(Map<String, dynamic> json) {
     return RasterDemSourceProperties(
-      url: json['url'],
-      tiles: json['tiles'],
-      bounds: json['bounds'],
-      minzoom: json['minzoom'],
-      maxzoom: json['maxzoom'],
-      tileSize: json['tileSize'],
-      attribution: json['attribution'],
-      encoding: json['encoding'],
+      url: json['url'] as String?,
+      tiles: (json['tiles'] as List?)?.cast<String>(),
+      bounds: (json['bounds'] as List?)?.cast<double>(),
+      minzoom: (json['minzoom'] as num?)?.toDouble(),
+      maxzoom: (json['maxzoom'] as num?)?.toDouble(),
+      tileSize: (json['tileSize'] as num?)?.toDouble(),
+      attribution: json['attribution'] as String?,
+      encoding: json['encoding'] as String?,
     );
   }
 }
@@ -457,12 +461,13 @@ class GeojsonSourceProperties implements SourceProperties {
   /// is any expression function that accepts at least 2 operands (e.g.
   /// `"+"` or `"max"`) — it accumulates the property value from
   /// clusters/points the cluster contains; `map_expression` produces the
-  /// value of a single point.Example: `{"sum": ["+", ["get",
-  /// "scalerank"]]}`.For more advanced use cases, in place of `operator`,
+  /// value of a single point.
+  /// Example: `{"sum": ["+", ["get", "scalerank"]]}`.
+  /// For more advanced use cases, in place of `operator`,
   /// you can use a custom reduce expression that references a special
-  /// `["accumulated"]` value, e.g.:`{"sum": [["+", ["accumulated"],
-  /// ["get", "sum"]], ["get", "scalerank"]]}`
-  ///
+  /// `["accumulated"]` value, e.g.:
+  /// `{"sum": [["+", ["accumulated"], ["get", "sum"]], ["get", "scalerank"]]}`
+
   /// Type: *
   final Object? clusterProperties;
 
@@ -482,8 +487,11 @@ class GeojsonSourceProperties implements SourceProperties {
   final bool? generateId;
 
   /// A property to use as a feature id (for feature state). Either a
-  /// property name, or an object of the form `{<sourceLayer>:
-  /// <propertyName>}`.
+  /// property name, or an object of the form `{<sourceLayer>: <propertyName>}`.
+  ///
+  /// Corrected:
+  /// Either a property name, or an object of the form `{<sourceLayer>: <propertyName>}`
+  /// where both `<sourceLayer>` and `<propertyName>` are replaced by strings.
   ///
   /// Type: promoteId
   final String? promoteId;
@@ -532,6 +540,7 @@ class GeojsonSourceProperties implements SourceProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -560,17 +569,17 @@ class GeojsonSourceProperties implements SourceProperties {
   factory GeojsonSourceProperties.fromJson(Map<String, dynamic> json) {
     return GeojsonSourceProperties(
       data: json['data'],
-      maxzoom: json['maxzoom'],
-      attribution: json['attribution'],
-      buffer: json['buffer'],
-      tolerance: json['tolerance'],
-      cluster: json['cluster'],
-      clusterRadius: json['clusterRadius'],
-      clusterMaxZoom: json['clusterMaxZoom'],
+      maxzoom: (json['maxzoom'] as num?)?.toDouble() ?? 18,
+      attribution: json['attribution'] as String?,
+      buffer: (json['buffer'] as num?)?.toDouble() ?? 128,
+      tolerance: (json['tolerance'] as num?)?.toDouble() ?? 0.375,
+      cluster: json['cluster'] as bool? ?? false,
+      clusterRadius: (json['clusterRadius'] as num?)?.toDouble() ?? 50,
+      clusterMaxZoom: (json['clusterMaxZoom'] as num?)?.toDouble(),
       clusterProperties: json['clusterProperties'],
-      lineMetrics: json['lineMetrics'],
-      generateId: json['generateId'],
-      promoteId: json['promoteId'],
+      lineMetrics: json['lineMetrics'] as bool? ?? false,
+      generateId: json['generateId'] as bool? ?? false,
+      promoteId: json['promoteId'] as String?,
     );
   }
 }
@@ -599,6 +608,7 @@ class VideoSourceProperties implements SourceProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -616,8 +626,10 @@ class VideoSourceProperties implements SourceProperties {
 
   factory VideoSourceProperties.fromJson(Map<String, dynamic> json) {
     return VideoSourceProperties(
-      urls: json['urls'],
-      coordinates: json['coordinates'],
+      urls: (json['urls'] as List?)?.map((e) => e as String).toList(),
+      coordinates: (json['coordinates'] as List?)
+          ?.map((e) => (e as List).toList())
+          .toList(),
     );
   }
 }
@@ -645,6 +657,7 @@ class ImageSourceProperties implements SourceProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -662,8 +675,10 @@ class ImageSourceProperties implements SourceProperties {
 
   factory ImageSourceProperties.fromJson(Map<String, dynamic> json) {
     return ImageSourceProperties(
-      url: json['url'],
-      coordinates: json['coordinates'],
+      url: json['url'] as String?,
+      coordinates: (json['coordinates'] as List?)
+          ?.map((e) => (e as List).toList())
+          .toList(),
     );
   }
 }
