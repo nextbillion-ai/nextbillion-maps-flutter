@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.0'
+        classpath 'com.android.tools.build:gradle:4.2.2'
     }
 }
 
@@ -35,7 +35,7 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     dependencies {
-        implementation 'ai.nextbillion:nb-maps-android:1.1.5'
+        implementation 'ai.nextbillion:nb-maps-android:1.1.7'
         implementation 'com.squareup.okhttp3:okhttp:4.9.0'
     }
     compileOptions {
