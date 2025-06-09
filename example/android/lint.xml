@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Disable specific checks -->
+    <issue id="InvalidPackage" severity="ignore" />
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="DefaultLocale" severity="warning" />
+    <issue id="InconsistentLayout" severity="warning" />
+    <issue id="GradlePluginVersion" severity="ignore" />
+    <issue id="GradleCompatible" severity="ignore" />
+    
+    <!-- Configure severity levels -->
+    <issue id="MissingPermission" severity="error" />
+    <issue id="NewApi" severity="error" />
+    <issue id="ObsoleteSdkInt" severity="warning" />
+    
+    <!-- Performance checks -->
+    <issue id="Overdraw" severity="warning" />
+    <issue id="UnusedResources" severity="warning" />
+    
+    <!-- Security checks -->
+    <issue id="ExportedService" severity="error" />
+    <issue id="AllowBackup" severity="warning" />
+    <issue id="JavascriptInterface" severity="error" />
+    <issue id="HandlerLeak" severity="error" />
+    <issue id="StaticFieldLeak" severity="error" />
+
+    <!-- Code quality checks -->
+    <issue id="NotifyDataSetChanged" severity="warning" />
+    <issue id="UseCompoundDrawables" severity="warning" />
+    <issue id="UselessParent" severity="warning" />
+    <issue id="ViewHolder" severity="warning" />
+    <issue id="VisibleForTests" severity="warning" />
+    <issue id="CheckResult" severity="warning" />
+    <issue id="StringFormatInvalid" severity="error" />
+    <issue id="StringFormatCount" severity="error" />
+    <issue id="SyntheticAccessor" severity="warning" />
+    <issue id="PrivateResource" severity="warning" />
+    <issue id="NonConstantResourceId" severity="warning" />
+    <issue id="Recycle" severity="warning" />
+    <issue id="Registered" severity="warning" />
+    <issue id="CommitTransaction" severity="error" />
+    <issue id="ProguardSplit" severity="error" />
+
+    
+    <!-- Ignore specific files or directories -->
+    <issue id="all">
+        <ignore path="**/test/**" />
+        <ignore path="**/androidTest/**" />
+        <ignore path="**/build/**" />
+        <ignore path="**/generated/**" />
+        <ignore path="**/gradle/**" />
+    </issue>
+</lint> 

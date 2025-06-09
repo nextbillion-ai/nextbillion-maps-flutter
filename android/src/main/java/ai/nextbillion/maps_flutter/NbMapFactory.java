@@ -12,6 +12,8 @@ import io.flutter.plugin.platform.PlatformViewFactory;
 
 import static ai.nextbillion.maps_flutter.Convert.interpretNextbillionMapOptions;
 
+import androidx.annotation.NonNull;
+
 public class NbMapFactory extends PlatformViewFactory {
 
   private final BinaryMessenger messenger;
@@ -25,7 +27,9 @@ public class NbMapFactory extends PlatformViewFactory {
   }
 
   @Override
-  public PlatformView create(Context context, int id, Object args) {
+  @NonNull
+  public PlatformView create(@NonNull Context context, int id, Object args) {
+    //noinspection unchecked
     Map<String, Object> params = (Map<String, Object>) args;
     final NbMapBuilder builder = new NbMapBuilder();
 

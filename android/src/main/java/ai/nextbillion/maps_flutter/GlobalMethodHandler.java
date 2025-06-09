@@ -1,7 +1,11 @@
 package ai.nextbillion.maps_flutter;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -11,24 +15,23 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.Map;
 
 import ai.nextbillion.maps.net.ConnectivityReceiver;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.common.PluginRegistry;
 
+/** @noinspection ALL */
 class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
   private static final String TAG = GlobalMethodHandler.class.getSimpleName();
   private static final String DATABASE_NAME = "mbgl-offline.db";
   private static final int BUFFER_SIZE = 1024 * 2;
   @NonNull private final Context context;
   @NonNull private final BinaryMessenger messenger;
-  @Nullable private FlutterPlugin.FlutterAssets flutterAssets;
+  @Nullable private final FlutterPlugin.FlutterAssets flutterAssets;
 
   GlobalMethodHandler(@NonNull FlutterPlugin.FlutterPluginBinding binding) {
     this.context = binding.getApplicationContext();
@@ -40,12 +43,10 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
     final byte[] buffer = new byte[BUFFER_SIZE];
     final BufferedInputStream in = new BufferedInputStream(input, BUFFER_SIZE);
     final BufferedOutputStream out = new BufferedOutputStream(output, BUFFER_SIZE);
-    int count = 0;
-    int n = 0;
+    int n;
     try {
       while ((n = in.read(buffer, 0, BUFFER_SIZE)) != -1) {
         out.write(buffer, 0, n);
-        count += n;
       }
       out.flush();
     } finally {
@@ -63,10 +64,9 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
   }
 
   @Override
-  public void onMethodCall(MethodCall methodCall, MethodChannel.Result result) {
+  public void onMethodCall(MethodCall methodCall, @NonNull MethodChannel.Result result) {
     String accessToken = methodCall.argument("accessToken");
     NbMapUtils.getNextbillion(context, accessToken);
-
     switch (methodCall.method) {
       case "installOfflineMapTiles":
         String tilesDb = methodCall.argument("tilesdb");
@@ -74,7 +74,7 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
         result.success(null);
         break;
       case "setOffline":
-        boolean offline = methodCall.argument("offline");
+        boolean offline = Boolean.TRUE.equals(methodCall.argument("offline"));
         ConnectivityReceiver.instance(context).setConnected(offline ? false : null);
         result.success(null);
         break;
@@ -134,10 +134,15 @@ class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
 
   private InputStream openTilesDbFile(String tilesDb) throws IOException {
     if (tilesDb.startsWith("/")) { // Absolute path.
-      return new FileInputStream(new File(tilesDb));
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        return Files.newInputStream(new File(tilesDb).toPath());
+      } else {
+        return new FileInputStream(new File(tilesDb));
+      }
     } else {
       String assetKey = flutterAssets.getAssetFilePathByName(tilesDb);
       return context.getAssets().open(assetKey);
     }
   }
+
 }
