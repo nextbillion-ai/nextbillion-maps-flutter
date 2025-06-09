@@ -15,7 +15,7 @@ buildscript {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 34
+    compileSdkVersion 33
     ndkVersion "20.1.5948944"
     namespace 'ai.nextbillion.maps_flutter'
 
