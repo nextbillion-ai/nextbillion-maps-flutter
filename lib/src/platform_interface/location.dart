@@ -36,12 +36,12 @@ class LatLng {
     return <double>[longitude, latitude];
   }
 
-  static LatLng _fromJson(List<dynamic> json) {
-    return LatLng(json[0], json[1]);
-  }
+  LatLng._fromJson(List<dynamic> json)
+      : latitude = (json[0] as num).toDouble(),
+        longitude = (json[1] as num).toDouble();
 
   @override
-  String toString() => '$runtimeType($latitude, $longitude)';
+  String toString() => 'LatLng($latitude, $longitude)';
 
   @override
   bool operator ==(Object o) {
@@ -80,9 +80,9 @@ class LatLngBounds {
     double? minLon;
     double? maxLon;
 
-    for (LatLng item in multiLatLng) {
-      double latitude = item.latitude;
-      double longitude = item.longitude;
+    for (final LatLng item in multiLatLng) {
+      final double latitude = item.latitude;
+      final double longitude = item.longitude;
 
       if (minLat == null) {
         minLat = latitude;
@@ -123,15 +123,16 @@ class LatLngBounds {
     if (json == null) {
       return null;
     }
+    final list = json as List<dynamic>;
     return LatLngBounds(
-      southwest: LatLng._fromJson(json[0]),
-      northeast: LatLng._fromJson(json[1]),
+      southwest: LatLng._fromJson(list[0] as List<dynamic>),
+      northeast: LatLng._fromJson(list[1] as List<dynamic>),
     );
   }
 
   @override
   String toString() {
-    return '$runtimeType($southwest, $northeast)';
+    return 'LatLngBounds($southwest, $northeast)';
   }
 
   @override
@@ -163,7 +164,7 @@ class LatLngQuad {
 
   final LatLng bottomLeft;
 
-  dynamic toList() {
+  List<dynamic> toList() {
     return <dynamic>[
       topLeft.toJson(),
       topRight.toJson(),
@@ -177,17 +178,19 @@ class LatLngQuad {
     if (json == null) {
       return null;
     }
+    final list = json as List<dynamic>;
     return LatLngQuad(
-      topLeft: LatLng._fromJson(json[0]),
-      topRight: LatLng._fromJson(json[1]),
-      bottomRight: LatLng._fromJson(json[2]),
-      bottomLeft: LatLng._fromJson(json[3]),
+      topLeft: LatLng._fromJson(list[0] as List<dynamic>),
+      topRight: LatLng._fromJson(list[1] as List<dynamic>),
+      bottomRight: LatLng._fromJson(list[2] as List<dynamic>),
+      bottomLeft: LatLng._fromJson(list[3] as List<dynamic>),
     );
   }
 
+
   @override
   String toString() {
-    return '$runtimeType($topLeft, $topRight, $bottomRight, $bottomLeft)';
+    return 'LatLngQuad($topLeft, $topRight, $bottomRight, $bottomLeft)';
   }
 
   @override

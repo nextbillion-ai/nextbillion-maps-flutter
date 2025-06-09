@@ -1,12 +1,12 @@
-import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 import 'package:flutter/services.dart';
+import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('DownloadRegionStatus', () {
     test('Success should be an instance of DownloadRegionStatus', () {
       // Arrange
-      DownloadRegionStatus status = Success();
+      final DownloadRegionStatus status = Success();
 
       // Assert
       expect(status, isA<DownloadRegionStatus>());
@@ -14,8 +14,8 @@ void main() {
 
     test('InProgress should be an instance of DownloadRegionStatus', () {
       // Arrange
-      double progress = 0.5;
-      DownloadRegionStatus status = InProgress(progress);
+      const double progress = 0.5;
+      final DownloadRegionStatus status = InProgress(progress);
 
       // Assert
       expect(status, isA<DownloadRegionStatus>());
@@ -23,8 +23,8 @@ void main() {
 
     test('InProgress should have correct progress value', () {
       // Arrange
-      double progress = 0.5;
-      InProgress status = InProgress(progress);
+      const double progress = 0.5;
+      final InProgress status = InProgress(progress);
 
       // Assert
       expect(status.progress, equals(progress));
@@ -32,8 +32,8 @@ void main() {
 
     test('InProgress should have correct toString representation', () {
       // Arrange
-      double progress = 0.5;
-      DownloadRegionStatus status = InProgress(progress);
+      const double progress = 0.5;
+      final DownloadRegionStatus status = InProgress(progress);
 
       // Assert
       expect(
@@ -44,9 +44,9 @@ void main() {
 
     test('Error should be an instance of DownloadRegionStatus', () {
       // Arrange
-      PlatformException cause =
+      final PlatformException cause =
           PlatformException(code: 'error_code', message: 'error_message');
-      DownloadRegionStatus status = Error(cause);
+      final DownloadRegionStatus status = Error(cause);
 
       // Assert
       expect(status, isA<DownloadRegionStatus>());
@@ -54,9 +54,9 @@ void main() {
 
     test('Error should have correct cause value', () {
       // Arrange
-      PlatformException cause =
+      final PlatformException cause =
           PlatformException(code: 'error_code', message: 'error_message');
-      Error status = Error(cause);
+      final Error status = Error(cause);
 
       // Assert
       expect(status.cause, equals(cause));
@@ -64,14 +64,14 @@ void main() {
 
     test('Error should have correct toString representation', () {
       // Arrange
-      PlatformException cause =
+      final PlatformException cause =
           PlatformException(code: 'error_code', message: 'error_message');
-      DownloadRegionStatus status = Error(cause);
+      final DownloadRegionStatus status = Error(cause);
 
       // Assert
       expect(
         status.toString(),
-        "Instance of 'DownloadRegionStatus.Error', cause = ${cause.toString()}",
+        "Instance of 'DownloadRegionStatus.Error', cause = $cause",
       );
     });
   });

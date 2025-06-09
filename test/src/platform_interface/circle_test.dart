@@ -4,7 +4,7 @@ import 'package:test/test.dart';
 void main() {
   test('Circle toGeoJson should return a valid GeoJSON representation', () {
     // Arrange
-    CircleOptions options = CircleOptions(
+    const CircleOptions options = CircleOptions(
       circleRadius: 10.0,
       circleColor: "#FF0000",
       circleBlur: 0.5,
@@ -15,31 +15,36 @@ void main() {
       geometry: LatLng(37.7749, -122.4194),
       draggable: true,
     );
-    Circle circle = Circle("circle1", options);
+    final Circle circle = Circle("circle1", options);
 
     // Act
-    Map<String, dynamic> result = circle.toGeoJson();
+    final Map<String, dynamic> result = circle.toGeoJson();
+
+    final Map<String, dynamic> properties = result["properties"] as Map<String, dynamic>;
+    final Map<String, dynamic> geometry = result["geometry"] as Map<String, dynamic>;
 
     // Assert
     expect(circle.data, isNull);
     expect(result["type"], equals("Feature"));
-    expect(result["properties"]["circleRadius"], equals(10.0));
-    expect(result["properties"]["circleColor"], equals("#FF0000"));
-    expect(result["properties"]["circleBlur"], equals(0.5));
-    expect(result["properties"]["circleOpacity"], equals(0.8));
-    expect(result["properties"]["circleStrokeWidth"], equals(2.0));
-    expect(result["properties"]["circleStrokeColor"], equals("#000000"));
-    expect(result["properties"]["circleStrokeOpacity"], equals(1.0));
-    expect(result["geometry"]["type"], equals("Point"));
-    //toGeoJsonCoordinates: longitute comes first
-    expect(result["geometry"]["coordinates"], equals([-122.4194, 37.7749]));
+
+    expect(properties["circleRadius"], equals(10.0));
+    expect(properties["circleColor"], equals("#FF0000"));
+    expect(properties["circleBlur"], equals(0.5));
+    expect(properties["circleOpacity"], equals(0.8));
+    expect(properties["circleStrokeWidth"], equals(2.0));
+    expect(properties["circleStrokeColor"], equals("#000000"));
+    expect(properties["circleStrokeOpacity"], equals(1.0));
+
+    expect(geometry["type"], equals("Point"));
+    expect(geometry["coordinates"], equals([-122.4194, 37.7749]));
   });
+
 
   test(
       'test CircleOptions.toJson(addGeometry = true) should contain geometry in the json',
       () {
-    LatLng geometry = LatLng(37.7749, -122.4194);
-    CircleOptions options = CircleOptions(
+    const LatLng geometry = LatLng(37.7749, -122.4194);
+    const CircleOptions options = CircleOptions(
       circleRadius: 10.0,
       circleColor: "#FF0000",
       circleBlur: 0.5,
@@ -51,7 +56,7 @@ void main() {
       draggable: true,
     );
 
-    Map<String, dynamic> result = options.toJson(true);
+    final Map<String, dynamic> result = options.toJson();
     expect(result["circleRadius"], equals(10.0));
     expect(result["circleColor"], equals("#FF0000"));
     expect(result["circleBlur"], equals(0.5));
@@ -65,8 +70,8 @@ void main() {
   test(
       'test CircleOptions.toJson(addGeometry = false) should not contain geometry in the json',
       () {
-    LatLng geometry = LatLng(37.7749, -122.4194);
-    CircleOptions options = CircleOptions(
+        const LatLng geometry = LatLng(37.7749, -122.4194);
+        const CircleOptions options = CircleOptions(
       circleRadius: 10.0,
       circleColor: "#FF0000",
       circleBlur: 0.5,
@@ -78,7 +83,7 @@ void main() {
       draggable: true,
     );
 
-    Map<String, dynamic> result = options.toJson(false);
+    final Map<String, dynamic> result = options.toJson(false);
     expect(result["circleRadius"], equals(10.0));
     expect(result["circleColor"], equals("#FF0000"));
     expect(result["circleBlur"], equals(0.5));
@@ -91,11 +96,11 @@ void main() {
 
   test('Circle translate should update the circle geometry', () {
     // Arrange
-    CircleOptions options = CircleOptions(
+    const CircleOptions options = CircleOptions(
       geometry: LatLng(37.7749, -122.4194),
     );
-    Circle circle = Circle("circle1", options);
-    LatLng delta = LatLng(0.1, 0.2);
+    final Circle circle = Circle("circle1", options);
+    const LatLng delta = LatLng(0.1, 0.2);
 
     // Act
     circle.translate(delta);

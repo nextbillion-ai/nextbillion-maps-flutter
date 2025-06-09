@@ -1,5 +1,5 @@
-import 'package:test/test.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
+import 'package:test/test.dart';
 
 class MockPlatformWrapper extends PlatformWrapper {
   @override
@@ -9,22 +9,22 @@ class MockPlatformWrapper extends PlatformWrapper {
 void main() {
   test('SnapshotOptions toJson should convert to map correctly', () {
     // Arrange
-    double width = 500.0;
-    double height = 300.0;
-    LatLng centerCoordinate = LatLng(37.7749, -122.4194);
-    LatLngBounds bounds = LatLngBounds(
-      southwest: LatLng(37.7749, -122.4194),
-      northeast: LatLng(37.8095, -122.3927),
+    const double width = 500.0;
+    const double height = 300.0;
+    const LatLng centerCoordinate = LatLng(37.7749, -122.4194);
+    final LatLngBounds bounds = LatLngBounds(
+      southwest: const LatLng(37.7749, -122.4194),
+      northeast: const LatLng(37.8095, -122.3927),
     );
-    double zoomLevel = 10.0;
-    double pitch = 45.0;
-    double heading = 90.0;
-    String styleUri = "https://example.com/mapstyle";
-    String styleJson = '{"key": "value"}';
-    bool withLogo = true;
-    bool writeToDisk = false;
+    const double zoomLevel = 10.0;
+    const double pitch = 45.0;
+    const double heading = 90.0;
+    const String styleUri = "https://example.com/mapstyle";
+    const String styleJson = '{"key": "value"}';
+    const bool withLogo = true;
+    const bool writeToDisk = false;
 
-    SnapshotOptions options = SnapshotOptions(
+    final SnapshotOptions options = SnapshotOptions(
       width: width,
       height: height,
       centerCoordinate: centerCoordinate,
@@ -39,7 +39,7 @@ void main() {
     );
 
     // Act
-    Map<String, dynamic> result = options.toJson();
+    final Map<String, dynamic> result = options.toJson();
 
     // Assert
     expect(result['width'], equals(width));
@@ -65,24 +65,24 @@ void main() {
       'SnapshotOptions toJson should convert to map correctly when isAndroid == true',
       () {
     // Arrange
-    double width = 500.0;
-    double height = 300.0;
+    const double width = 500.0;
+    const double height = 300.0;
 
-    LatLng centerCoordinate = LatLng(37.7749, -122.4194);
+    const LatLng centerCoordinate = LatLng(37.7749, -122.4194);
 
-    LatLngBounds bounds = LatLngBounds(
-      southwest: LatLng(37.7749, -122.4194),
-      northeast: LatLng(37.8095, -122.3927),
+    final LatLngBounds bounds = LatLngBounds(
+      southwest: const LatLng(37.7749, -122.4194),
+      northeast: const LatLng(37.8095, -122.3927),
     );
-    double zoomLevel = 10.0;
-    double pitch = 45.0;
-    double heading = 90.0;
-    String styleUri = "https://example.com/mapstyle";
-    String styleJson = '{"key": "value"}';
-    bool withLogo = true;
-    bool writeToDisk = false;
+    const double zoomLevel = 10.0;
+    const double pitch = 45.0;
+    const double heading = 90.0;
+    const String styleUri = "https://example.com/mapstyle";
+    const String styleJson = '{"key": "value"}';
+    const bool withLogo = true;
+    const bool writeToDisk = false;
 
-    SnapshotOptions options = SnapshotOptions(
+    final SnapshotOptions options = SnapshotOptions(
       width: width,
       height: height,
       centerCoordinate: centerCoordinate,
@@ -135,8 +135,7 @@ void main() {
     };
 
     // Act
-
-    Map<String, dynamic> result = options.toJson();
+    final Map<String, dynamic> result = options.toJson();
 
     // Assert
     expect(result['width'], equals(width));

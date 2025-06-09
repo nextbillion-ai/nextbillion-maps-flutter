@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart'; // ignore: unnecessary_import
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 class AnnotationOrderPage extends ExamplePage {
-  AnnotationOrderPage()
+  const AnnotationOrderPage()
       : super(const Icon(Icons.layers), 'Annotation order maps');
 
   @override
-  Widget build(BuildContext context) => AnnotationOrderBody();
+  Widget build(BuildContext context) => const AnnotationOrderBody();
 }
 
 class AnnotationOrderBody extends StatefulWidget {
-  AnnotationOrderBody();
+  const AnnotationOrderBody();
 
   @override
   _AnnotationOrderBodyState createState() => _AnnotationOrderBodyState();
@@ -31,7 +31,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
       children: <Widget>[
         Card(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 0.0),
+            padding: EdgeInsets.zero,
             child: Column(
               children: <Widget>[
                 const Padding(
@@ -50,12 +50,6 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
                         target: center,
                         zoom: 5.0,
                       ),
-                      annotationOrder: const [
-                        AnnotationType.line,
-                        AnnotationType.symbol,
-                        AnnotationType.circle,
-                        AnnotationType.fill,
-                      ],
                     ),
                   ),
                 ),
@@ -65,7 +59,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
         ),
         Card(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 0.0),
+            padding: EdgeInsets.zero,
             child: Column(
               children: <Widget>[
                 const Padding(
@@ -102,11 +96,15 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
   }
 
   void onMapCreatedOne(NextbillionMapController controller) {
-    this.controllerOne = controller;
+    setState(() {
+      controllerOne = controller;
+    });
   }
 
   void onMapCreatedTwo(NextbillionMapController controller) {
-    this.controllerTwo = controller;
+    setState(() {
+      controllerTwo = controller;
+    });
   }
 
   void onStyleLoaded(NextbillionMapController controller) {
@@ -120,7 +118,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
       ),
     );
     controller.addLine(
-      LineOptions(
+      const LineOptions(
         draggable: false,
         lineColor: "#ff0000",
         lineWidth: 7.0,
@@ -136,7 +134,7 @@ class _AnnotationOrderBodyState extends State<AnnotationOrderBody> {
       ),
     );
     controller.addFill(
-      FillOptions(
+      const FillOptions(
         draggable: false,
         fillColor: "#008888",
         fillOpacity: 0.3,

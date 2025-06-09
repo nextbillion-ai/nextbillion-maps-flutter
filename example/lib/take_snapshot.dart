@@ -5,10 +5,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 class TakeSnapPage extends ExamplePage {
-  TakeSnapPage() : super(const Icon(Icons.camera_alt), 'Take snapshot');
+  const TakeSnapPage() : super(const Icon(Icons.camera_alt), 'Take snapshot');
 
   @override
   Widget build(BuildContext context) {
@@ -31,11 +31,13 @@ class FullMapState extends State<TakeSnapshot> {
   String? snapshotResult;
 
   void _onMapCreated(NextbillionMapController controller) {
-    mapController = controller;
+    setState(() {
+      mapController = controller;
+    });
   }
 
-  void _onTakeSnapshot([bool writeToDisk = true]) async {
-    final renderBox = mapKey.currentContext?.findRenderObject() as RenderBox;
+  Future<void> _onTakeSnapshot([bool writeToDisk = true]) async {
+    final renderBox = mapKey.currentContext!.findRenderObject()! as RenderBox;
 
     final snapshotOptions = SnapshotOptions(
       width: renderBox.size.width,
@@ -48,8 +50,8 @@ class FullMapState extends State<TakeSnapshot> {
     _setResult(result);
   }
 
-  void _onTakeSnapshotWithBounds() async {
-    final renderBox = mapKey.currentContext?.findRenderObject() as RenderBox;
+  Future<void> _onTakeSnapshotWithBounds() async {
+    final renderBox = mapKey.currentContext!.findRenderObject()! as RenderBox;
     final bounds = await mapController?.getVisibleRegion();
 
     final snapshotOptions = SnapshotOptions(
@@ -64,15 +66,15 @@ class FullMapState extends State<TakeSnapshot> {
     _setResult(uri);
   }
 
-  void _onTakeSnapshotWithCameraPosition() async {
-    final renderBox = mapKey.currentContext?.findRenderObject() as RenderBox;
+  Future<void> _onTakeSnapshotWithCameraPosition() async {
+    final renderBox = mapKey.currentContext!.findRenderObject()! as RenderBox;
 
     final snapshotOptions = SnapshotOptions(
       width: renderBox.size.width,
       height: renderBox.size.height,
       writeToDisk: true,
       withLogo: false,
-      centerCoordinate: LatLng(40.79796, -74.126410),
+      centerCoordinate: const LatLng(40.79796, -74.126410),
       zoomLevel: 12,
       pitch: 30,
       heading: 20,
@@ -90,7 +92,7 @@ class FullMapState extends State<TakeSnapshot> {
   }
 
   Uint8List convertBase64Image(String base64String) {
-    return Base64Decoder().convert(base64String.split(',').last);
+    return const Base64Decoder().convert(base64String.split(',').last);
   }
 
   @override
@@ -105,13 +107,13 @@ class FullMapState extends State<TakeSnapshot> {
             initialCameraPosition:
                 const CameraPosition(target: LatLng(0.0, 0.0)),
             myLocationEnabled: true,
-            styleString: NbMapStyles.SATELLITE,
+            styleString: NbMapStyles.satellite,
           ),
         ),
         const SizedBox(
           height: 5,
         ),
-        Container(
+        SizedBox(
           height: height * 0.4,
           child: Column(
             children: [
@@ -121,19 +123,19 @@ class FullMapState extends State<TakeSnapshot> {
                 children: [
                   ElevatedButton(
                     onPressed: _onTakeSnapshot,
-                    child: Text("Take Snap"),
+                    child: const Text("Take Snap"),
                   ),
                   ElevatedButton(
                     onPressed: _onTakeSnapshotWithBounds,
-                    child: Text("With Bounds"),
+                    child: const Text("With Bounds"),
                   ),
                   ElevatedButton(
                     onPressed: _onTakeSnapshotWithCameraPosition,
-                    child: Text("With Camera Position"),
+                    child: const Text("With Camera Position"),
                   ),
                   ElevatedButton(
                     onPressed: () => _onTakeSnapshot(false),
-                    child: Text("With Base64"),
+                    child: const Text("With Base64"),
                   ),
                 ],
               ),
