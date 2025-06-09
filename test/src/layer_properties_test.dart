@@ -4,7 +4,7 @@ import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 void main() {
   group('SymbolLayerProperties', () {
     test('SymbolLayerProperties toJson', () {
-      final properties = SymbolLayerProperties(
+      const properties = SymbolLayerProperties(
         visibility: 'visible',
       );
 
@@ -24,7 +24,7 @@ void main() {
     });
 
     test('SymbolLayerProperties copyWith', () {
-      SymbolLayerProperties properties = SymbolLayerProperties(
+      SymbolLayerProperties properties = const SymbolLayerProperties(
         visibility: 'visible',
       );
       expect(properties.visibility, 'visible');
@@ -40,7 +40,7 @@ void main() {
   });
   group('CircleLayerProperties', () {
     test('CircleLayerProperties toJson', () {
-      final properties = CircleLayerProperties(
+      const properties = CircleLayerProperties(
         visibility: 'visible',
       );
 
@@ -60,7 +60,7 @@ void main() {
     });
 
     test('CircleLayerProperties copyWith', () {
-      CircleLayerProperties properties = CircleLayerProperties(
+      CircleLayerProperties properties = const CircleLayerProperties(
         visibility: 'visible',
       );
       expect(properties.visibility, 'visible');
@@ -76,7 +76,7 @@ void main() {
   });
   group('FillLayerProperties', () {
     test('FillLayerProperties toJson', () {
-      final properties = FillLayerProperties(
+      const properties = FillLayerProperties(
         visibility: 'visible',
       );
 
@@ -96,7 +96,7 @@ void main() {
     });
 
     test('FillLayerProperties copyWith', () {
-      FillLayerProperties properties = FillLayerProperties(
+      FillLayerProperties properties = const FillLayerProperties(
         visibility: 'visible',
       );
       expect(properties.visibility, 'visible');
@@ -112,7 +112,7 @@ void main() {
   });
   group('LineLayerProperties', () {
     test('LineLayerProperties toJson', () {
-      final properties = LineLayerProperties(
+      const properties = LineLayerProperties(
         visibility: 'visible',
       );
 
@@ -132,7 +132,7 @@ void main() {
     });
 
     test('LineLayerProperties copyWith', () {
-      LineLayerProperties properties = LineLayerProperties(
+      LineLayerProperties properties = const LineLayerProperties(
         visibility: 'visible',
       );
       expect(properties.visibility, 'visible');
@@ -148,7 +148,7 @@ void main() {
   });
   group('RasterLayerProperties', () {
     test('RasterLayerProperties toJson', () {
-      final properties = RasterLayerProperties(
+      const properties = RasterLayerProperties(
         visibility: 'visible',
       );
 
@@ -168,7 +168,7 @@ void main() {
     });
 
     test('RasterLayerProperties copyWith', () {
-      RasterLayerProperties properties = RasterLayerProperties(
+      RasterLayerProperties properties = const RasterLayerProperties(
         visibility: 'visible',
       );
       expect(properties.visibility, 'visible');

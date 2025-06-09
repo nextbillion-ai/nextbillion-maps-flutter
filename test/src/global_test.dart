@@ -14,14 +14,14 @@ void main() {
     expect(globalChannel.name, equals('plugins.flutter.io/nb_maps_flutter'));
   });
   group('test gloabl.dart', () {
-    MethodChannel mockChannel = MockMethodChannel();
+    final MethodChannel mockChannel = MockMethodChannel();
 
     setUp(() {
       setTestingGlobalChannel(mockChannel);
     });
 
     test('installOfflineMapTiles test', () async {
-      final tilesDb = 'path/to/tiles.db';
+      const tilesDb = 'path/to/tiles.db';
       when(mockChannel.invokeMethod('installOfflineMapTiles', any))
           .thenAnswer((_) async => null);
       await installOfflineMapTiles(tilesDb);
@@ -32,8 +32,8 @@ void main() {
     });
 
     test('setOffline test', () async {
-      final offline = true;
-      final accessToken = 'your_access_token';
+      const offline = true;
+      const accessToken = 'your_access_token';
 
       when(mockChannel.invokeMethod('setOffline', any))
           .thenAnswer((_) async => null);
@@ -52,21 +52,21 @@ void main() {
       when(mockChannel.invokeMethod('setHttpHeaders', any))
           .thenAnswer((_) async => null);
       await setHttpHeaders(headers);
-      Map<String, dynamic> args = <String, dynamic>{
+      final args = <String, dynamic>{
         'headers': headers,
       };
       verify(mockChannel.invokeMethod('setHttpHeaders', args));
     });
 
     test('mergeOfflineRegions test', () async {
-      final path = 'path/to/regions';
-      final accessToken = 'your_access_token';
-      Map<String, dynamic> args = <String, dynamic>{
+      const path = 'path/to/regions';
+      const accessToken = 'your_access_token';
+      final args = <String, dynamic>{
         'path': path,
         'accessToken': accessToken,
       };
 
-      String regionsJson = '''
+      const String regionsJson = '''
         [
           {
             "id": 1,
@@ -98,7 +98,7 @@ void main() {
     });
 
     test('getListOfRegions test', () async {
-      final accessToken = 'your_access_token';
+      const accessToken = 'your_access_token';
       final args = <String, dynamic>{
         'accessToken': accessToken,
       };
@@ -131,9 +131,9 @@ void main() {
     });
 
     test('updateOfflineRegionMetadata test', () async {
-      final id = 1;
+      const id = 1;
       final metadata = {'name': 'Region 1'};
-      final accessToken = 'your_access_token';
+      const accessToken = 'your_access_token';
       final args = <String, dynamic>{
         'id': id,
         'accessToken': accessToken,
@@ -167,8 +167,8 @@ void main() {
     });
 
     test('setOfflineTileCountLimit test', () async {
-      final limit = 1000;
-      final accessToken = 'your_access_token';
+      const limit = 1000;
+      const accessToken = 'your_access_token';
       final args = <String, dynamic>{
         'limit': limit,
         'accessToken': accessToken,
@@ -180,8 +180,8 @@ void main() {
     });
 
     test('deleteOfflineRegion test', () async {
-      final id = 1;
-      final accessToken = 'your_access_token';
+      const id = 1;
+      const accessToken = 'your_access_token';
 
       final args = <String, dynamic>{
         'id': id,
@@ -198,16 +198,16 @@ void main() {
     test('downloadOfflineRegion test', () async {
       final definition = OfflineRegionDefinition(
         bounds: LatLngBounds(
-          southwest: LatLng(37.5, -122.5),
-          northeast: LatLng(37.9, -122.1),
+          southwest: const LatLng(37.5, -122.5),
+          northeast: const LatLng(37.9, -122.1),
         ),
         mapStyleUrl: 'https://example.com/style.json',
         minZoom: 10.0,
         maxZoom: 15.0,
       );
       final metadata = {'name': 'Region 1'};
-      final accessToken = 'your_access_token';
-      Function(DownloadRegionStatus event) onEvent = (event) => print(event);
+      const accessToken = 'your_access_token';
+      void onEvent(event) => {};
 
       when(mockChannel.invokeMethod('downloadOfflineRegion', any))
           .thenAnswer((_) async => '''
@@ -246,15 +246,15 @@ void main() {
 
     final definition = OfflineRegionDefinition(
       bounds: LatLngBounds(
-        southwest: LatLng(37.5, -122.5),
-        northeast: LatLng(37.9, -122.1),
+        southwest: const LatLng(37.5, -122.5),
+        northeast: const LatLng(37.9, -122.1),
       ),
       mapStyleUrl: 'https://example.com/style.json',
       minZoom: 10.0,
       maxZoom: 15.0,
     );
     final metadata = {'name': 'Region 1'};
-    final accessToken = 'your_access_token';
+    const accessToken = 'your_access_token';
 
     final mockChannel = MockMethodChannel();
     setTestingGlobalChannel(mockChannel);
@@ -263,11 +263,11 @@ void main() {
     final mockEventChannel = MockEventChannel();
     final error = PlatformException(code: 'Error', message: 'Test error');
 
-    EventChannelCreator eventChannelCreator = (channelName) {
+    MockEventChannel eventChannelCreator(channelName) {
       return mockEventChannel;
-    };
+    }
 
-    Stream stream = Stream.fromFuture(Future.error(error));
+    final Stream stream = Stream.fromFuture(Future.error(error));
     when(mockEventChannel.receiveBroadcastStream()).thenAnswer((_) => stream);
 
     when(mockChannel.invokeMethod('downloadOfflineRegion', any))

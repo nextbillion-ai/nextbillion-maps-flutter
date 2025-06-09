@@ -92,7 +92,8 @@ import static ai.nextbillion.maps.style.layers.Property.VISIBLE;
 import static ai.nextbillion.maps.style.layers.PropertyFactory.visibility;
 import static ai.nextbillion.maps_flutter.Convert.interpretNextbillionMapOptions;
 
-/** Controller of a single NbMaps MapView instance. */
+/** Controller of a single NbMaps MapView instance.
+ * @noinspection ALL*/
 @SuppressLint("MissingPermission")
 final class NextbillionMapController
     implements DefaultLifecycleObserver,
@@ -109,8 +110,7 @@ final class NextbillionMapController
         PlatformView {
 
   private static final String TAG = "NbMapController";
-  private final int id;
-  private final MethodChannel methodChannel;
+  protected final MethodChannel methodChannel;
   private final NbMapsPlugin.LifecycleProvider lifecycleProvider;
   private final float density;
   private final Context context;
@@ -119,24 +119,25 @@ final class NextbillionMapController
   private final Map<String, FeatureCollection> addedFeaturesByLayer;
   private final Map<String, MapSnapshotter> mSnapshotterMap;
   private MapView mapView;
-  private NextbillionMap nextbillionMap;
+  protected NextbillionMap nextbillionMap;
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
+
+  private int id;
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
   private boolean disposed = false;
-  private boolean dragEnabled = true;
   private MethodChannel.Result mapReadyResult;
   private LocationComponent locationComponent = null;
   private LocationEngine locationEngine = null;
   private LocationEngineCallback<LocationEngineResult> locationEngineCallback = null;
 //  private LocalizationPlugin localizationPlugin;
-  private Style style;
+  protected Style style;
   private Feature draggedFeature;
   private AndroidGesturesManager androidGesturesManager;
   private LatLng dragOrigin;
   private LatLng dragPrevious;
-  private LatLngBounds bounds = null;
+  protected LatLngBounds bounds = null;
   Style.OnStyleLoaded onStyleLoadedCallback =
       new Style.OnStyleLoaded() {
         @Override
@@ -167,11 +168,10 @@ final class NextbillionMapController
       boolean dragEnabled) {
     this.id = id;
     this.context = context;
-    this.dragEnabled = dragEnabled;
     this.styleStringInitial = styleStringInitial;
     this.mapView = new MapView(context, options);
     this.interactiveFeatureLayerIds = new HashSet<>();
-    this.addedFeaturesByLayer = new HashMap<String, FeatureCollection>();
+    this.addedFeaturesByLayer = new HashMap<>();
     this.density = context.getResources().getDisplayMetrics().density;
     this.lifecycleProvider = lifecycleProvider;
     if (dragEnabled) {
@@ -204,8 +204,9 @@ final class NextbillionMapController
     return trackCameraPosition ? nextbillionMap.getCameraPosition() : null;
   }
 
+  @SuppressLint("ClickableViewAccessibility")
   @Override
-  public void onMapReady(NextbillionMap nextbillionMap) {
+  public void onMapReady(@NonNull NextbillionMap nextbillionMap) {
     this.nextbillionMap = nextbillionMap;
     if (mapReadyResult != null) {
       mapReadyResult.success(null);
@@ -218,14 +219,11 @@ final class NextbillionMapController
     if (androidGesturesManager != null) {
       androidGesturesManager.setMoveGestureListener(new MoveGestureListener());
       mapView.setOnTouchListener(
-          new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-              androidGesturesManager.onTouchEvent(event);
+              (v, event) -> {
+                androidGesturesManager.onTouchEvent(event);
 
-              return draggedFeature != null;
-            }
-          });
+                return draggedFeature != null;
+              });
     }
 
     mapView.addOnStyleImageMissingListener(
@@ -325,7 +323,7 @@ final class NextbillionMapController
     return optionsBuilder.build();
   }
 
-  private void onUserLocationUpdate(Location location) {
+  protected void onUserLocationUpdate(Location location) {
     if (location == null) {
       return;
     }
@@ -339,9 +337,7 @@ final class NextbillionMapController
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       userLocation.put(
           "verticalAccuracy",
-          (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-              ? location.getVerticalAccuracyMeters()
-              : null);
+              location.getVerticalAccuracyMeters());
     }
     userLocation.put("timestamp", location.getTime());
 
@@ -363,7 +359,9 @@ final class NextbillionMapController
     GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
     addedFeaturesByLayer.put(sourceName, featureCollection);
 
-    geoJsonSource.setGeoJson(featureCollection);
+    if (geoJsonSource != null) {
+      geoJsonSource.setGeoJson(featureCollection);
+    }
   }
 
   private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
@@ -372,11 +370,13 @@ final class NextbillionMapController
     GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
     if (featureCollection != null && geoJsonSource != null) {
       final List<Feature> features = featureCollection.features();
-      for (int i = 0; i < features.size(); i++) {
-        final String id = features.get(i).id();
-        if (id.equals(feature.id())) {
-          features.set(i, feature);
-          break;
+      if (features != null) {
+        for (int i = 0; i < features.size(); i++) {
+          final String id = features.get(i).id();
+          if (id != null && id.equals(feature.id())) {
+            features.set(i, feature);
+            break;
+          }
         }
       }
 
@@ -391,7 +391,7 @@ final class NextbillionMapController
       String sourceLayer,
       Float minZoom,
       Float maxZoom,
-      PropertyValue[] properties,
+      PropertyValue<?>[] properties,
       boolean enableInteraction,
       Expression filter) {
 
@@ -426,7 +426,7 @@ final class NextbillionMapController
       String sourceLayer,
       Float minZoom,
       Float maxZoom,
-      PropertyValue[] properties,
+      PropertyValue<?>[] properties,
       boolean enableInteraction,
       Expression filter) {
     LineLayer lineLayer = new LineLayer(layerName, sourceName);
@@ -460,7 +460,7 @@ final class NextbillionMapController
       String sourceLayer,
       Float minZoom,
       Float maxZoom,
-      PropertyValue[] properties,
+      PropertyValue<?>[] properties,
       boolean enableInteraction,
       Expression filter) {
     FillLayer fillLayer = new FillLayer(layerName, sourceName);
@@ -494,7 +494,7 @@ final class NextbillionMapController
       String sourceLayer,
       Float minZoom,
       Float maxZoom,
-      PropertyValue[] properties,
+      PropertyValue<?>[] properties,
       boolean enableInteraction,
       Expression filter) {
     FillExtrusionLayer fillLayer = new FillExtrusionLayer(layerName, sourceName);
@@ -528,7 +528,7 @@ final class NextbillionMapController
       String sourceLayer,
       Float minZoom,
       Float maxZoom,
-      PropertyValue[] properties,
+      PropertyValue<?>[] properties,
       boolean enableInteraction,
       Expression filter) {
     CircleLayer circleLayer = new CircleLayer(layerName, sourceName);
@@ -567,8 +567,7 @@ final class NextbillionMapController
       Float minZoom,
       Float maxZoom,
       String belowLayerId,
-      PropertyValue[] properties,
-      Expression filter) {
+      PropertyValue<?>[] properties) {
     RasterLayer layer = new RasterLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
@@ -590,8 +589,7 @@ final class NextbillionMapController
       Float minZoom,
       Float maxZoom,
       String belowLayerId,
-      PropertyValue[] properties,
-      Expression filter) {
+      PropertyValue<?>[] properties) {
     HillshadeLayer layer = new HillshadeLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
@@ -613,8 +611,7 @@ final class NextbillionMapController
       Float minZoom,
       Float maxZoom,
       String belowLayerId,
-      PropertyValue[] properties,
-      Expression filter) {
+      PropertyValue<?>[] properties) {
     HeatmapLayer layer = new HeatmapLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
@@ -633,7 +630,7 @@ final class NextbillionMapController
   private Feature firstFeatureOnLayers(RectF in) {
     if (style != null) {
       final List<Layer> layers = style.getLayers();
-      final List<String> layersInOrder = new ArrayList<String>();
+      final List<String> layersInOrder = new ArrayList<>();
       for (Layer layer : layers) {
         String id = layer.getId();
         if (interactiveFeatureLayerIds.contains(id)) {
@@ -653,7 +650,7 @@ final class NextbillionMapController
   }
 
   @Override
-  public void onMethodCall(MethodCall call, MethodChannel.Result result) {
+  public void onMethodCall(MethodCall call, @NonNull MethodChannel.Result result) {
 
     switch (call.method) {
       case "map#waitForMap":
@@ -846,9 +843,7 @@ final class NextbillionMapController
         }
       case "map#getTelemetryEnabled":
         {
-//          final TelemetryEnabler.State telemetryState =
-//              TelemetryEnabler.retrieveTelemetryStateFromPreferences();
-//          result.success(telemetryState == TelemetryEnabler.State.ENABLED);
+          result.success(true);
           break;
         }
       case "map#invalidateAmbientCache":
@@ -902,8 +897,8 @@ final class NextbillionMapController
           final Double minzoom = call.argument("minzoom");
           final Double maxzoom = call.argument("maxzoom");
           final String filter = call.argument("filter");
-          final boolean enableInteraction = call.argument("enableInteraction");
-          final PropertyValue[] properties =
+          final boolean enableInteraction = Boolean.TRUE.equals(call.argument("enableInteraction"));
+          final PropertyValue<?>[] properties =
               LayerPropertyConverter.interpretSymbolLayerProperties(call.argument("properties"));
 
           Expression filterExpression = parseFilter(filter);
@@ -934,7 +929,7 @@ final class NextbillionMapController
           final Double maxzoom = call.argument("maxzoom");
           final String filter = call.argument("filter");
           final boolean enableInteraction = call.argument("enableInteraction");
-          final PropertyValue[] properties =
+          final PropertyValue<?>[] properties =
               LayerPropertyConverter.interpretLineLayerProperties(call.argument("properties"));
 
           Expression filterExpression = parseFilter(filter);
@@ -964,8 +959,8 @@ final class NextbillionMapController
           final Double minzoom = call.argument("minzoom");
           final Double maxzoom = call.argument("maxzoom");
           final String filter = call.argument("filter");
-          final boolean enableInteraction = call.argument("enableInteraction");
-          final PropertyValue[] properties =
+          final boolean enableInteraction = Boolean.TRUE.equals(call.argument("enableInteraction"));
+          final PropertyValue<?>[] properties =
               LayerPropertyConverter.interpretFillLayerProperties(call.argument("properties"));
 
           Expression filterExpression = parseFilter(filter);
@@ -996,7 +991,7 @@ final class NextbillionMapController
           final Double maxzoom = call.argument("maxzoom");
           final String filter = call.argument("filter");
           final boolean enableInteraction = call.argument("enableInteraction");
-          final PropertyValue[] properties =
+          final PropertyValue<?>[] properties =
               LayerPropertyConverter.interpretFillExtrusionLayerProperties(
                   call.argument("properties"));
 
@@ -1027,8 +1022,8 @@ final class NextbillionMapController
           final Double minzoom = call.argument("minzoom");
           final Double maxzoom = call.argument("maxzoom");
           final String filter = call.argument("filter");
-          final boolean enableInteraction = call.argument("enableInteraction");
-          final PropertyValue[] properties =
+          final boolean enableInteraction = Boolean.TRUE.equals(call.argument("enableInteraction"));
+          final PropertyValue<?>[] properties =
               LayerPropertyConverter.interpretCircleLayerProperties(call.argument("properties"));
 
           Expression filterExpression = parseFilter(filter);
@@ -1056,7 +1051,7 @@ final class NextbillionMapController
           final String belowLayerId = call.argument("belowLayerId");
           final Double minzoom = call.argument("minzoom");
           final Double maxzoom = call.argument("maxzoom");
-          final PropertyValue[] properties =
+          final PropertyValue<?>[] properties =
               LayerPropertyConverter.interpretRasterLayerProperties(call.argument("properties"));
 
           removeLayer(layerId);
@@ -1066,8 +1061,8 @@ final class NextbillionMapController
               minzoom != null ? minzoom.floatValue() : null,
               maxzoom != null ? maxzoom.floatValue() : null,
               belowLayerId,
-              properties,
-              null);
+              properties
+          );
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1080,7 +1075,7 @@ final class NextbillionMapController
           final String belowLayerId = call.argument("belowLayerId");
           final Double minzoom = call.argument("minzoom");
           final Double maxzoom = call.argument("maxzoom");
-          final PropertyValue[] properties =
+          final PropertyValue<?>[] properties =
               LayerPropertyConverter.interpretHillshadeLayerProperties(call.argument("properties"));
           addHillshadeLayer(
               layerId,
@@ -1088,8 +1083,8 @@ final class NextbillionMapController
               minzoom != null ? minzoom.floatValue() : null,
               maxzoom != null ? maxzoom.floatValue() : null,
               belowLayerId,
-              properties,
-              null);
+              properties
+          );
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1102,7 +1097,7 @@ final class NextbillionMapController
           final String belowLayerId = call.argument("belowLayerId");
           final Double minzoom = call.argument("minzoom");
           final Double maxzoom = call.argument("maxzoom");
-          final PropertyValue[] properties =
+          final PropertyValue<?>[] properties =
               LayerPropertyConverter.interpretHeatmapLayerProperties(call.argument("properties"));
           addHeatmapLayer(
               layerId,
@@ -1110,8 +1105,8 @@ final class NextbillionMapController
               minzoom != null ? minzoom.floatValue() : null,
               maxzoom != null ? maxzoom.floatValue() : null,
               belowLayerId,
-              properties,
-              null);
+              properties
+          );
           updateLocationComponentLayer();
 
           result.success(null);
@@ -1259,8 +1254,8 @@ final class NextbillionMapController
                   ? ((Double) call.argument("maxzoom")).floatValue()
                   : null,
               null,
-              new PropertyValue[] {},
-              null);
+              new PropertyValue[] {}
+          );
           result.success(null);
           break;
         }
@@ -1282,8 +1277,8 @@ final class NextbillionMapController
                   ? ((Double) call.argument("maxzoom")).floatValue()
                   : null,
               call.argument("belowLayerId"),
-              new PropertyValue[] {},
-              null);
+              new PropertyValue[] {}
+          );
           result.success(null);
           break;
         }
@@ -1363,9 +1358,11 @@ final class NextbillionMapController
             ((SymbolLayer) layer).setFilter(expression);
           } else {
             result.error(
-                "INVALID LAYER TYPE",
-                String.format("Layer '%s' does not support filtering.", layerId),
-                null);
+                    "INVALID LAYER TYPE",
+                    "Layer '" + layerId + "' does not support filtering.",
+                    null
+            );
+
             break;
           }
 
@@ -1456,13 +1453,10 @@ final class NextbillionMapController
                 result.success(result1);
                 mSnapshotterMap.remove(snapshotterID);
               },
-              new MapSnapshotter.ErrorHandler() {
-                @Override
-                public void onError(String error) {
-                  result.error("SNAPSHOT_ERROR", error, null);
-                  mSnapshotterMap.remove(snapshotterID);
-                }
-              });
+                  error -> {
+                    result.error("SNAPSHOT_ERROR", error, null);
+                    mSnapshotterMap.remove(snapshotterID);
+                  });
           break;
         }
       default:
@@ -1850,8 +1844,8 @@ final class NextbillionMapController
     }
   }
 
-  private void updateMyLocationEnabled() {
-    if (this.locationComponent == null && myLocationEnabled) {
+  void updateMyLocationEnabled() {
+    if (this.locationComponent == null && myLocationEnabled && nextbillionMap.getStyle() != null) {
       enableLocationComponent(nextbillionMap.getStyle());
     }
 
@@ -2065,7 +2059,7 @@ final class NextbillionMapController
   }
 
   /** Simple Listener to listen for the status of camera movements. */
-  public class OnCameraMoveFinishedListener implements NextbillionMap.CancelableCallback {
+  public static class OnCameraMoveFinishedListener implements NextbillionMap.CancelableCallback {
     @Override
     public void onFinish() {}
 
@@ -2076,17 +2070,17 @@ final class NextbillionMapController
   private class MoveGestureListener implements MoveGestureDetector.OnMoveGestureListener {
 
     @Override
-    public boolean onMoveBegin(MoveGestureDetector detector) {
+    public boolean onMoveBegin(@NonNull MoveGestureDetector detector) {
       return NextbillionMapController.this.onMoveBegin(detector);
     }
 
     @Override
-    public boolean onMove(MoveGestureDetector detector, float distanceX, float distanceY) {
+    public boolean onMove(@NonNull MoveGestureDetector detector, float distanceX, float distanceY) {
       return NextbillionMapController.this.onMove(detector);
     }
 
     @Override
-    public void onMoveEnd(MoveGestureDetector detector, float velocityX, float velocityY) {
+    public void onMoveEnd(@NonNull MoveGestureDetector detector, float velocityX, float velocityY) {
       NextbillionMapController.this.onMoveEnd(detector);
     }
   }

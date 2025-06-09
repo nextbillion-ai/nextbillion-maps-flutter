@@ -1,0 +1,16 @@
+--maxwidth 160
+--wraparguments before-first
+--wrapcollections before-first
+--wrapconditions before-first
+--wrapparameters before-first
+--indent 4
+--allman false
+--swiftversion 5.0
+--empty void
+--trimwhitespace always
+--importgrouping alphabetized
+--exclude Pods,Generated
+--commas inline
+--groupblanklines true
+--rules braces
+

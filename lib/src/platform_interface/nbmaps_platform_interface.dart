@@ -74,7 +74,7 @@ abstract class NbMapsGlPlatform {
   Future invalidateAmbientCache();
   Future<LatLng?> requestMyLocationLatLng();
 
-  Future<LatLngBounds> getVisibleRegion();
+  Future<LatLngBounds?> getVisibleRegion();
 
   Future<void> setStyleString(String styleString);
 
@@ -98,13 +98,13 @@ abstract class NbMapsGlPlatform {
 
   Future<void> setVisibility(String layerId, bool isVisible);
 
-  Future<Point> toScreenLocation(LatLng latLng);
+  Future<Point?> toScreenLocation(LatLng latLng);
 
   Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs);
 
-  Future<LatLng> toLatLng(Point screenLocation);
+  Future<LatLng?> toLatLng(Point screenLocation);
 
-  Future<double> getMetersPerPixelAtLatitude(double latitude);
+  Future<double?> getMetersPerPixelAtLatitude(double latitude);
 
   Future<void> addGeoJsonSource(String sourceId, Map<String, dynamic> geojson,
       {String? promoteId});
@@ -184,9 +184,9 @@ abstract class NbMapsGlPlatform {
 
   Future<void> addSource(String sourceId, SourceProperties properties);
 
-  Future<String> takeSnapshot(SnapshotOptions snapshotOptions);
+  Future<String?> takeSnapshot(SnapshotOptions snapshotOptions);
 
-  Future<String> findBelowLayerId(List<String> belowAt);
+  Future<String?> findBelowLayerId(List<String> belowAt);
 
   @mustCallSuper
   void dispose() {

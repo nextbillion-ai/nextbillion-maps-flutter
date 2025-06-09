@@ -8,7 +8,7 @@ void main() {
       home: Scaffold(
         body: NBMap(
           initialCameraPosition:
-              CameraPosition(target: LatLng(1.3, 108.2), zoom: 15.0),
+              const CameraPosition(target: LatLng(1.3, 108.2), zoom: 15.0),
         ),
       ),
     ));
@@ -19,7 +19,7 @@ void main() {
       home: Scaffold(
         body: NBMap(
           initialCameraPosition:
-              CameraPosition(target: LatLng(37, 128.2), zoom: 14.0),
+              const CameraPosition(target: LatLng(37, 128.2), zoom: 14.0),
         ),
       ),
     ));

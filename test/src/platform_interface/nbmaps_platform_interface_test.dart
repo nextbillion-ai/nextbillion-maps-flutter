@@ -5,10 +5,10 @@ import 'package:test/test.dart';
 void main() {
   test('verify dispose functionalities', () {
     WidgetsFlutterBinding.ensureInitialized();
-    NbMapsGlPlatform platform = MethodChannelNbMapsGl();
+    final NbMapsGlPlatform platform = MethodChannelNbMapsGl();
     expect(platform, isNotNull);
     platform.onInfoWindowTappedPlatform.add((String str) {
-      return null;
+      return;
     });
     expect(platform.onInfoWindowTappedPlatform.length, equals(1));
     platform.initPlatform(1);
