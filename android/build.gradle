@@ -35,12 +35,8 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     dependencies {
-        implementation 'ai.nextbillion:nb-maps-android:1.1.7'
-        implementation 'com.squareup.okhttp3:okhttp:4.9.0'
-    }
-    compileOptions {
-        sourceCompatibility 1.8
-        targetCompatibility 1.8
+        implementation 'ai.nextbillion:nb-maps-android:1.2.0'
+        implementation 'com.squareup.okhttp3:okhttp:4.10.0'
     }
 
     buildFeatures {
