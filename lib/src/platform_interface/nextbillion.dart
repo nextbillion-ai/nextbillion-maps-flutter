@@ -27,15 +27,15 @@ class NextBillion {
         "nextbillion/set_access_key", config);
   }
 
-  static Future<String> getBaseUri() async {
-    return await _nextBillionChannel.invokeMethod("nextbillion/get_base_uri");
-  }
-
-  static Future<void> setBaseUri(String baseUri) async {
-    Map<String, dynamic> config = {"baseUri": baseUri};
-    return await _nextBillionChannel.invokeMethod(
-        "nextbillion/set_base_uri", config);
-  }
+  // static Future<String> getBaseUri() async {
+  //   return await _nextBillionChannel.invokeMethod("nextbillion/get_base_uri");
+  // }
+  //
+  // static Future<void> setBaseUri(String baseUri) async {
+  //   Map<String, dynamic> config = {"baseUri": baseUri};
+  //   return await _nextBillionChannel.invokeMethod(
+  //       "nextbillion/set_base_uri", config);
+  // }
 
   static Future<void> setApiKeyHeaderName(String apiKeyHeaderName) async {
     Map<String, dynamic> config = {"apiKeyHeaderName": apiKeyHeaderName};

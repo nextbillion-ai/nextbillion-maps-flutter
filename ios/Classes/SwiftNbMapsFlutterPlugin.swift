@@ -47,13 +47,14 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
                 }
                 result(nil)
             case "nextbillion/get_base_uri":
-                result(NGLAccountManager.apiBaseURL.absoluteString)
+//                result(NGLAccountManager.apiBaseURL.absoluteString)
+                result(nil)
             case "nextbillion/set_base_uri":
-                if let args = call.arguments as? [String: Any] {
-                    if let baseUri = args["baseUri"] as? String? {
-                        NGLAccountManager.setAPIBaseURL(URL(string: baseUri!)!)
-                    }
-                }
+//                if let args = call.arguments as? [String: Any] {
+//                    if let baseUri = args["baseUri"] as? String? {
+//                        NGLAccountManager.setAPIBaseURL(URL(string: baseUri!)!)
+//                    }
+//                }
                 result(nil)
             case "nextbillion/set_key_header_name":
                 if let args = call.arguments as? [String: Any] {
