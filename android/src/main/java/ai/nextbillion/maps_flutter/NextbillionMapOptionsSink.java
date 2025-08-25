@@ -14,6 +14,7 @@ interface NextbillionMapOptionsSink {
   // TODO: styleString is not actually a part of options. consider moving
   void setStyleString(String styleString);
 
+  void setStyleType(String styleType);
   void setMinMaxZoomPreference(Float min, Float max);
 
   void setRotateGesturesEnabled(boolean rotateGesturesEnabled);
