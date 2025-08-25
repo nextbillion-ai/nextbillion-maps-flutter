@@ -4,208 +4,218 @@ package ai.nextbillion.maps_flutter;
 import android.content.Context;
 import android.view.Gravity;
 
+import java.util.Objects;
+
 import ai.nextbillion.maps.camera.CameraPosition;
 import ai.nextbillion.maps.core.NextbillionMapOptions;
 import ai.nextbillion.maps.geometry.LatLngBounds;
 import io.flutter.plugin.common.BinaryMessenger;
 
 class NbMapBuilder implements NextbillionMapOptionsSink {
-  public final String TAG = getClass().getSimpleName();
-  private final NextbillionMapOptions options = new NextbillionMapOptions().attributionEnabled(false);
-  private boolean trackCameraPosition = false;
-  private boolean myLocationEnabled = false;
-  private boolean dragEnabled = true;
-  private int myLocationTrackingMode = 0;
-  private int myLocationRenderMode = 0;
-  private String styleString = "https://api.nextbillion.io/tt/style/1/style/22.2.1-9?map=2/basic_street-light";
-  private LatLngBounds bounds = null;
+    public final String TAG = getClass().getSimpleName();
+    private final NextbillionMapOptions options = new NextbillionMapOptions().attributionEnabled(false);
+    private boolean trackCameraPosition = false;
+    private boolean myLocationEnabled = false;
+    private boolean dragEnabled = true;
+    private int myLocationTrackingMode = 0;
+    private int myLocationRenderMode = 0;
+    private String styleString;
 
-  NextbillionMapController build(
-      int id,
-      Context context,
-      BinaryMessenger messenger,
-      NbMapsPlugin.LifecycleProvider lifecycleProvider) {
-    final NextbillionMapController controller =
-        new NextbillionMapController(
-            id,
-            context,
-            messenger,
-            lifecycleProvider,
-            options,
-            styleString,
-            dragEnabled);
-    controller.init();
-    controller.setMyLocationEnabled(myLocationEnabled);
-    controller.setMyLocationTrackingMode(myLocationTrackingMode);
-    controller.setMyLocationRenderMode(myLocationRenderMode);
-    controller.setTrackCameraPosition(trackCameraPosition);
+    private String styleType;
+    private LatLngBounds bounds = null;
 
-    if (null != bounds) {
-      controller.setCameraTargetBounds(bounds);
+    NextbillionMapController build(
+            int id,
+            Context context,
+            BinaryMessenger messenger,
+            NbMapsPlugin.LifecycleProvider lifecycleProvider) {
+        final NextbillionMapController controller =
+                new NextbillionMapController(
+                        id,
+                        context,
+                        messenger,
+                        lifecycleProvider,
+                        options,
+                        styleString,
+                        styleType,
+                        dragEnabled);
+        controller.init();
+        controller.setMyLocationEnabled(myLocationEnabled);
+        controller.setMyLocationTrackingMode(myLocationTrackingMode);
+        controller.setMyLocationRenderMode(myLocationRenderMode);
+        controller.setTrackCameraPosition(trackCameraPosition);
+
+        if (null != bounds) {
+            controller.setCameraTargetBounds(bounds);
+        }
+
+        return controller;
     }
 
-    return controller;
-  }
-
-  public void setInitialCameraPosition(CameraPosition position) {
-    options.camera(position);
-  }
-
-  @Override
-  public void setCompassEnabled(boolean compassEnabled) {
-    options.compassEnabled(compassEnabled);
-  }
-
-  @Override
-  public void setCameraTargetBounds(LatLngBounds bounds) {
-    this.bounds = bounds;
-  }
-
-  @Override
-  public void setStyleString(String styleString) {
-    this.styleString = styleString;
-    // options. styleString(styleString);
-  }
-
-  @Override
-  public void setMinMaxZoomPreference(Float min, Float max) {
-    if (min != null) {
-      options.minZoomPreference(min);
+    public void setInitialCameraPosition(CameraPosition position) {
+        options.camera(position);
     }
-    if (max != null) {
-      options.maxZoomPreference(max);
+
+    @Override
+    public void setCompassEnabled(boolean compassEnabled) {
+        options.compassEnabled(compassEnabled);
     }
-  }
 
-  @Override
-  public void setTrackCameraPosition(boolean trackCameraPosition) {
-    this.trackCameraPosition = trackCameraPosition;
-  }
-
-  @Override
-  public void setRotateGesturesEnabled(boolean rotateGesturesEnabled) {
-    options.rotateGesturesEnabled(rotateGesturesEnabled);
-  }
-
-  @Override
-  public void setScrollGesturesEnabled(boolean scrollGesturesEnabled) {
-    options.scrollGesturesEnabled(scrollGesturesEnabled);
-  }
-
-  @Override
-  public void setTiltGesturesEnabled(boolean tiltGesturesEnabled) {
-    options.tiltGesturesEnabled(tiltGesturesEnabled);
-  }
-
-  @Override
-  public void setZoomGesturesEnabled(boolean zoomGesturesEnabled) {
-    options.zoomGesturesEnabled(zoomGesturesEnabled);
-  }
-
-  @Override
-  public void setMyLocationEnabled(boolean myLocationEnabled) {
-    this.myLocationEnabled = myLocationEnabled;
-  }
-
-  @Override
-  public void setMyLocationTrackingMode(int myLocationTrackingMode) {
-    this.myLocationTrackingMode = myLocationTrackingMode;
-  }
-
-  @Override
-  public void setMyLocationRenderMode(int myLocationRenderMode) {
-    this.myLocationRenderMode = myLocationRenderMode;
-  }
-
-  public void setLogoViewMargins(int x, int y) {
-    options.logoMargins(
-        new int[] {
-          (int) x, // left
-          (int) 0, // top
-          (int) 0, // right
-          (int) y, // bottom
-        });
-  }
-
-  @Override
-  public void setCompassGravity(int gravity) {
-    switch (gravity) {
-      case 0:
-        options.compassGravity(Gravity.TOP | Gravity.START);
-        break;
-      case 1:
-        options.compassGravity(Gravity.TOP | Gravity.END);
-        break;
-      case 2:
-        options.compassGravity(Gravity.BOTTOM | Gravity.START);
-        break;
-      case 3:
-        options.compassGravity(Gravity.BOTTOM | Gravity.END);
-        break;
+    @Override
+    public void setCameraTargetBounds(LatLngBounds bounds) {
+        this.bounds = bounds;
     }
-  }
 
-  @Override
-  public void setCompassViewMargins(int x, int y) {
-    switch (options.getCompassGravity()) {
-      case Gravity.TOP | Gravity.START:
-        options.compassMargins(new int[] {(int) x, (int) y, 0, 0});
-        break;
-        // If the application code has not specified gravity, assume the platform
-        // default for the compass which is top-right
-      default:
-      case Gravity.TOP | Gravity.END:
-        options.compassMargins(new int[] {0, (int) y, (int) x, 0});
-        break;
-      case Gravity.BOTTOM | Gravity.START:
-        options.compassMargins(new int[] {(int) x, 0, 0, (int) y});
-        break;
-      case Gravity.BOTTOM | Gravity.END:
-        options.compassMargins(new int[] {0, 0, (int) x, (int) y});
-        break;
+    @Override
+    public void setStyleString(String styleString) {
+        this.styleString = styleString;
+        // options. styleString(styleString);
     }
-  }
 
-  @Override
-  public void setAttributionButtonGravity(int gravity) {
-    switch (gravity) {
-      case 0:
-        options.attributionGravity(Gravity.TOP | Gravity.START);
-        break;
-      case 1:
-        options.attributionGravity(Gravity.TOP | Gravity.END);
-        break;
-      case 2:
-        options.attributionGravity(Gravity.BOTTOM | Gravity.START);
-        break;
-      case 3:
-        options.attributionGravity(Gravity.BOTTOM | Gravity.END);
-        break;
+    @Override
+    public void setStyleType(String styleType) {
+        this.styleType = styleType;
     }
-  }
 
-  @Override
-  public void setAttributionButtonMargins(int x, int y) {
-    switch (options.getAttributionGravity()) {
-      case Gravity.TOP | Gravity.START:
-        options.attributionMargins(new int[] {(int) x, (int) y, 0, 0});
-        break;
-      case Gravity.TOP | Gravity.END:
-        options.attributionMargins(new int[] {0, (int) y, (int) x, 0});
-        break;
-        // If the application code has not specified gravity, assume the platform
-        // default for the attribution button which is bottom left
-      default:
-      case Gravity.BOTTOM | Gravity.START:
-        options.attributionMargins(new int[] {(int) x, 0, 0, (int) y});
-        break;
-      case Gravity.BOTTOM | Gravity.END:
-        options.attributionMargins(new int[] {0, 0, (int) x, (int) y});
-        break;
+    @Override
+    public void setMinMaxZoomPreference(Float min, Float max) {
+        if (min != null) {
+            options.minZoomPreference(min);
+        }
+        if (max != null) {
+            options.maxZoomPreference(max);
+        }
     }
-  }
 
-  public void setDragEnabled(boolean enabled) {
-    this.dragEnabled = enabled;
-  }
+    @Override
+    public void setTrackCameraPosition(boolean trackCameraPosition) {
+        this.trackCameraPosition = trackCameraPosition;
+    }
+
+    @Override
+    public void setRotateGesturesEnabled(boolean rotateGesturesEnabled) {
+        options.rotateGesturesEnabled(rotateGesturesEnabled);
+    }
+
+    @Override
+    public void setScrollGesturesEnabled(boolean scrollGesturesEnabled) {
+        options.scrollGesturesEnabled(scrollGesturesEnabled);
+    }
+
+    @Override
+    public void setTiltGesturesEnabled(boolean tiltGesturesEnabled) {
+        options.tiltGesturesEnabled(tiltGesturesEnabled);
+    }
+
+    @Override
+    public void setZoomGesturesEnabled(boolean zoomGesturesEnabled) {
+        options.zoomGesturesEnabled(zoomGesturesEnabled);
+    }
+
+    @Override
+    public void setMyLocationEnabled(boolean myLocationEnabled) {
+        this.myLocationEnabled = myLocationEnabled;
+    }
+
+    @Override
+    public void setMyLocationTrackingMode(int myLocationTrackingMode) {
+        this.myLocationTrackingMode = myLocationTrackingMode;
+    }
+
+    @Override
+    public void setMyLocationRenderMode(int myLocationRenderMode) {
+        this.myLocationRenderMode = myLocationRenderMode;
+    }
+
+    public void setLogoViewMargins(int x, int y) {
+        options.logoMargins(
+                new int[]{
+                        (int) x, // left
+                        (int) 0, // top
+                        (int) 0, // right
+                        (int) y, // bottom
+                });
+    }
+
+    @Override
+    public void setCompassGravity(int gravity) {
+        switch (gravity) {
+            case 0:
+                options.compassGravity(Gravity.TOP | Gravity.START);
+                break;
+            case 1:
+                options.compassGravity(Gravity.TOP | Gravity.END);
+                break;
+            case 2:
+                options.compassGravity(Gravity.BOTTOM | Gravity.START);
+                break;
+            case 3:
+                options.compassGravity(Gravity.BOTTOM | Gravity.END);
+                break;
+        }
+    }
+
+    @Override
+    public void setCompassViewMargins(int x, int y) {
+        switch (options.getCompassGravity()) {
+            case Gravity.TOP | Gravity.START:
+                options.compassMargins(new int[]{(int) x, (int) y, 0, 0});
+                break;
+            // If the application code has not specified gravity, assume the platform
+            // default for the compass which is top-right
+            default:
+            case Gravity.TOP | Gravity.END:
+                options.compassMargins(new int[]{0, (int) y, (int) x, 0});
+                break;
+            case Gravity.BOTTOM | Gravity.START:
+                options.compassMargins(new int[]{(int) x, 0, 0, (int) y});
+                break;
+            case Gravity.BOTTOM | Gravity.END:
+                options.compassMargins(new int[]{0, 0, (int) x, (int) y});
+                break;
+        }
+    }
+
+    @Override
+    public void setAttributionButtonGravity(int gravity) {
+        switch (gravity) {
+            case 0:
+                options.attributionGravity(Gravity.TOP | Gravity.START);
+                break;
+            case 1:
+                options.attributionGravity(Gravity.TOP | Gravity.END);
+                break;
+            case 2:
+                options.attributionGravity(Gravity.BOTTOM | Gravity.START);
+                break;
+            case 3:
+                options.attributionGravity(Gravity.BOTTOM | Gravity.END);
+                break;
+        }
+    }
+
+    @Override
+    public void setAttributionButtonMargins(int x, int y) {
+        switch (options.getAttributionGravity()) {
+            case Gravity.TOP | Gravity.START:
+                options.attributionMargins(new int[]{(int) x, (int) y, 0, 0});
+                break;
+            case Gravity.TOP | Gravity.END:
+                options.attributionMargins(new int[]{0, (int) y, (int) x, 0});
+                break;
+            // If the application code has not specified gravity, assume the platform
+            // default for the attribution button which is bottom left
+            default:
+            case Gravity.BOTTOM | Gravity.START:
+                options.attributionMargins(new int[]{(int) x, 0, 0, (int) y});
+                break;
+            case Gravity.BOTTOM | Gravity.END:
+                options.attributionMargins(new int[]{0, 0, (int) x, (int) y});
+                break;
+        }
+    }
+
+    public void setDragEnabled(boolean enabled) {
+        this.dragEnabled = enabled;
+    }
 }

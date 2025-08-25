@@ -1298,12 +1298,43 @@ class NextbillionMapController extends ChangeNotifier {
     return await _nbMapsGlPlatform.getVisibleRegion();
   }
 
-  /// Update map style for MapView
+  /// Update map style using a custom style URL or JSON string.
+  /// 
+  /// This method allows you to set a custom map style using either:
+  /// - A URL to a style JSON file (e.g., "https://example.com/style.json")
+  /// - A JSON string containing the style definition
+  /// - A local asset path (e.g., "assets/style.json")
+  /// 
+  /// Note: This method has higher priority than [setStyleType]. If both
+  /// [setStyleString] and [setStyleType] are called, the style string will
+  /// take precedence.
+  /// 
+  /// [styleString] - The style URL or JSON string to apply
   Future<void> setStyleString(String styleString) async {
     if (_disposed) {
       return;
     }
     return await _nbMapsGlPlatform.setStyleString(styleString);
+  }
+
+  /// Switch map style using predefined style types.
+  /// 
+  /// This method allows you to quickly switch between predefined map styles:
+  /// - [NBMapStyleType.bright] - Light theme with good contrast
+  /// - [NBMapStyleType.night] - Dark theme for low-light conditions
+  /// - [NBMapStyleType.satellite] - Satellite imagery with labels
+  /// 
+  /// Note: This method has lower priority than [setStyleString]. If both
+  /// [setStyleString] and [setStyleType] are called, the style string will
+  /// take precedence. It's recommended to use [setStyleType] for initial
+  /// style configuration and [setStyleString] for custom styles.
+  /// 
+  /// [styleType] - The predefined style type to apply
+  Future<void> setStyleType(NBMapStyleType styleType) async {
+    if (_disposed) {
+      return;
+    }
+    return await _nbMapsGlPlatform.setStyleType(styleType);
   }
 
   /// Adds an image to the style currently displayed in the map, so that it can later be referred to by the provided name.

@@ -5,6 +5,7 @@ import UIKit
 class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegate, NextbillionMapOptionsSink,
     UIGestureRecognizerDelegate
 {
+    
     private var registrar: FlutterPluginRegistrar
     private var channel: FlutterMethodChannel?
 
@@ -1724,7 +1725,9 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
         } else if
             !styleString.hasPrefix("http://"),
             !styleString.hasPrefix("https://"),
-            !styleString.hasPrefix("nbmaps://")
+            !styleString.hasPrefix("nbmaps://"),
+            !styleString.hasPrefix("tomtom://"),
+            !styleString.hasPrefix("maptiler:/")
         {
             // We are assuming that the style will be loaded from an asset here.
             let assetPath = registrar.lookupKey(forAsset: styleString)
@@ -1733,6 +1736,10 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
         } else {
             mapView.styleURL = URL(string: styleString)
         }
+    }
+    
+    func setStyleType(styleType: NGMapStyleType) {
+        mapView.setStyleWith(styleType)
     }
 
     func setRotateGesturesEnabled(rotateGesturesEnabled: Bool) {
