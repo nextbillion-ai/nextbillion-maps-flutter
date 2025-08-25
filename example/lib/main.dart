@@ -11,10 +11,10 @@ import 'animate_camera.dart';
 import 'annotation_order_maps.dart';
 import 'click_annotations.dart';
 import 'custom_marker.dart';
-import 'full_map.dart';
 import 'layer.dart';
 import 'line.dart';
 import 'local_style.dart';
+import 'map_style_switch.dart';
 import 'map_ui.dart';
 import 'move_camera.dart';
 import 'offline_regions.dart';
@@ -30,7 +30,7 @@ import 'take_snapshot.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   MapUiPage(),
-  FullMapPage(),
+  MapStyleSwitchPage(),
   AnimateCameraPage(),
   MoveCameraPage(),
   PlaceSymbolPage(),
@@ -59,6 +59,10 @@ class MapsDemo extends StatefulWidget {
 }
 
 class _MapsDemoState extends State<MapsDemo> {
+  // By default , the maps SDK is using the 'WellKnownTileServer.nbTomtom' tile server
+  WellKnownTileServer currentTileServer = WellKnownTileServer.nbTomtom;
+  bool isSwitchingTileServer = false;
+
   @override
   void initState() {
     super.initState();
@@ -106,22 +110,131 @@ class _MapsDemoState extends State<MapsDemo> {
             )));
   }
 
+  Future<void> _switchTileServer() async {
+    if (isSwitchingTileServer) return;
+
+    setState(() {
+      isSwitchingTileServer = true;
+    });
+
+    try {
+      // Switch to the other tile server
+      final newTileServer = currentTileServer == WellKnownTileServer.nbTomtom
+          ? WellKnownTileServer.nbMapTiler
+          : WellKnownTileServer.nbTomtom;
+
+      final success = await NextBillion.switchWellKnownTileServer(newTileServer);
+      
+      if (success) {
+        setState(() {
+          currentTileServer = newTileServer;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Switched to ${_getTileServerName(newTileServer)}'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Failed to switch tile server'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error switching tile server: $e'),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
+      ));
+    } finally {
+      setState(() {
+        isSwitchingTileServer = false;
+      });
+    }
+  }
+
+  String _getTileServerName(WellKnownTileServer server) {
+    switch (server) {
+      case WellKnownTileServer.nbTomtom:
+        return 'TomTom';
+      case WellKnownTileServer.nbMapTiler:
+        return 'MapTiler';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('NbMaps examples')),
+      appBar: AppBar(
+        title: const Text('NbMaps examples'),
+        actions: [
+          // Tile Server Switch Button
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton.icon(
+              onPressed: isSwitchingTileServer ? null : _switchTileServer,
+              icon: isSwitchingTileServer 
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.swap_horiz, size: 16),
+              label: Text(
+                isSwitchingTileServer 
+                    ? 'Switching...' 
+                    : _getTileServerName(currentTileServer),
+                style: const TextStyle(fontSize: 12),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: MapsDemo.ACCESS_KEY.isEmpty ||
               MapsDemo.ACCESS_KEY.contains("YOUR_TOKEN")
           ? buildAccessTokenWarning()
-          : ListView.separated(
-              itemCount: _allPages.length,
-              separatorBuilder: (BuildContext context, int index) =>
-                  const Divider(height: 1),
-              itemBuilder: (_, int index) => ListTile(
-                leading: _allPages[index].leading,
-                title: Text(_allPages[index].title),
-                onTap: () => _pushPage(context, _allPages[index]),
-              ),
+          : Column(
+              children: [
+                // Current Tile Server Info
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  color: Colors.grey[100],
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Current Tile Server: ${_getTileServerName(currentTileServer)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Examples List
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: _allPages.length,
+                    separatorBuilder: (BuildContext context, int index) =>
+                        const Divider(height: 1),
+                    itemBuilder: (_, int index) => ListTile(
+                      leading: _allPages[index].leading,
+                      title: Text(_allPages[index].title),
+                      onTap: () => _pushPage(context, _allPages[index]),
+                    ),
+                  ),
+                ),
+              ],
             ),
     );
   }

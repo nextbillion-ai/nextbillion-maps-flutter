@@ -34,3 +34,6 @@ part 'src/platform_interface/snapshot.dart';
 part 'src/platform_interface/nbmaps_platform_interface.dart';
 part 'src/platform_interface/source_properties.dart';
 part 'src/platform_interface/nextbillion.dart';
+part 'src/platform_interface/well_known_tile_server.dart';
+part 'src/platform_interface/nb_map_style_type.dart';
+part 'src/platform_interface/nb_default_style.dart';

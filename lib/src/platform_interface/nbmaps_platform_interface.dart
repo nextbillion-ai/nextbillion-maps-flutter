@@ -78,6 +78,8 @@ abstract class NbMapsGlPlatform {
 
   Future<void> setStyleString(String styleString);
 
+  Future<void> setStyleType(NBMapStyleType type);
+
   Future<void> addImage(String name, Uint8List bytes, [bool sdf = false]);
 
   Future<void> addImageSource(

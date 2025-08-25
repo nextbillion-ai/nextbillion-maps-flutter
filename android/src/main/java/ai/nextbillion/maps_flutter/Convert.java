@@ -220,6 +220,12 @@ class Convert {
     if (styleString != null) {
       sink.setStyleString(toString(styleString));
     }
+
+    final Object styleType = data.get("styleType");
+    if (styleString != null) {
+      sink.setStyleType(toString(styleType));
+    }
+
     final Object minMaxZoomPreference = data.get("minMaxZoomPreference");
     if (minMaxZoomPreference != null) {
       final List<?> zoomPreferenceData = toList(minMaxZoomPreference);

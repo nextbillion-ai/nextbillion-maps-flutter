@@ -35,6 +35,29 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
                     NGLAccountManager.crossPlatformInfo = crossPlatformInfo
                 }
                 result(nil)
+            case "nextbillion/init_nextbillion_tile_server":
+                if let args = call.arguments as? [String: Any] {
+                    if let token = args["accessKey"] as? String? {
+                        NGLAccountManager.accessToken = token
+                    }
+                    
+                    if let server = args["server"] as? String? {
+                        if server == "NGLTomTom" {
+                            NGLAccountManager.use(.tomTom)
+                        } else if server == "NGLMapTiler" {
+                            NGLAccountManager.use(.mapTiler)
+                        }
+                    }
+                    
+                    let libraryBundle = Bundle(for: SwiftNbMapsFlutterPlugin.self)
+                   
+                    let version = libraryBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") ?? "Unknown"
+                    let buildNumber = libraryBundle.object(forInfoDictionaryKey: "CFBundleVersion") ?? "Unknown"
+                 
+                    let crossPlatformInfo: String = "Flutter-\(version)-\(buildNumber)"
+                    NGLAccountManager.crossPlatformInfo = crossPlatformInfo
+                }
+                result(nil)
             case "nextbillion/get_access_key":
                 if let token = NGLAccountManager.accessToken {
                     result(token)
@@ -47,14 +70,13 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
                 }
                 result(nil)
             case "nextbillion/get_base_uri":
-//                result(NGLAccountManager.apiBaseURL.absoluteString)
-                result(nil)
+                result(NGLAccountManager.apiBaseURL()?.absoluteString)
             case "nextbillion/set_base_uri":
-//                if let args = call.arguments as? [String: Any] {
-//                    if let baseUri = args["baseUri"] as? String? {
-//                        NGLAccountManager.setAPIBaseURL(URL(string: baseUri!)!)
-//                    }
-//                }
+                if let args = call.arguments as? [String: Any],
+                   let baseUri = args["baseUri"] as? String,
+                   let url = URL(string: baseUri) {
+                    NGLAccountManager.setAPIBaseURL(url)
+                }
                 result(nil)
             case "nextbillion/set_key_header_name":
                 if let args = call.arguments as? [String: Any] {
@@ -77,7 +99,37 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
                    }
                 }
                 result(nil)
+            case "nextbillion/predefined_styles":
+                let styles = NGLStyle.predefinedStyles()
+                var serializableStyles: [[String: Any]] = []
+                
+                for style in styles {
+                    let styleDict: [String: Any] = [
+                        "name": style.name,
+                        "url": style.url.absoluteString,
+                        "version": style.version
+                    ]
+                    serializableStyles.append(styleDict)
+                }
+                
+                result(serializableStyles)
 
+            case "nextbillion/switch_tile_server":
+                if let args = call.arguments as? [String: Any] {
+                   if let server = args["server"] as? String? {
+                       if server == "NGLTomTom" {
+                           NGLAccountManager.use(.tomTom)
+                           result(true)
+                       } else if server == "NGLMapTiler" {
+                           NGLAccountManager.use(.mapTiler)
+                           result(true)
+                       } else {
+                           result(false)
+                       }
+                   } else {
+                       result(false)
+                   }
+                }
             default:
                 result(FlutterMethodNotImplemented)
             }
