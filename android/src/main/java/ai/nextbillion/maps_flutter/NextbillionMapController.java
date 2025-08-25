@@ -291,19 +291,18 @@ final class NextbillionMapController
         // clear old layer id from the location Component
         clearLocationComponentLayer();
         if (styleType.equals("bright")) {
-            nextbillionMap.setStyle(MapView.MAP_TYPE_NORMAL);
+            nextbillionMap.setStyle(MapView.MAP_TYPE_NORMAL,onStyleLoadedCallback);
             return;
         }
 
         if (styleType.equals("night")) {
-            nextbillionMap.setStyle(MapView.MAP_TYPE_NIGHT);
+            nextbillionMap.setStyle(MapView.MAP_TYPE_NIGHT,onStyleLoadedCallback);
             return;
         }
 
         if (styleType.equals("satellite")) {
-            nextbillionMap.setStyle(MapView.MAP_TYPE_SATELLITE);
+            nextbillionMap.setStyle(MapView.MAP_TYPE_SATELLITE,onStyleLoadedCallback);
         }
-        nextbillionMap.getStyle(onStyleLoadedCallback);
     }
 
 
