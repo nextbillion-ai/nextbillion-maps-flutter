@@ -14,6 +14,7 @@ class NBMap extends StatefulWidget {
     this.compassEnabled = true,
     this.cameraTargetBounds = CameraTargetBounds.unbounded,
     this.styleString,
+    this.styleType,
     this.minMaxZoomPreference = MinMaxZoomPreference.unbounded,
     this.rotateGesturesEnabled = true,
     this.scrollGesturesEnabled = true,
@@ -91,9 +92,38 @@ class NBMap extends StatefulWidget {
   /// Geographical bounding box for the camera target.
   final CameraTargetBounds cameraTargetBounds;
 
-  /// Style URL or Style JSON
-  /// Can be a NbMapStyle constant, any NbMaps Style URL,
+  /// Custom style URL or JSON string for the map.
+  /// 
+  /// This property allows you to set a custom map style using either:
+  /// - A URL to a style JSON file (e.g., "https://example.com/style.json")
+  /// - A JSON string containing the style definition
+  /// - A local asset path (e.g., "assets/style.json")
+  /// - NbMapStyle constants (e.g., NbMapStyles.NBMAP_STREETS)
+  /// 
+  /// Note: This property has higher priority than [styleType]. If both
+  /// [styleString] and [styleType] are set, the style string will take
+  /// precedence and the styleType configuration will be ignored.
+  /// 
+  /// It's recommended to use [styleType] for initial style configuration
+  /// and [styleString] for custom styles or when you need specific
+  /// style URLs from predefined styles.
   final String? styleString;
+
+  /// Predefined style type for the map.
+  /// 
+  /// This property allows you to quickly set a predefined map style:
+  /// - [NBMapStyleType.bright] - Light theme with good contrast
+  /// - [NBMapStyleType.night] - Dark theme for low-light conditions  
+  /// - [NBMapStyleType.satellite] - Satellite imagery with labels
+  /// 
+  /// Note: This property has lower priority than [styleString]. If both
+  /// [styleString] and [styleType] are set, the style string will take
+  /// precedence. It's recommended to use [styleType] for initial
+  /// style configuration as it's simpler and more performant.
+  /// 
+  /// Both [styleString] and [styleType] are optional. If neither is set,
+  /// the map will use the default [NBMapStyleType.bright] style.
+  final NBMapStyleType? styleType;
 
   /// Preferred bounds for the camera zoom level.
   ///
@@ -324,6 +354,7 @@ class NextBillionMapOptions {
     this.compassEnabled,
     this.cameraTargetBounds,
     this.styleString,
+    this.styleType,
     this.minMaxZoomPreference,
     required this.rotateGesturesEnabled,
     required this.scrollGesturesEnabled,
@@ -346,6 +377,7 @@ class NextBillionMapOptions {
       compassEnabled: map.compassEnabled,
       cameraTargetBounds: map.cameraTargetBounds,
       styleString: map.styleString,
+      styleType: map.styleType,
       minMaxZoomPreference: map.minMaxZoomPreference,
       rotateGesturesEnabled: map.rotateGesturesEnabled,
       scrollGesturesEnabled: map.scrollGesturesEnabled,
@@ -370,6 +402,8 @@ class NextBillionMapOptions {
   final CameraTargetBounds? cameraTargetBounds;
 
   final String? styleString;
+
+  final NBMapStyleType? styleType;
 
   final MinMaxZoomPreference? minMaxZoomPreference;
 
@@ -429,6 +463,7 @@ class NextBillionMapOptions {
     addIfNonNull('compassEnabled', compassEnabled);
     addIfNonNull('cameraTargetBounds', cameraTargetBounds?.toJson());
     addIfNonNull('styleString', styleString);
+    addIfNonNull('styleType', styleType?.value);
     addIfNonNull('minMaxZoomPreference', minMaxZoomPreference?.toJson());
 
     addIfNonNull('rotateGesturesEnabled', rotateGesturesEnabled);
