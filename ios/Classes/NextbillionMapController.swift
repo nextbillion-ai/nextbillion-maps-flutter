@@ -546,6 +546,24 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             setStyleString(styleString: styleString)
             result(nil)
             
+        case "style#setStyleType":
+            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let typeString = arguments["styleType"] as? String else { return }
+            
+            var styleType: NGMapStyleType?
+            if typeString == "bright" {
+                styleType = .Bright
+            } else if typeString == "night" {
+                styleType = .Night
+            } else if typeString == "satellite" {
+                styleType = .Satellite
+            }
+            if let styleType = styleType {
+                setStyleType(styleType: styleType)
+            }
+            
+            result(nil)
+            
         case "style#addImage":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let name = arguments["name"] as? String else { return }
