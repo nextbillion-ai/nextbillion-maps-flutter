@@ -84,6 +84,10 @@ class EncodedGeometryExampleState extends State<EncodedGeometryExample> {
   static final String _encodedPolylineExample =
       "itbnAgwlxM]@C?_@DU?eAHNn@XvAE@E@KDG@EBMo@AGQ}@G[Ow@Oo@CGOa@EMGSm@gBEIGOKa@AEUu@Ik@AMUcA??AGEOCMMk@G[Kc@?W?EAKAG?SAa@Am@GmAEa@?AAUC[?EEmBE{A?CAKAKEwAC[EgAGiA?IEk@Ca@C[E]E_@Ca@?C?E@W?KF[BI@KDMDSBIL[^cA@CDOFUFYJk@BOECECGCAACCEEGKASCUBc@@]Bq@DuAHmB@U@MD{@Dq@?KH_BBc@HsADs@@WDgA?E@W@WB{@@U@Y@QB}@@M?OD{@@w@Bk@?KBm@?SBcA@Y?G?C@WAM?GAQAOCSCGCIGMOWGGMK_@]q@m@OKkBcBEC_@_@GCCCUAWGI?UEKCKEMGKG]WGGq@k@CEGEYQMEICEAQCEAUBaBTG?GAGCKEGEAAACEI?WD{B?I?IAEC]CQCSEOCKCKIWEKCIEICGCIGKEGEGEECEKMOQqAuAuF}GsBiCCEY]kByB]a@WYOQa@c@II[]W]GGIOGKGC]SEEIIGEi@_@_@[ECKIi@a@SOQQSQIKOSGGMQQU]e@QWUWKMSYw@aACCu@eACCGKKMa@s@EGCEOUKOEGy@oAKOGKGIIMa@m@ACOUW[c@q@S]CGCGCGCICM?M@}@@mB@gA@}@?sA@m@@]?IBI@K?G@EDOFg@Fc@T_BHi@N}@b@{CBOBKVoBn@cEHi@~@wFZoBGC[G[IqA[GASGWIy@UuA]ICICKEUIUIEAKCuAc@ICaA[e@KwA_@e@MiBe@YGwA[yA]}@WICOGBSP}@BOBO@MBM@M?CEOCIIMMQCCGGCA{@u@ECc@c@_@]_Au@CCy@u@CAAAACAAMKs@q@GGQOCCAAMMBEFIDMFQTkA@KRkAFa@?CBO@[?Y?IAa@CSGw@?s@IQEMCCCCAE?KBI[YEGMWYq@KQQc@CGWe@]o@KOMQUWOOGI_@[AC]YQQq@m@gA_A}@w@][MIGGa@YoAu@i@Wm@Yc@KWGGAMA@D@B@JCHEH[^KNGJICIEGCG?EAI@IAk@Ia@Ea@Ew@Iw@IUAWCw@C[?g@@e@D{BA}@@K@_@@y@Fa@DWB]DK@M@SDIB]JIB_@Nk@Va@N[Lg@R[NQFo@XeCdAw@^IDGBEIFEJCdBu@zAo@JGp@[ZMb@Ql@Ux@_@RGRIFAf@Oj@IB?";
 
+  // The precision of the geometry. Valid values are 5 or 6.
+  // In this example, the geometry string above uses a precision of 5.
+  static final int _encodedGeometryPrecision = 5;
+  
   void _addEncodedLine() async {
     if (controller == null || _hasLine) return;
 
@@ -95,7 +99,7 @@ class EncodedGeometryExampleState extends State<EncodedGeometryExample> {
       final line = await controller!.addLine(
         LineOptions(
           encodedGeometry: _encodedPolylineExample,
-          encodedGeometryPrecision: 5,
+          encodedGeometryPrecision: _encodedGeometryPrecision,
           // Standard precision
           lineColor: "#FF0000",
           // Red color

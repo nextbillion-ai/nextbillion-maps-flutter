@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
 // Simplified mock widget for testing UI components
 class MockEncodedGeometryExample extends StatefulWidget {
