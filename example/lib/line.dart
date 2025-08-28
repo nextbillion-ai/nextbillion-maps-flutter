@@ -67,7 +67,7 @@ class LineBodyState extends State<LineBody> {
   }
 
   void _add() {
-    controller!.addLine(
+    controller?.addLine(
       LineOptions(
           geometry: [
             LatLng(-33.86711, 151.1947171),

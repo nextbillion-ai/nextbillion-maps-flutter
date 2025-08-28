@@ -1649,21 +1649,44 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
 
     func setSource(sourceId: String, geojson: String) {
         do {
+            // Process encoded geometry if present in the GeoJSON
+            let processedGeoJson = PolylineDecoder.processEncodedGeometryInFeatureCollection(geojson: geojson)
+            
             let parsed = try NGLShape(
-                data: geojson.data(using: .utf8)!,
+                data: processedGeoJson.data(using: .utf8)!,
                 encoding: String.Encoding.utf8.rawValue
             )
             if let source = mapView.style?.source(withIdentifier: sourceId) as? NGLShapeSource {
                 addedShapesByLayer[sourceId] = parsed
                 source.shape = parsed
             }
-        } catch {}
+        } catch {
+            print("iOS: Error setting source: \(error)")
+        }
+    }
+
+    private func processEncodedGeometry(geojsonFeature: String) -> String {
+        do {
+            guard let data = geojsonFeature.data(using: .utf8),
+                  let featureDict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                return geojsonFeature
+            }
+            let processedFeature = PolylineDecoder.processEncodedGeometry(featureDict)
+            let processedData = try JSONSerialization.data(withJSONObject: processedFeature)
+            return String(data: processedData, encoding: .utf8) ?? geojsonFeature
+        } catch {
+            print("iOS: Error processing encoded geometry: \(error)")
+            return geojsonFeature
+        }
     }
 
     func setFeature(sourceId: String, geojsonFeature: String) {
         do {
+            // Process encoded geometry if present
+            let processedGeoJsonFeature = processEncodedGeometry(geojsonFeature: geojsonFeature)
+            
             let newShape = try NGLShape(
-                data: geojsonFeature.data(using: .utf8)!,
+                data: processedGeoJsonFeature.data(using: .utf8)!,
                 encoding: String.Encoding.utf8.rawValue
             )
             if let source = mapView.style?.source(withIdentifier: sourceId) as? NGLShapeSource,
@@ -1691,8 +1714,11 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
                 addedShapesByLayer[sourceId] = source.shape
             }
 
-        } catch {}
+        } catch {
+            print("iOS: Error processing feature: \(error)")
+        }
     }
+
 
     /*
      *  NextbillionMapOptionsSink

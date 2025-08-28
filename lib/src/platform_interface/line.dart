@@ -45,6 +45,12 @@ class LineOptions {
   ///
   /// By default, every non-specified field is null, meaning no desire to change
   /// line defaults or current configuration.
+  /// 
+  /// For geometry, you can provide either:
+  /// - [geometry]: A list of LatLng points (traditional approach)
+  /// - [encodedGeometry]: An encoded polyline string for better performance with large datasets
+  /// 
+  /// Note: If both [geometry] and [encodedGeometry] are provided, [encodedGeometry] takes precedence.
   const LineOptions({
     this.lineJoin,
     this.lineOpacity,
@@ -55,6 +61,8 @@ class LineOptions {
     this.lineBlur,
     this.linePattern,
     this.geometry,
+    this.encodedGeometry,
+    this.encodedGeometryPrecision,
     this.draggable,
   });
 
@@ -66,7 +74,21 @@ class LineOptions {
   final double? lineOffset;
   final double? lineBlur;
   final String? linePattern;
+  
+  /// Traditional geometry as a list of LatLng points.
+  /// This will be ignored if [encodedGeometry] is provided.
   final List<LatLng>? geometry;
+  
+  /// Encoded polyline string for better performance with large datasets.
+  /// This takes precedence over [geometry] if both are provided.
+  /// The string should be encoded using polyline encoding algorithm.
+  final String? encodedGeometry;
+  
+  /// Precision used for encoding the geometry string.
+  /// Default precision is 5 if not specified.
+  /// This is only used when [encodedGeometry] is provided.
+  final int? encodedGeometryPrecision;
+  
   final bool? draggable;
 
   static const LineOptions defaultOptions = LineOptions();
@@ -82,6 +104,8 @@ class LineOptions {
       lineBlur: changes.lineBlur ?? lineBlur,
       linePattern: changes.linePattern ?? linePattern,
       geometry: changes.geometry ?? geometry,
+      encodedGeometry: changes.encodedGeometry ?? encodedGeometry,
+      encodedGeometryPrecision: changes.encodedGeometryPrecision ?? encodedGeometryPrecision,
       draggable: changes.draggable ?? draggable,
     );
   }
@@ -103,22 +127,45 @@ class LineOptions {
     addIfPresent('lineOffset', lineOffset);
     addIfPresent('lineBlur', lineBlur);
     addIfPresent('linePattern', linePattern);
+    
     if (addGeometry) {
-      addIfPresent('geometry',
-          geometry?.map((LatLng latLng) => latLng.toJson()).toList());
+      // Priority: encodedGeometry > geometry
+      if (encodedGeometry != null) {
+        addIfPresent('encodedGeometry', encodedGeometry);
+        addIfPresent('encodedGeometryPrecision', encodedGeometryPrecision ?? 5);
+      } else if (geometry != null) {
+        addIfPresent('geometry',
+            geometry?.map((LatLng latLng) => latLng.toJson()).toList());
+      }
     }
+    
     addIfPresent('draggable', draggable);
     return json;
   }
 
   Map<String, dynamic> toGeoJson() {
-    return {
+    final Map<String, dynamic> geoJson = {
       "type": "Feature",
       "properties": toJson(false),
-      "geometry": {
+    };
+    
+    // For GeoJSON, we need actual coordinates
+    // If we have encodedGeometry, we'll let the native layer handle the decoding
+    // and provide a placeholder here
+    if (encodedGeometry != null) {
+      geoJson["geometry"] = {
+        "type": "LineString",
+        "coordinates": [], // Placeholder - will be decoded on native side
+        "encodedGeometry": encodedGeometry,
+        "encodedGeometryPrecision": encodedGeometryPrecision ?? 5,
+      };
+    } else if (geometry != null) {
+      geoJson["geometry"] = {
         "type": "LineString",
         "coordinates": geometry!.map((c) => c.toGeoJsonCoordinates()).toList()
-      }
-    };
+      };
+    }
+    
+    return geoJson;
   }
 }

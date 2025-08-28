@@ -27,6 +27,7 @@ import 'place_symbol.dart';
 import 'scrolling_map.dart';
 import 'sources.dart';
 import 'take_snapshot.dart';
+import 'encoded_geometry_example.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   MapUiPage(),
@@ -48,7 +49,8 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   TakeSnapPage(),
   ClickAnnotationPage(),
   Sources(),
-  TrackCurrentLocationPage()
+  TrackCurrentLocationPage(),
+  EncodedGeometryPage()
 ];
 
 class MapsDemo extends StatefulWidget {

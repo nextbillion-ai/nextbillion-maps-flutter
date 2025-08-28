@@ -40,6 +40,7 @@ import ai.nextbillion.gestures.AndroidGesturesManager;
 import ai.nextbillion.gestures.MoveGestureDetector;
 import ai.nextbillion.kits.geojson.Feature;
 import ai.nextbillion.kits.geojson.FeatureCollection;
+import ai.nextbillion.kits.geojson.LineString;
 import ai.nextbillion.kits.geojson.Point;
 import ai.nextbillion.maps.camera.CameraPosition;
 import ai.nextbillion.maps.camera.CameraUpdate;
@@ -359,29 +360,127 @@ final class NextbillionMapController
   }
 
   private void setGeoJsonSource(String sourceName, String geojson) {
-    FeatureCollection featureCollection = FeatureCollection.fromJson(geojson);
-    GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
-    addedFeaturesByLayer.put(sourceName, featureCollection);
+    try {
+      // Process encoded geometry if present in the GeoJSON
+      String processedGeoJson = PolylineDecoder.processEncodedGeometryInFeatureCollection(geojson);
+      
+      FeatureCollection featureCollection = FeatureCollection.fromJson(processedGeoJson);
+      GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
+      addedFeaturesByLayer.put(sourceName, featureCollection);
 
-    geoJsonSource.setGeoJson(featureCollection);
+      geoJsonSource.setGeoJson(featureCollection);
+    } catch (Exception e) {
+      // Handle error silently
+      Log.e("NextbillionMapController", "Error processing setGeoJsonSource: " + e.getMessage());
+
+    }
   }
 
   private void setGeoJsonFeature(String sourceName, String geojsonFeature) {
     Feature feature = Feature.fromJson(geojsonFeature);
+    
+    // Handle encoded geometry if present
+    Feature processedFeature = processEncodedGeometry(feature);
+    
     FeatureCollection featureCollection = addedFeaturesByLayer.get(sourceName);
     GeoJsonSource geoJsonSource = style.getSourceAs(sourceName);
     if (featureCollection != null && geoJsonSource != null) {
-      final List<Feature> features = featureCollection.features();
+      final List<Feature> features = new ArrayList<>(featureCollection.features());
+      boolean featureFound = false;
       for (int i = 0; i < features.size(); i++) {
         final String id = features.get(i).id();
-        if (id.equals(feature.id())) {
-          features.set(i, feature);
+        if (id.equals(processedFeature.id())) {
+          features.set(i, processedFeature);
+          featureFound = true;
+
           break;
         }
       }
+      
+      if (!featureFound) {
+        // Add the feature if not found
+        features.add(processedFeature);
+      }
 
-      geoJsonSource.setGeoJson(featureCollection);
+      // Create a new FeatureCollection with updated features
+      FeatureCollection updatedFeatureCollection = FeatureCollection.fromFeatures(features);
+      addedFeaturesByLayer.put(sourceName, updatedFeatureCollection);
+      
+      geoJsonSource.setGeoJson(updatedFeatureCollection);
+
+    } else {
+      Log.e("NextbillionMapController", "featureCollection or geoJsonSource is null , unable to update geoJson feature");
     }
+  }
+
+  /**
+   * Processes a Feature to decode encoded geometry if present.
+   * If the feature's geometry contains encodedGeometry property, it will be decoded
+   * and replaced with actual coordinates.
+   */
+  private Feature processEncodedGeometry(Feature feature) {
+    if (feature == null || feature.geometry() == null) {
+      Log.d("NextbillionMapController", "processEncodedGeometry: feature or geometry is null");
+      return feature;
+    }
+
+    // Check if this is a LineString geometry with encoded data
+    if ("LineString".equals(feature.geometry().type())) {
+      try {
+        // Parse the geometry as a JSON object to check for encoded data
+        Gson gson = new Gson();
+        Map<String, Object> geometryMap = gson.fromJson(feature.geometry().toJson(), Map.class);
+
+        if (geometryMap.containsKey("encodedGeometry")) {
+          String encodedGeometry = (String) geometryMap.get("encodedGeometry");
+          Object precisionObj = geometryMap.get("encodedGeometryPrecision");
+          int precision = 5; // default precision
+
+          if (precisionObj instanceof Number) {
+            precision = ((Number) precisionObj).intValue();
+          }
+          
+          // Decode the geometry
+          LineString decodedLineString = PolylineDecoder.decodePolyline(encodedGeometry, precision);
+          
+          if (decodedLineString != null) {
+            // Convert Point objects to [longitude, latitude] arrays for GeoJSON
+            List<List<Double>> coordinatesArray = new ArrayList<>();
+            for (Point point : decodedLineString.coordinates()) {
+              List<Double> coord = new ArrayList<>();
+              coord.add(point.longitude());
+              coord.add(point.latitude());
+              coordinatesArray.add(coord);
+            }
+            
+            // Create a new feature with the decoded geometry by reconstructing the JSON
+            Map<String, Object> newFeatureMap = new HashMap<>();
+            newFeatureMap.put("type", "Feature");
+            newFeatureMap.put("id", feature.id());
+            newFeatureMap.put("properties", feature.properties());
+            
+            // Convert LineString to GeoJSON geometry
+            Map<String, Object> newGeometryMap = new HashMap<>();
+            newGeometryMap.put("type", "LineString");
+            newGeometryMap.put("coordinates", coordinatesArray);
+            newFeatureMap.put("geometry", newGeometryMap);
+            
+            // Convert back to JSON and create new Feature
+            String newFeatureJson = gson.toJson(newFeatureMap);
+
+            return Feature.fromJson(newFeatureJson);
+          }
+        } else {
+          Log.d("NextbillionMapController", "processEncodedGeometry: no encoded geometry found");
+        }
+      } catch (Exception e) {
+        Log.e("NextbillionMapController", "Error processing encoded geometry: " + e.getMessage());
+      }
+    } else {
+      Log.d("NextbillionMapController", "processEncodedGeometry: not a LineString geometry");
+    }
+    
+    return feature;
   }
 
   private void addSymbolLayer(

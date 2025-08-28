@@ -4,7 +4,8 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.12.0 <3.0.0'
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: ">=3.24.0"
 
 dependencies:
   flutter:
@@ -16,7 +17,7 @@ dependencies:
   path_provider: ^2.0.0
   http: ^0.13.0
   collection: ^1.0.0
-  device_info_plus: ^11.4.0
+  device_info_plus: ^11.3.0
   nb_maps_flutter:
     path: ../
   permission_handler: ^11.0.1
