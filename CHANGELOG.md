@@ -1,10 +1,21 @@
+## v2.3.0, Aug 28
+* **Encoded Geometry Support**: Add support for Google polyline encoded geometry strings in LineOptions
+  - Add `encodedGeometry` and `encodedGeometryPrecision` fields to LineOptions for efficient route rendering
+  - Implement PolylineDecoder for both Android and iOS platforms to handle encoded geometry decoding
+  - Support for Google's polyline encoding algorithm with configurable precision levels
+  - Significant performance improvement for routes with large numbers of coordinates
+
+## v2.2.0, Jun 26, 2025
+* Update Android native SDK to 1.2.0 , There're some lint issue fix on this version
+
+## v2.1.0, May 14, 2025
+* Update Android maps dependency to 1.1.7 to fix error
+  - Error logs :
+  - drawable/nbmap_user_icon_shadow has unresolved theme attributes! Consider using Resources.getDrawable(int, Theme) or Context.getDrawable(int). W/Resources(27021): java.lang.RuntimeException
+
 ## v2.0.0, Apr 15, 2025
 * Update project to support flutter 3.29, Fixed PluginRegistry.Registrar issue
-## v2.0.0-dev.2, Feb 13, 2025
 * resolved lint issues, updated description of the library
-
-## v2.0.0-dev.1, Feb 13, 2025
-* prerelease v2.0.0-dev.1, bump version to v2.0.x to align with Nextbillion.ai SDK matrix.
 
 ## v1.2.0, Dec 16, 2024
 * Adapting to Android Gradle Plugin 8.0 Without Using the AGP Upgrading Assistant
