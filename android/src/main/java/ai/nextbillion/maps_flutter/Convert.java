@@ -22,7 +22,6 @@ import ai.nextbillion.maps.geometry.LatLngBounds;
 /** Conversions between JSON-like values and NbMaps data types. */
 class Convert {
 
-  private static final String TAG = "Convert";
 
   static boolean toBoolean(Object o) {
     return (Boolean) o;
@@ -38,6 +37,7 @@ class Convert {
     return builder.build();
   }
 
+  /** @noinspection unused*/
   static boolean isScrollByCameraUpdate(Object o) {
     return toString(toList(o).get(0)).equals("scrollBy");
   }
@@ -149,6 +149,7 @@ class Convert {
     return latLngList;
   }
 
+  /** @noinspection unused*/
   private static List<List<LatLng>> toLatLngListList(Object o) {
     if (o == null) {
       return null;
@@ -162,6 +163,7 @@ class Convert {
     return latLngListList;
   }
 
+  /** @noinspection unused*/
   static Polygon interpretListLatLng(List<List<LatLng>> geometry) {
     List<List<Point>> points = new ArrayList<>(geometry.size());
     for (List<LatLng> innerGeometry : geometry) {
@@ -179,6 +181,7 @@ class Convert {
     return (List<?>) o;
   }
 
+  /** @noinspection unused*/
   static long toLong(Object o) {
     return ((Number) o).longValue();
   }
@@ -261,7 +264,7 @@ class Convert {
     }
     final Object logoViewMargins = data.get("logoViewMargins");
     if (logoViewMargins != null) {
-      final List logoViewMarginsData = toList(logoViewMargins);
+      final List<?> logoViewMarginsData = toList(logoViewMargins);
       final android.graphics.Point point = toPoint(logoViewMarginsData, metrics.density);
       sink.setLogoViewMargins(point.x, point.y);
     }
@@ -271,7 +274,7 @@ class Convert {
     }
     final Object compassViewMargins = data.get("compassViewMargins");
     if (compassViewMargins != null) {
-      final List compassViewMarginsData = toList(compassViewMargins);
+      final List<?> compassViewMarginsData = toList(compassViewMargins);
       final android.graphics.Point point = toPoint(compassViewMarginsData, metrics.density);
       sink.setCompassViewMargins(point.x, point.y);
     }
@@ -281,7 +284,7 @@ class Convert {
     }
     final Object attributionButtonMargins = data.get("attributionButtonMargins");
     if (attributionButtonMargins != null) {
-      final List attributionButtonMarginsData = toList(attributionButtonMargins);
+      final List<?> attributionButtonMarginsData = toList(attributionButtonMargins);
       final android.graphics.Point point = toPoint(attributionButtonMarginsData, metrics.density);
       sink.setAttributionButtonMargins(point.x, point.y);
     }

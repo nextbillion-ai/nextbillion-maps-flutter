@@ -8,10 +8,9 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.2'
+        classpath 'com.android.tools.build:gradle:8.9.2'
     }
 }
-
 
 apply plugin: 'com.android.library'
 
@@ -21,19 +20,41 @@ android {
     namespace 'ai.nextbillion.maps_flutter'
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 21
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         buildConfigField "String", "GIT_REVISION_SHORT", String.format("\"%s\"", getGitRevision())
         buildConfigField "String", "NBMAP_FLUTTER_VERSION", String.format("\"%s\"", project.version)
     }
-    lintOptions {
-        disable 'InvalidPackage'
+
+    lint {
+        // Enable all checks
+        checkAllWarnings true
+        // Treat warnings as errors
+        warningsAsErrors true
+        // Show all issues
+        showAll true
+        // Generate HTML report
+        htmlReport true
+        // Generate XML report
+        xmlReport true
+        // Generate text report
+        textReport true
+        // Set output files
+        htmlOutput file("$project.buildDir/reports/lint/lint-results.html")
+        xmlOutput file("$project.buildDir/reports/lint/lint-results.xml")
+        textOutput file("$project.buildDir/reports/lint/lint-results.txt")
+        // Set lint config file
+        lintConfig file("$rootProject.projectDir/lint.xml")
+        // Don't abort on error
+        abortOnError false
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     dependencies {
         implementation 'ai.nextbillion:nb-maps-android:1.2.0'
         implementation 'com.squareup.okhttp3:okhttp:4.10.0'
@@ -43,6 +64,7 @@ android {
         buildConfig = true
     }
 }
+
 def static getGitRevision() {
     def cmd = "git rev-parse --short HEAD"
     def process = cmd.execute()
