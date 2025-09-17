@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class OfflineChannelHandlerImpl implements EventChannel.StreamHandler {
   private EventChannel.EventSink sink;
-  private Gson gson = new Gson();
+  private final Gson gson = new Gson();
 
   OfflineChannelHandlerImpl(BinaryMessenger messenger, String channelName) {
     EventChannel eventChannel = new EventChannel(messenger, channelName);

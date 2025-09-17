@@ -79,11 +79,11 @@ class SnapshotOptions {
       bool? withLogo,
       bool? writeToDisk,
       PlatformWrapper? platformWrapper})
-      : this.withLogo = withLogo ?? false,
-        this.writeToDisk = writeToDisk ?? true,
-        this.pitch = pitch ?? 0,
-        this.heading = heading ?? 0,
-        this._platformWrapper = platformWrapper ?? PlatformWrapperImpl();
+      : withLogo = withLogo ?? false,
+        writeToDisk = writeToDisk ?? true,
+        pitch = pitch ?? 0,
+        heading = heading ?? 0,
+        _platformWrapper = platformWrapper ?? PlatformWrapperImpl();
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};

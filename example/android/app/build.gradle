@@ -1,3 +1,5 @@
+import org.gradle.api.GradleException
+
 plugins {
     id 'com.android.application'
     id 'dev.flutter.flutter-gradle-plugin'
@@ -26,14 +28,32 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
-
 android {
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
     namespace 'ai.nextbillion.mapsglexample'
 
-    lintOptions {
-        disable 'InvalidPackage'
+    lint {
+        // Enable all checks
+        checkAllWarnings true
+        // Treat warnings as errors
+        warningsAsErrors true
+        // Show all issues
+        showAll true
+        // Generate HTML report
+        htmlReport true
+        // Generate XML report
+        xmlReport true
+        // Generate text report
+        textReport true
+        // Set output files
+        htmlOutput file("$project.buildDir/reports/lint/lint-results.html")
+        xmlOutput file("$project.buildDir/reports/lint/lint-results.xml")
+        textOutput file("$project.buildDir/reports/lint/lint-results.txt")
+        // Set lint config file
+        lintConfig file("$rootProject.projectDir/lint.xml")
+        // Don't abort on error
+        abortOnError false
     }
 
     defaultConfig {

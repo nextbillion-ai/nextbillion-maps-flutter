@@ -19,10 +19,10 @@ class OfflineRegionDefinition {
 
   @override
   String toString() =>
-      "$runtimeType, bounds = $bounds, mapStyleUrl = $mapStyleUrl, minZoom = $minZoom, maxZoom = $maxZoom";
+      "OfflineRegionDefinition, bounds = $bounds, mapStyleUrl = $mapStyleUrl, minZoom = $minZoom, maxZoom = $maxZoom";
 
   Map<String, dynamic> toMap() {
-    final Map<String, dynamic> data = Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['bounds'] = bounds.toList();
     data['mapStyleUrl'] = mapStyleUrl;
     data['minZoom'] = minZoom;
@@ -33,21 +33,27 @@ class OfflineRegionDefinition {
 
   factory OfflineRegionDefinition.fromMap(Map<String, dynamic> map) {
     return OfflineRegionDefinition(
-      bounds: _latLngBoundsFromList(map['bounds']),
-      mapStyleUrl: map['mapStyleUrl'],
-      // small integers may deserialize to Int
-      minZoom: map['minZoom'].toDouble(),
-      maxZoom: map['maxZoom'].toDouble(),
-      includeIdeographs: map['includeIdeographs'] ?? false,
+      bounds: _latLngBoundsFromList(map['bounds'] as List<dynamic>),
+      mapStyleUrl: map['mapStyleUrl'] as String? ?? "",
+      minZoom: (map['minZoom'] as num?)?.toDouble() ?? 0.0,
+      maxZoom: (map['maxZoom'] as num?)?.toDouble() ?? 0.0,
+      includeIdeographs: (map['includeIdeographs'] as bool?) ?? false,
     );
   }
 
+
   static LatLngBounds _latLngBoundsFromList(List<dynamic> json) {
-    return LatLngBounds(
-      southwest: LatLng(json[0][0], json[0][1]),
-      northeast: LatLng(json[1][0], json[1][1]),
+    final List<List<dynamic>> coordinates = json.cast<List<dynamic>>();
+    final LatLngBounds latLngBounds = LatLngBounds(
+      southwest: LatLng(_toDouble(coordinates[0][0]), _toDouble(coordinates[0][1])),
+      northeast: LatLng(_toDouble(coordinates[1][0]), _toDouble(coordinates[1][1])),
     );
+
+    return latLngBounds;
   }
+
+
+  static double _toDouble(dynamic value) => (value as num).toDouble();
 }
 
 /// Description of a downloaded region including its identifier.
@@ -62,15 +68,32 @@ class OfflineRegion {
   final OfflineRegionDefinition definition;
   final Map<String, dynamic> metadata;
 
+  // factory OfflineRegion.fromMap(Map<String, dynamic> json) {
+  //   return OfflineRegion(
+  //     id: json['id'],
+  //     definition: OfflineRegionDefinition.fromMap(json['definition']),
+  //     metadata: json['metadata'],
+  //   );
+  // }
+
   factory OfflineRegion.fromMap(Map<String, dynamic> json) {
+    final id = json['id'];
+    final definition = json['definition'];
+    final metadata = json['metadata'] as Map<String, dynamic>?;
+
+    if (id == null || definition == null || metadata == null) {
+      throw ArgumentError('Missing required OfflineRegion fields in JSON');
+    }
+
     return OfflineRegion(
-      id: json['id'],
-      definition: OfflineRegionDefinition.fromMap(json['definition']),
-      metadata: json['metadata'],
+      id: id as int,
+      definition: OfflineRegionDefinition.fromMap(definition as Map<String, dynamic>),
+      metadata: metadata,
     );
   }
 
+
   @override
   String toString() =>
-      "$runtimeType, id = $id, definition = $definition, metadata = $metadata";
+      "OfflineRegion, id = $id, definition = $definition, metadata = $metadata";
 }

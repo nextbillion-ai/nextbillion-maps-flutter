@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 class StyleInfo {
   final String name;
@@ -21,7 +21,7 @@ class StyleInfo {
 }
 
 class Sources extends ExamplePage {
-  Sources() : super(const Icon(Icons.map), 'Various Sources');
+  const Sources() : super(const Icon(Icons.map), 'Various Sources');
 
   @override
   Widget build(BuildContext context) {
@@ -41,14 +41,16 @@ class FullMapState extends State<FullMap> {
   final watercolorRasterId = "watercolorRaster";
   int selectedStyleId = 0;
 
-  _onMapCreated(NextbillionMapController controller) {
-    this.controller = controller;
+  void _onMapCreated(NextbillionMapController controller) {
+    setState(() {
+      this.controller = controller;
+    });
   }
 
   static Future<void> addRaster(NextbillionMapController controller) async {
     await controller.addSource(
       "watercolor",
-      RasterSourceProperties(
+      const RasterSourceProperties(
           tiles: [
             'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg'
           ],
@@ -57,24 +59,22 @@ class FullMapState extends State<FullMap> {
               'Map tiles by <a target="_top" rel="noopener" href="http://stamen.com">Stamen Design</a>, under <a target="_top" rel="noopener" href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a target="_top" rel="noopener" href="http://openstreetmap.org">OpenStreetMap</a>, under <a target="_top" rel="noopener" href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>'),
     );
     await controller.addLayer(
-        "watercolor", "watercolor", RasterLayerProperties());
+        "watercolor", "watercolor", const RasterLayerProperties());
   }
 
-  static Future<void> addGeojsonCluster(
+  static Future<void> addGeoJsonCluster(
       NextbillionMapController controller) async {
     await controller.addSource(
         "earthquakes",
-        GeojsonSourceProperties(
+        const GeojsonSourceProperties(
             data: '',
             cluster: true,
             clusterMaxZoom: 14, // Max zoom to cluster points on
-            clusterRadius:
-                50 // Radius of each cluster when clustering points (defaults to 50)
             ));
     await controller.addLayer(
         "earthquakes",
         "earthquakes-circles",
-        CircleLayerProperties(circleColor: [
+        const CircleLayerProperties(circleColor: [
           Expressions.step,
           [Expressions.get, 'point_count'],
           '#51bbd6',
@@ -94,7 +94,7 @@ class FullMapState extends State<FullMap> {
     await controller.addLayer(
         "earthquakes",
         "earthquakes-count",
-        SymbolLayerProperties(
+        const SymbolLayerProperties(
           textField: [Expressions.get, 'point_count_abbreviated'],
           textFont: ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
           textSize: 12,
@@ -105,13 +105,13 @@ class FullMapState extends State<FullMap> {
       NextbillionMapController controller) async {
     await controller.addSource(
         "earthquakes-heatmap-source",
-        GeojsonSourceProperties(
+        const GeojsonSourceProperties(
           data: '',
         ));
     await controller.addLayer(
         "earthquakes-heatmap-source",
         "earthquakes-heatmap-layer",
-        HeatmapLayerProperties(
+        const HeatmapLayerProperties(
           heatmapColor: [
             Expressions.interpolate,
             ["linear"],
@@ -173,11 +173,11 @@ class FullMapState extends State<FullMap> {
     final jsonStr =
         await rootBundle.loadString("assets/fill-extrusion/indoor_3d_map.json");
     await controller.addGeoJsonSource(
-        "indoor-building-source", jsonDecode(jsonStr));
+        "indoor-building-source", jsonDecode(jsonStr) as Map<String, dynamic>);
     await controller.addFillExtrusionLayer(
         "indoor-building-source",
         "indoor-building-layer",
-        FillExtrusionLayerProperties(
+        const FillExtrusionLayerProperties(
           fillExtrusionOpacity: 0.5,
           fillExtrusionHeight: [Expressions.get, "height"],
           fillExtrusionBase: [Expressions.get, "base_height"],
@@ -188,14 +188,14 @@ class FullMapState extends State<FullMap> {
   static Future<void> addVector(NextbillionMapController controller) async {
     await controller.addSource(
         "terrain",
-        VectorSourceProperties(
+        const VectorSourceProperties(
           url: "",
         ));
 
     await controller.addLayer(
         "terrain",
         "contour",
-        LineLayerProperties(
+        const LineLayerProperties(
           lineColor: "#ff69b4",
           lineWidth: 1,
           lineCap: "round",
@@ -207,7 +207,7 @@ class FullMapState extends State<FullMap> {
   static Future<void> addImage(NextbillionMapController controller) async {
     await controller.addSource(
         "radar",
-        ImageSourceProperties(url: "", coordinates: [
+        const ImageSourceProperties(url: "", coordinates: [
           [-80.425, 46.437],
           [-71.516, 46.437],
           [-71.516, 37.936],
@@ -217,14 +217,14 @@ class FullMapState extends State<FullMap> {
     await controller.addRasterLayer(
       "radar",
       "radar",
-      RasterLayerProperties(rasterFadeDuration: 0),
+      const RasterLayerProperties(rasterFadeDuration: 0),
     );
   }
 
   static Future<void> addVideo(NextbillionMapController controller) async {
     await controller.addSource(
         "video",
-        VideoSourceProperties(urls: [
+        const VideoSourceProperties(urls: [
           '',
           ''
         ], coordinates: [
@@ -237,12 +237,12 @@ class FullMapState extends State<FullMap> {
     await controller.addRasterLayer(
       "video",
       "video",
-      RasterLayerProperties(),
+      const RasterLayerProperties(),
     );
   }
 
   static Future<void> addDem(NextbillionMapController controller) async {
-    await controller.addSource("dem", RasterDemSourceProperties(url: ""));
+    await controller.addSource("dem", const RasterDemSourceProperties(url: ""));
 
     await controller.addLayer(
       "dem",
@@ -256,44 +256,44 @@ class FullMapState extends State<FullMap> {
   static const _stylesAndLoaders = [
     StyleInfo(
       name: "Vector",
-      baseStyle: NbMapStyles.LIGHT,
+      baseStyle: NbMapStyles.light,
       addDetails: addVector,
       position: CameraPosition(target: LatLng(33.3832, -118.4333), zoom: 12),
     ),
     StyleInfo(
       name: "Dem",
-      baseStyle: NbMapStyles.EMPTY,
+      baseStyle: NbMapStyles.empty,
       addDetails: addDem,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 8),
     ),
     StyleInfo(
       name: "Geojson cluster",
-      baseStyle: NbMapStyles.LIGHT,
-      addDetails: addGeojsonCluster,
+      baseStyle: NbMapStyles.light,
+      addDetails: addGeoJsonCluster,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 5),
     ),
     StyleInfo(
       name: "Geojson heatmap",
-      baseStyle: NbMapStyles.DARK,
+      baseStyle: NbMapStyles.dark,
       addDetails: addGeojsonHeatmap,
       position: CameraPosition(target: LatLng(33.5, -118.1), zoom: 5),
     ),
     StyleInfo(
       name: "Indoor Building",
-      baseStyle: NbMapStyles.LIGHT,
+      baseStyle: NbMapStyles.light,
       addDetails: addIndoorBuilding,
       position: CameraPosition(
           target: LatLng(41.86625, -87.61694), zoom: 16, tilt: 20, bearing: 40),
     ),
     StyleInfo(
       name: "Raster",
-      baseStyle: NbMapStyles.EMPTY,
+      baseStyle: NbMapStyles.empty,
       addDetails: addRaster,
       position: CameraPosition(target: LatLng(40, -100), zoom: 3),
     ),
     StyleInfo(
       name: "Image",
-      baseStyle: NbMapStyles.DARK,
+      baseStyle: NbMapStyles.dark,
       addDetails: addImage,
       position: CameraPosition(target: LatLng(43, -75), zoom: 6),
     ),
@@ -301,14 +301,14 @@ class FullMapState extends State<FullMap> {
     if (kIsWeb)
       StyleInfo(
         name: "Video",
-        baseStyle: NbMapStyles.SATELLITE,
+        baseStyle: NbMapStyles.satellite,
         addDetails: addVideo,
         position: CameraPosition(
             target: LatLng(37.562984, -122.514426), zoom: 17, bearing: -96),
       ),
   ];
 
-  _onStyleLoadedCallback() async {
+  Future<void> _onStyleLoadedCallback() async {
     final styleInfo = _stylesAndLoaders[selectedStyleId];
     styleInfo.addDetails(controller!);
     controller!
@@ -321,11 +321,11 @@ class FullMapState extends State<FullMap> {
     final nextName =
         _stylesAndLoaders[(selectedStyleId + 1) % _stylesAndLoaders.length]
             .name;
-    return new Scaffold(
+    return Scaffold(
         floatingActionButton: Padding(
           padding: const EdgeInsets.all(32.0),
           child: FloatingActionButton.extended(
-            icon: Icon(Icons.swap_horiz),
+            icon: const Icon(Icons.swap_horiz),
             label: SizedBox(
                 width: 120, child: Center(child: Text("To $nextName"))),
             onPressed: () => setState(
@@ -343,14 +343,14 @@ class FullMapState extends State<FullMap> {
               onStyleLoadedCallback: _onStyleLoadedCallback,
             ),
             Container(
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               alignment: Alignment.topCenter,
               child: Card(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     "Current source ${styleInfo.name}",
-                    textScaler: TextScaler.linear(1.4),
+                    textScaler: const TextScaler.linear(1.4),
                   ),
                 ),
               ),

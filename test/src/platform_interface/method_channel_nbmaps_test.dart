@@ -16,7 +16,7 @@ void main() {
   late MethodChannelNbMapsGl nbMapsGlChannel;
   late MockMethodChannel channel;
 
-  setUp(() async {
+  setUp(() {
     // Create a mock channel
     channel = MockMethodChannel();
     // Set the mock channel to the platform channel
@@ -29,12 +29,12 @@ void main() {
       compassEnabled: true,
       cameraTargetBounds: CameraTargetBounds(
         LatLngBounds(
-          southwest: LatLng(37.7749, -122.4194),
-          northeast: LatLng(37.8095, -122.3927),
+          southwest: const LatLng(37.7749, -122.4194),
+          northeast: const LatLng(37.8095, -122.3927),
         ),
       ),
       styleString: 'https://example.com/mapstyle',
-      minMaxZoomPreference: MinMaxZoomPreference(10.0, 15.0),
+      minMaxZoomPreference: const MinMaxZoomPreference(10.0, 15.0),
       rotateGesturesEnabled: true,
       scrollGesturesEnabled: true,
       tiltGesturesEnabled: true,
@@ -42,16 +42,16 @@ void main() {
       doubleClickZoomEnabled: true,
       trackCameraPosition: true,
       myLocationEnabled: true,
-      myLocationTrackingMode: MyLocationTrackingMode.None,
-      myLocationRenderMode: MyLocationRenderMode.NORMAL,
-      logoViewMargins: Point(10, 10),
-      compassViewPosition: CompassViewPosition.BottomLeft,
-      compassViewMargins: Point(5, 5),
-      attributionButtonPosition: AttributionButtonPosition.BottomRight,
-      attributionButtonMargins: Point(5, 5),
+      myLocationTrackingMode: MyLocationTrackingMode.none,
+      myLocationRenderMode: MyLocationRenderMode.normal,
+      logoViewMargins: const Point(10, 10),
+      compassViewPosition: CompassViewPosition.bottomLeft,
+      compassViewMargins: const Point(5, 5),
+      attributionButtonPosition: AttributionButtonPosition.bottomRight,
+      attributionButtonMargins: const Point(5, 5),
     );
 
-    final expectedCameraPosition = CameraPosition(
+    const expectedCameraPosition = CameraPosition(
       target: LatLng(37.7749, -122.4194),
       zoom: 15.0,
       bearing: 2.0,
@@ -67,7 +67,7 @@ void main() {
 
   test('animateCamera', () async {
     final cameraUpdate = CameraUpdate.newCameraPosition(
-      CameraPosition(
+      const CameraPosition(
         target: LatLng(37.7749, -122.4194),
         zoom: 15.0,
         bearing: 2.0,
@@ -80,7 +80,7 @@ void main() {
 
     await nbMapsGlChannel.animateCamera(cameraUpdate);
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'cameraUpdate': cameraUpdate.toJson(),
       'duration': null,
     };
@@ -90,7 +90,7 @@ void main() {
 
   test('test moveCamera', () async {
     final cameraUpdate = CameraUpdate.newCameraPosition(
-      CameraPosition(
+      const CameraPosition(
         target: LatLng(37.7749, -122.4194),
         zoom: 15.0,
         bearing: 2.0,
@@ -103,7 +103,7 @@ void main() {
 
     await nbMapsGlChannel.moveCamera(cameraUpdate);
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'cameraUpdate': cameraUpdate.toJson(),
     };
 
@@ -111,14 +111,14 @@ void main() {
   });
 
   test('updateMyLocationTrackingMode', () async {
-    final myLocationTrackingMode = MyLocationTrackingMode.None;
+    const myLocationTrackingMode = MyLocationTrackingMode.none;
 
     when(channel.invokeMethod<void>('map#updateMyLocationTrackingMode', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.updateMyLocationTrackingMode(myLocationTrackingMode);
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'mode': myLocationTrackingMode.index,
     };
 
@@ -128,7 +128,7 @@ void main() {
 
   test('matchMapLanguageWithDeviceDefault', () async {
     when(channel.invokeMethod<void>('map#matchMapLanguageWithDeviceDefault'))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.matchMapLanguageWithDeviceDefault();
 
@@ -137,7 +137,7 @@ void main() {
   });
 
   test('updateContentInsets', () async {
-    final insets = EdgeInsets.only(
+    const insets = EdgeInsets.only(
       left: 10.0,
       top: 10.0,
       right: 10.0,
@@ -145,11 +145,11 @@ void main() {
     );
 
     when(channel.invokeMethod<void>('map#updateContentInsets', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.updateContentInsets(insets, false);
 
-    Map<String, dynamic> args = <String, dynamic>{
+    const args = <String, dynamic>{
       'bounds': <String, double>{
         'left': 10.0,
         'top': 10.0,
@@ -163,14 +163,14 @@ void main() {
   });
 
   test('setMapLanguage', () async {
-    final language = 'en';
+    const language = 'en';
 
     when(channel.invokeMethod<void>('map#setMapLanguage', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.setMapLanguage(language);
 
-    Map<String, dynamic> args = <String, dynamic>{
+    const args = <String, dynamic>{
       'language': language,
     };
 
@@ -178,14 +178,14 @@ void main() {
   });
 
   test('setTelemetryEnabled', () async {
-    final enabled = true;
+    const enabled = true;
 
     when(channel.invokeMethod<void>('map#setTelemetryEnabled', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.setTelemetryEnabled(enabled);
 
-    Map<String, dynamic> args = <String, dynamic>{
+    const args = <String, dynamic>{
       'enabled': enabled,
     };
 
@@ -193,7 +193,7 @@ void main() {
   });
 
   test('getTelemetryEnabled', () async {
-    final enabled = true;
+    const enabled = true;
 
     when(channel.invokeMethod<bool>('map#getTelemetryEnabled'))
         .thenAnswer((_) async => enabled);
@@ -204,8 +204,8 @@ void main() {
   });
 
   test('queryRenderedFeatures', () async {
-    final point = Point<double>(10.0, 10.0);
-    final layerIds = <String>['layerId'];
+    const point = Point<double>(10.0, 10.0);
+    const layerIds = <String>['layerId'];
 
     when(channel.invokeMethod<Map<dynamic, dynamic>>(
             'map#queryRenderedFeatures', any))
@@ -215,7 +215,7 @@ void main() {
 
     await nbMapsGlChannel.queryRenderedFeatures(point, layerIds, null);
 
-    Map<String, dynamic> args = <String, Object?>{
+    final args = <String, Object?>{
       'x': point.x,
       'y': point.y,
       'layerIds': layerIds,
@@ -226,8 +226,8 @@ void main() {
   });
 
   test('queryRenderedFeaturesInRect', () async {
-    final rect = Rect.fromLTWH(10.0, 10.0, 10.0, 10.0);
-    final layerIds = <String>['layerId'];
+    const rect = Rect.fromLTWH(10.0, 10.0, 10.0, 10.0);
+    const layerIds = <String>['layerId'];
 
     when(channel.invokeMethod<Map<dynamic, dynamic>>(
             'map#queryRenderedFeatures', any))
@@ -237,7 +237,7 @@ void main() {
 
     await nbMapsGlChannel.queryRenderedFeaturesInRect(rect, layerIds, null);
 
-    Map<String, dynamic> args = <String, Object?>{
+    final args = <String, Object?>{
       'left': rect.left,
       'top': rect.top,
       'right': rect.right,
@@ -251,7 +251,7 @@ void main() {
 
   test('invalidateAmbientCache', () async {
     when(channel.invokeMethod<void>('map#invalidateAmbientCache'))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.invalidateAmbientCache();
 
@@ -259,7 +259,7 @@ void main() {
   });
 
   test('requestMyLocationLatLng', () async {
-    final latLng = LatLng(37.7749, -122.4194);
+    const latLng = LatLng(37.7749, -122.4194);
 
     when(channel.invokeMethod<Map<dynamic, dynamic>>(
             'locationComponent#getLastLocation'))
@@ -275,8 +275,8 @@ void main() {
 
   test('getVisibleRegion', () async {
     final bounds = LatLngBounds(
-      southwest: LatLng(37.7749, -122.4194),
-      northeast: LatLng(37.8095, -122.3927),
+      southwest: const LatLng(37.7749, -122.4194),
+      northeast: const LatLng(37.8095, -122.3927),
     );
 
     when(channel.invokeMethod<Map<dynamic, dynamic>>('map#getVisibleRegion'))
@@ -292,16 +292,16 @@ void main() {
 
   test('addImage', () async {
     final byteData = ByteData(1);
-    final name = 'name';
-    final sdf = false;
+    const name = 'name';
+    const sdf = false;
     final data = byteData.buffer.asUint8List();
 
     when(channel.invokeMethod<void>('style#addImage', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
-    await nbMapsGlChannel.addImage(name, data, sdf);
+    await nbMapsGlChannel.addImage(name, data);
 
-    Map<String, dynamic> args = <String, Object?>{
+    final args = <String, Object?>{
       'name': name,
       'bytes': data,
       'length': data.length,
@@ -312,9 +312,9 @@ void main() {
   });
 
   test('test addImageSource', () async {
-    final sourceId = 'sourceId';
-    Uint8List bytes = Uint8List(1);
-    LatLngQuad coordinates = LatLngQuad(
+    const sourceId = 'sourceId';
+    final bytes = Uint8List(1);
+    const coordinates = LatLngQuad(
       topLeft: LatLng(37.7749, -122.4194),
       topRight: LatLng(37.7749, -122.3927),
       bottomRight: LatLng(37.8095, -122.3927),
@@ -322,11 +322,11 @@ void main() {
     );
 
     when(channel.invokeMethod<void>('style#addImageSource', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addImageSource(sourceId, bytes, coordinates);
 
-    Map<String, dynamic> args = <String, Object>{
+    final args = <String, dynamic>{
       'imageSourceId': sourceId,
       'bytes': bytes,
       'length': bytes.length,
@@ -337,9 +337,9 @@ void main() {
   });
 
   test('test updateImageSource', () async {
-    final sourceId = 'sourceId';
-    Uint8List bytes = Uint8List(1);
-    LatLngQuad coordinates = LatLngQuad(
+    const sourceId = 'sourceId';
+    final bytes = Uint8List(1);
+    const coordinates = LatLngQuad(
       topLeft: LatLng(37.7749, -122.4194),
       topRight: LatLng(37.7749, -122.3927),
       bottomRight: LatLng(37.8095, -122.3927),
@@ -347,11 +347,11 @@ void main() {
     );
 
     when(channel.invokeMethod<void>('style#updateImageSource', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.updateImageSource(sourceId, bytes, coordinates);
 
-    Map<String, dynamic> args = <String, Object>{
+    final args = <String, dynamic>{
       'imageSourceId': sourceId,
       'bytes': bytes,
       'length': bytes.length,
@@ -362,8 +362,8 @@ void main() {
   });
 
   test('test toScreenLocation', () async {
-    final latLng = LatLng(37.7749, -122.4194);
-    final point = Point<double>(10.0, 10.0);
+    const latLng = LatLng(37.7749, -122.4194);
+    const point = Point<double>(10.0, 10.0);
 
     when(channel.invokeMethod<Map<dynamic, dynamic>>(
             'map#toScreenLocation', any))
@@ -378,11 +378,11 @@ void main() {
   });
 
   test('test toScreenLocationBatch', () async {
-    final latLngs = <LatLng>[
+    const latLngs = <LatLng>[
       LatLng(37.7749, -122.4194),
       LatLng(37.7749, -122.3927),
     ];
-    final points = <Point<double>>[
+    const points = <Point<double>>[
       Point<double>(10.0, 10.0),
       Point<double>(20.0, 20.0),
     ];
@@ -401,14 +401,14 @@ void main() {
   });
 
   test('removeSource', () async {
-    final sourceId = 'sourceId';
+    const sourceId = 'sourceId';
 
     when(channel.invokeMethod<void>('style#removeSource', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.removeSource(sourceId);
 
-    Map<String, dynamic> args = <String, Object>{
+    const args = <String, Object>{
       'sourceId': sourceId,
     };
 
@@ -416,18 +416,18 @@ void main() {
   });
 
   test('test addLayer', () async {
-    String imageLayerId = 'imageLayerId';
-    String imageSourceId = 'imageSourceId';
-    double? minzoom = 1.0;
-    double? maxzoom = 2.0;
+    const imageLayerId = 'imageLayerId';
+    const imageSourceId = 'imageSourceId';
+    const minzoom = 1.0;
+    const maxzoom = 2.0;
 
     when(channel.invokeMethod<void>('style#addLayer', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addLayer(
         imageLayerId, imageSourceId, minzoom, maxzoom);
 
-    Map<String, dynamic> args = <String, Object>{
+    const args = <String, Object>{
       'imageLayerId': imageLayerId,
       'imageSourceId': imageSourceId,
       'minzoom': minzoom,
@@ -438,14 +438,14 @@ void main() {
   });
 
   test('test removeLayer', () async {
-    final layerId = 'layerId';
+    const layerId = 'layerId';
 
     when(channel.invokeMethod<void>('style#removeLayer', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.removeLayer(layerId);
 
-    Map<String, dynamic> args = <String, Object>{
+    const args = <String, Object>{
       'layerId': layerId,
     };
 
@@ -453,19 +453,19 @@ void main() {
   });
 
   test('addLayerBelow', () async {
-    String imageLayerId = 'imageLayerId';
-    String imageSourceId = 'imageSourceId';
-    String belowLayerId = 'belowLayerId';
-    double? minzoom = 1.0;
-    double? maxzoom = 2.0;
+    const imageLayerId = 'imageLayerId';
+    const imageSourceId = 'imageSourceId';
+    const belowLayerId = 'belowLayerId';
+    const minzoom = 1.0;
+    const maxzoom = 2.0;
 
     when(channel.invokeMethod<void>('style#addLayerBelow', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addLayerBelow(
         imageLayerId, imageSourceId, belowLayerId, minzoom, maxzoom);
 
-    Map<String, dynamic> args = <String, Object>{
+    const args = <String, Object>{
       'imageLayerId': imageLayerId,
       'imageSourceId': imageSourceId,
       'belowLayerId': belowLayerId,
@@ -477,15 +477,15 @@ void main() {
   });
 
   test('setFilter', () async {
-    final layerId = 'layerId';
-    final filter = <String>['==', 'name', 'Doe'];
+    const layerId = 'layerId';
+    const filter = ['==', 'name', 'Doe'];
 
     when(channel.invokeMethod<void>('style#setFilter', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.setFilter(layerId, filter);
 
-    Map<String, dynamic> args = <String, Object>{
+    final args = <String, Object>{
       'layerId': layerId,
       'filter': jsonEncode(filter),
     };
@@ -494,15 +494,15 @@ void main() {
   });
 
   test('test setVisibility', () async {
-    final layerId = 'layerId';
-    final isVisible = true;
+    const layerId = 'layerId';
+    const isVisible = true;
 
     when(channel.invokeMethod<void>('style#setVisibility', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.setVisibility(layerId, isVisible);
 
-    Map<String, dynamic> args = <String, Object>{
+    const args = <String, Object>{
       'layerId': layerId,
       'isVisible': isVisible,
     };
@@ -511,9 +511,9 @@ void main() {
   });
 
   test('toLatLng', () async {
-    final screenLocation = Point<double>(10.0, 10.0);
-    final latLng = LatLng(37.7749, -122.4194);
-    Map<dynamic, dynamic> args = <dynamic, dynamic>{
+    const screenLocation = Point<double>(10.0, 10.0);
+    const latLng = LatLng(37.7749, -122.4194);
+    final args = <dynamic, dynamic>{
       'x': screenLocation.x,
       'y': screenLocation.y,
     };
@@ -531,8 +531,8 @@ void main() {
   });
 
   test('test getMetersPerPixelAtLatitude', () async {
-    final latitude = 37.7749;
-    final expectedMetersPerPixel = 152.8740565703525;
+    const latitude = 37.7749;
+    const expectedMetersPerPixel = 152.8740565703525;
 
     when(channel.invokeMethod<Map<String, dynamic>>(
             'map#getMetersPerPixelAtLatitude', any))
@@ -546,8 +546,8 @@ void main() {
   });
 
   test('test addGeoJsonSource', () async {
-    final sourceId = 'sourceId';
-    final geoJson = {
+    const sourceId = 'sourceId';
+    const geoJson = {
       'type': 'FeatureCollection',
       'features': [
         {
@@ -564,11 +564,11 @@ void main() {
     };
 
     when(channel.invokeMethod<void>('source#addGeoJson', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addGeoJsonSource(sourceId, geoJson);
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'sourceId': sourceId,
       'geojson': jsonEncode(geoJson),
     };
@@ -577,8 +577,8 @@ void main() {
   });
 
   test('test setGeoJsonSource', () async {
-    final sourceId = 'sourceId';
-    final geoJson = {
+    const sourceId = 'sourceId';
+    const geoJson = {
       'type': 'FeatureCollection',
       'features': [
         {
@@ -595,11 +595,11 @@ void main() {
     };
 
     when(channel.invokeMethod<void>('source#setGeoJson', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.setGeoJsonSource(sourceId, geoJson);
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'sourceId': sourceId,
       'geojson': jsonEncode(geoJson),
     };
@@ -608,17 +608,17 @@ void main() {
   });
 
   test('test addSymbolLayer', () async {
-    String sourceId = 'sourceId';
-    String layerId = 'layerId';
-    Map<String, dynamic> properties = {};
-    String? belowLayerId = 'belowLayerId';
-    String? sourceLayer = 'sourceLayer';
-    double? minzoom = 1.0;
-    double? maxzoom = 2.0;
-    dynamic filter = ['==', 'name', 'Doe'];
-    bool enableInteraction = true;
+    const sourceId = 'sourceId';
+    const layerId = 'layerId';
+    const properties = <String, dynamic>{};
+    const belowLayerId = 'belowLayerId';
+    const sourceLayer = 'sourceLayer';
+    const minzoom = 1.0;
+    const maxzoom = 2.0;
+    const filter = ['==', 'name', 'Doe'];
+    const enableInteraction = true;
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'sourceId': sourceId,
       'layerId': layerId,
       'belowLayerId': belowLayerId,
@@ -632,7 +632,7 @@ void main() {
     };
 
     when(channel.invokeMethod<void>('symbolLayer#add', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addSymbolLayer(sourceId, layerId, properties,
         belowLayerId: belowLayerId,
@@ -646,17 +646,17 @@ void main() {
   });
 
   test('test addLineLayer', () async {
-    String sourceId = 'sourceId';
-    String layerId = 'layerId';
-    Map<String, dynamic> properties = {};
-    String? belowLayerId = 'belowLayerId';
-    String? sourceLayer = 'sourceLayer';
-    double? minzoom = 1.0;
-    double? maxzoom = 2.0;
-    dynamic filter = ['==', 'name', 'Doe'];
-    bool enableInteraction = true;
+    const sourceId = 'sourceId';
+    const layerId = 'layerId';
+    const properties = <String, dynamic>{};
+    const belowLayerId = 'belowLayerId';
+    const sourceLayer = 'sourceLayer';
+    const minzoom = 1.0;
+    const maxzoom = 2.0;
+    const filter = ['==', 'name', 'Doe'];
+    const enableInteraction = true;
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'sourceId': sourceId,
       'layerId': layerId,
       'belowLayerId': belowLayerId,
@@ -670,7 +670,7 @@ void main() {
     };
 
     when(channel.invokeMethod<void>('lineLayer#add', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addLineLayer(sourceId, layerId, properties,
         belowLayerId: belowLayerId,
@@ -684,17 +684,17 @@ void main() {
   });
 
   test('test addCircleLayer', () async {
-    String sourceId = 'sourceId';
-    String layerId = 'layerId';
-    Map<String, dynamic> properties = {};
-    String? belowLayerId = 'belowLayerId';
-    String? sourceLayer = 'sourceLayer';
-    double? minzoom = 1.0;
-    double? maxzoom = 2.0;
-    dynamic filter = ['==', 'name', 'Doe'];
-    bool enableInteraction = true;
+    const sourceId = 'sourceId';
+    const layerId = 'layerId';
+    const properties = <String, dynamic>{};
+    const belowLayerId = 'belowLayerId';
+    const sourceLayer = 'sourceLayer';
+    const minzoom = 1.0;
+    const maxzoom = 2.0;
+    const filter = ['==', 'name', 'Doe'];
+    const enableInteraction = true;
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'sourceId': sourceId,
       'layerId': layerId,
       'belowLayerId': belowLayerId,
@@ -708,7 +708,7 @@ void main() {
     };
 
     when(channel.invokeMethod<void>('circleLayer#add', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addCircleLayer(sourceId, layerId, properties,
         belowLayerId: belowLayerId,
@@ -722,17 +722,17 @@ void main() {
   });
 
   test('test addFillLayer', () async {
-    String sourceId = 'sourceId';
-    String layerId = 'layerId';
-    Map<String, dynamic> properties = {};
-    String? belowLayerId = 'belowLayerId';
-    String? sourceLayer = 'sourceLayer';
-    double? minzoom = 1.0;
-    double? maxzoom = 2.0;
-    dynamic filter = ['==', 'name', 'Doe'];
-    bool enableInteraction = true;
+    const sourceId = 'sourceId';
+    const layerId = 'layerId';
+    const properties = <String, dynamic>{};
+    const belowLayerId = 'belowLayerId';
+    const sourceLayer = 'sourceLayer';
+    const minzoom = 1.0;
+    const maxzoom = 2.0;
+    const filter = ['==', 'name', 'Doe'];
+    const enableInteraction = true;
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'sourceId': sourceId,
       'layerId': layerId,
       'belowLayerId': belowLayerId,
@@ -746,7 +746,7 @@ void main() {
     };
 
     when(channel.invokeMethod<void>('fillLayer#add', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addFillLayer(sourceId, layerId, properties,
         belowLayerId: belowLayerId,
@@ -760,17 +760,17 @@ void main() {
   });
 
   test('test addFillExtrusionLayer', () async {
-    String sourceId = 'sourceId';
-    String layerId = 'layerId';
-    Map<String, dynamic> properties = {};
-    String? belowLayerId = 'belowLayerId';
-    String? sourceLayer = 'sourceLayer';
-    double? minzoom = 1.0;
-    double? maxzoom = 2.0;
-    dynamic filter = ['==', 'name', 'Doe'];
-    bool enableInteraction = true;
+    const sourceId = 'sourceId';
+    const layerId = 'layerId';
+    const properties = <String, dynamic>{};
+    const belowLayerId = 'belowLayerId';
+    const sourceLayer = 'sourceLayer';
+    const minzoom = 1.0;
+    const maxzoom = 2.0;
+    const filter = ['==', 'name', 'Doe'];
+    const enableInteraction = true;
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'sourceId': sourceId,
       'layerId': layerId,
       'belowLayerId': belowLayerId,
@@ -784,7 +784,7 @@ void main() {
     };
 
     when(channel.invokeMethod<void>('fillExtrusionLayer#add', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addFillExtrusionLayer(sourceId, layerId, properties,
         belowLayerId: belowLayerId,
@@ -798,16 +798,16 @@ void main() {
   });
 
   test('test addSource', () async {
-    String sourceId = 'sourceId';
-    SourceProperties properties = VectorSourceProperties();
+    const sourceId = 'sourceId';
+    const properties = VectorSourceProperties();
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'sourceId': sourceId,
       'properties': properties.toJson(),
     };
 
     when(channel.invokeMethod<void>('style#addSource', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addSource(sourceId, properties);
 
@@ -815,15 +815,15 @@ void main() {
   });
 
   test('test addRasterLayer', () async {
-    String sourceId = 'sourceId';
-    String layerId = 'layerId';
-    Map<String, dynamic> properties = {};
-    String? belowLayerId = 'belowLayerId';
-    String? sourceLayer = 'sourceLayer';
-    double? minzoom = 1.0;
-    double? maxzoom = 2.0;
+    const sourceId = 'sourceId';
+    const layerId = 'layerId';
+    const properties = <String, dynamic>{};
+    const belowLayerId = 'belowLayerId';
+    const sourceLayer = 'sourceLayer';
+    const minzoom = 1.0;
+    const maxzoom = 2.0;
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'sourceId': sourceId,
       'layerId': layerId,
       'belowLayerId': belowLayerId,
@@ -834,7 +834,7 @@ void main() {
     };
 
     when(channel.invokeMethod<void>('rasterLayer#add', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addRasterLayer(sourceId, layerId, properties,
         belowLayerId: belowLayerId,
@@ -846,15 +846,15 @@ void main() {
   });
 
   test('test addHillshadeLayer', () async {
-    String sourceId = 'sourceId';
-    String layerId = 'layerId';
-    Map<String, dynamic> properties = {};
-    String? belowLayerId = 'belowLayerId';
-    String? sourceLayer = 'sourceLayer';
-    double? minzoom = 1.0;
-    double? maxzoom = 2.0;
+    const sourceId = 'sourceId';
+    const layerId = 'layerId';
+    const properties = <String, dynamic>{};
+    const belowLayerId = 'belowLayerId';
+    const sourceLayer = 'sourceLayer';
+    const minzoom = 1.0;
+    const maxzoom = 2.0;
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'sourceId': sourceId,
       'layerId': layerId,
       'belowLayerId': belowLayerId,
@@ -865,7 +865,7 @@ void main() {
     };
 
     when(channel.invokeMethod<void>('hillshadeLayer#add', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addHillshadeLayer(sourceId, layerId, properties,
         belowLayerId: belowLayerId,
@@ -877,15 +877,15 @@ void main() {
   });
 
   test('test addHeatmapLayer', () async {
-    String sourceId = 'sourceId';
-    String layerId = 'layerId';
-    Map<String, dynamic> properties = {};
-    String? belowLayerId = 'belowLayerId';
-    String? sourceLayer = 'sourceLayer';
-    double? minzoom = 1.0;
-    double? maxzoom = 2.0;
+    const sourceId = 'sourceId';
+    const layerId = 'layerId';
+    const properties = <String, dynamic>{};
+    const belowLayerId = 'belowLayerId';
+    const sourceLayer = 'sourceLayer';
+    const minzoom = 1.0;
+    const maxzoom = 2.0;
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'sourceId': sourceId,
       'layerId': layerId,
       'belowLayerId': belowLayerId,
@@ -896,7 +896,7 @@ void main() {
     };
 
     when(channel.invokeMethod<void>('heatmapLayer#add', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.addHeatmapLayer(sourceId, layerId, properties,
         belowLayerId: belowLayerId,
@@ -908,24 +908,24 @@ void main() {
   });
 
   test('test setFeatureForGeoJsonSource', () async {
-    final sourceId = 'sourceId';
-    final feature = {
+    const sourceId = 'sourceId';
+    const feature = <String, dynamic>{
       'type': 'Feature',
-      'geometry': {
+      'geometry': <String, dynamic>{
         'type': 'Point',
         'coordinates': [-122.4194, 37.7749],
       },
-      'properties': {
+      'properties': <String, dynamic>{
         'name': 'Doe',
       },
     };
 
     when(channel.invokeMethod<void>('source#setFeature', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.setFeatureForGeoJsonSource(sourceId, feature);
 
-    Map<String, dynamic> args = <String, dynamic>{
+    final args = <String, dynamic>{
       'sourceId': sourceId,
       'geojsonFeature': jsonEncode(feature),
     };
@@ -934,8 +934,8 @@ void main() {
   });
 
   test('test findBelowLayerId', () async {
-    List<String> belowAttrs = ['layerId'];
-    final belowLayerId = 'belowLayerId';
+    const belowAttrs = ['layerId'];
+    const belowLayerId = 'belowLayerId';
 
     when(channel.invokeMethod<String>('style#findBelowLayer', any))
         .thenAnswer((_) async => belowLayerId);
@@ -944,23 +944,24 @@ void main() {
 
     expect(result, equals(belowLayerId));
   });
+
   test('test setStyleString', () async {
-    final styleString = 'styleString';
+    const styleString = 'styleString';
 
     when(channel.invokeMethod<void>('style#setStyleString', any))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     await nbMapsGlChannel.setStyleString(styleString);
 
-    Map<String, dynamic> args = <String, dynamic>{
+    const args = <String, dynamic>{
       'styleString': styleString,
     };
 
     verify(channel.invokeMethod('style#setStyleString', args)).called(1);
   });
 
-  test('handleMethodCall infoWindow#onTap', () async {
-    final arguments = <String, dynamic>{
+  test('handleMethodCall infoWindow#onTap', () {
+    const arguments = <String, dynamic>{
       'symbol': 'symbolId',
     };
 
@@ -968,17 +969,17 @@ void main() {
       expect(symbol, 'symbolId');
     });
 
-    nbMapsGlChannel.handleMethodCall(MethodCall('infoWindow#onTap', arguments));
+    nbMapsGlChannel.handleMethodCall(const MethodCall('infoWindow#onTap', arguments));
   });
 
-  test('handleMethodCall feature#onTap', () async {
-    String id = 'id';
-    double x = 10.0;
-    double y = 10.0;
-    double lng = -122.4194;
-    double lat = 37.7749;
+  test('handleMethodCall feature#onTap', () {
+    const id = 'id';
+    const x = 10.0;
+    const y = 10.0;
+    const lng = -122.4194;
+    const lat = 37.7749;
 
-    final arguments = <String, dynamic>{
+    const arguments = <String, dynamic>{
       'id': id,
       'x': x,
       'y': y,
@@ -988,28 +989,26 @@ void main() {
 
     nbMapsGlChannel.onFeatureTappedPlatform.add((Map<String, dynamic> arg) {
       expect(arg['id'], id);
-      expect(arg['point'], Point<double>(x, y));
-      expect(arg['latLng'], LatLng(lat, lng));
+      expect(arg['point'], const Point<double>(x, y));
+      expect(arg['latLng'], const LatLng(lat, lng));
     });
 
-    nbMapsGlChannel.handleMethodCall(MethodCall('feature#onTap', arguments));
+    nbMapsGlChannel.handleMethodCall(const MethodCall('feature#onTap', arguments));
   });
 
-  test('handleMethodCall feature#onDrag', () async {
-    String id = 'id';
-    double x = 10.0;
-    double y = 10.0;
-    double originLat = -122.4194;
-    double originLng = 37.7749;
+  test('handleMethodCall feature#onDrag', () {
+    const id = 'id';
+    const x = 10.0;
+    const y = 10.0;
+    const originLat = -122.4194;
+    const originLng = 37.7749;
+    const currentLat = 38.7749;
+    const currentLng = -125.4194;
+    const deltaLat = 1.0;
+    const deltaLng = 2.0;
+    const eventType = 'end';
 
-    final double currentLat = 38.7749;
-    final double currentLng = -125.4194;
-
-    final double deltaLat = 1.0;
-    final double deltaLng = 2.0;
-    final String eventType = 'end';
-
-    Map<String, dynamic> methodArgs = {
+    const methodArgs = <String, dynamic>{
       'id': id,
       'x': x,
       'y': y,
@@ -1022,7 +1021,7 @@ void main() {
       'eventType': eventType,
     };
 
-    Map<String, dynamic> callabckArguments = {
+    const callabckArguments = <String, dynamic>{
       'id': id,
       'point': Point<double>(x, y),
       'origin': LatLng(originLat, originLng),
@@ -1035,31 +1034,31 @@ void main() {
       expect(arg, callabckArguments);
     });
 
-    nbMapsGlChannel.handleMethodCall(MethodCall('feature#onDrag', methodArgs));
+    nbMapsGlChannel.handleMethodCall(const MethodCall('feature#onDrag', methodArgs));
   });
 
   test('handleMethodCall throws MissingPluginException for unknown method',
-      () async {
+      () {
     const call = MethodCall('unknownMethod');
 
     expect(() async => await nbMapsGlChannel.handleMethodCall(call),
         throwsA(isA<MissingPluginException>()));
   });
 
-  test('handleMethodCall camera#onMoveStarted', () async {
-    bool isCallbackInvoked = false;
+  test('handleMethodCall camera#onMoveStarted', () {
+    var isCallbackInvoked = false;
     nbMapsGlChannel.onCameraMoveStartedPlatform.add((_) {
       isCallbackInvoked = true;
     });
 
-    nbMapsGlChannel.handleMethodCall(MethodCall('camera#onMoveStarted'));
+    nbMapsGlChannel.handleMethodCall(const MethodCall('camera#onMoveStarted'));
 
     expect(isCallbackInvoked, true);
   });
 
-  test('handleMethodCall camera#onMove', () async {
-    Map<String, dynamic> args = <String, dynamic>{
-      'position': <String, dynamic>{
+  test('handleMethodCall camera#onMove', () {
+    const args = <String, dynamic>{
+      'position': {
         'target': [37.7749, -122.4194],
         'zoom': 15.0,
         'bearing': 2.0,
@@ -1068,17 +1067,17 @@ void main() {
     };
 
     nbMapsGlChannel.onCameraMovePlatform.add((CameraPosition position) {
-      expect(position.target, LatLng(37.7749, -122.4194));
+      expect(position.target, const LatLng(37.7749, -122.4194));
       expect(position.zoom, 15.0);
       expect(position.bearing, 2.0);
       expect(position.tilt, 3.0);
     });
-    nbMapsGlChannel.handleMethodCall(MethodCall('camera#onMove', args));
+    nbMapsGlChannel.handleMethodCall(const MethodCall('camera#onMove', args));
   });
 
-  test('handleMethodCall camera#onIdle', () async {
-    Map<String, dynamic> args = <String, dynamic>{
-      'position': <String, dynamic>{
+  test('handleMethodCall camera#onIdle', () {
+    const args = <String, dynamic>{
+      'position': {
         'target': [37.7749, -122.4194],
         'zoom': 15.0,
         'bearing': 2.0,
@@ -1087,29 +1086,29 @@ void main() {
     };
 
     nbMapsGlChannel.onCameraIdlePlatform.add((CameraPosition? position) {
-      expect(position?.target, LatLng(37.7749, -122.4194));
+      expect(position?.target, const LatLng(37.7749, -122.4194));
       expect(position?.zoom, 15.0);
       expect(position?.bearing, 2.0);
       expect(position?.tilt, 3.0);
     });
 
-    nbMapsGlChannel.handleMethodCall(MethodCall('camera#onIdle', args));
+    nbMapsGlChannel.handleMethodCall(const MethodCall('camera#onIdle', args));
   });
 
-  test('handleMethodCall map#onStyleLoaded', () async {
-    bool isCallbackInvoked = false;
+  test('handleMethodCall map#onStyleLoaded', () {
+    var isCallbackInvoked = false;
     nbMapsGlChannel.onMapStyleLoadedPlatform.add((_) {
       isCallbackInvoked = true;
     });
 
-    nbMapsGlChannel.handleMethodCall(MethodCall('map#onStyleLoaded'));
+    nbMapsGlChannel.handleMethodCall(const MethodCall('map#onStyleLoaded'));
 
     expect(isCallbackInvoked, true);
   });
 
-  test('handleMethodCall map#onMapClick', () async {
-    final point = Point<double>(10.0, 10.0);
-    final latLng = LatLng(37.7749, -122.4194);
+  test('handleMethodCall map#onMapClick', () {
+    const point = Point<double>(10.0, 10.0);
+    const latLng = LatLng(37.7749, -122.4194);
 
     final arguments = <String, dynamic>{
       'x': point.x,
@@ -1126,9 +1125,9 @@ void main() {
     nbMapsGlChannel.handleMethodCall(MethodCall('map#onMapClick', arguments));
   });
 
-  test('handleMethodCall map#onMapLongClick', () async {
-    final point = Point<double>(10.0, 10.0);
-    final latLng = LatLng(37.7749, -122.4194);
+  test('handleMethodCall map#onMapLongClick', () {
+    const point = Point<double>(10.0, 10.0);
+    const latLng = LatLng(37.7749, -122.4194);
 
     final arguments = <String, dynamic>{
       'x': point.x,
@@ -1142,14 +1141,13 @@ void main() {
       expect(args['latLng'], latLng);
     });
 
-    nbMapsGlChannel
-        .handleMethodCall(MethodCall('map#onMapLongClick', arguments));
+    nbMapsGlChannel.handleMethodCall(MethodCall('map#onMapLongClick', arguments));
   });
 
-  test('handleMethodCall map#onCameraTrackingChanged', () async {
-    final int trackingMode = 1;
+  test('handleMethodCall map#onCameraTrackingChanged', () {
+    const trackingMode = 1;
 
-    final arguments = <String, dynamic>{
+    const arguments = <String, dynamic>{
       'mode': trackingMode,
     };
 
@@ -1159,25 +1157,25 @@ void main() {
     });
 
     nbMapsGlChannel
-        .handleMethodCall(MethodCall('map#onCameraTrackingChanged', arguments));
+        .handleMethodCall(const MethodCall('map#onCameraTrackingChanged', arguments));
   });
 
-  test('handleMethodCall map#onAttributionClick', () async {
-    bool isCallbackInvoked = false;
+  test('handleMethodCall map#onAttributionClick', () {
+    var isCallbackInvoked = false;
     nbMapsGlChannel.onAttributionClickPlatform.add((_) {
       isCallbackInvoked = true;
     });
 
-    nbMapsGlChannel.handleMethodCall(MethodCall('map#onAttributionClick'));
+    nbMapsGlChannel.handleMethodCall(const MethodCall('map#onAttributionClick'));
 
     expect(isCallbackInvoked, true);
   });
 
-  test('handleMethodCall map#onUserLocationUpdated', () async {
-    final location = <String, dynamic>{
+  test('handleMethodCall map#onUserLocationUpdated', () {
+    const location = <String, dynamic>{
       'userLocation': {
         'position': [37.7749, -122.4194],
-        'timestamp': DateTime.now().microsecondsSinceEpoch,
+        'timestamp': 0,
         'altitude': 10.0,
         'bearing': 2.0,
         'horizontalAccuracy': 3.0,
@@ -1197,6 +1195,6 @@ void main() {
     });
 
     nbMapsGlChannel
-        .handleMethodCall(MethodCall('map#onUserLocationUpdated', location));
+        .handleMethodCall(const MethodCall('map#onUserLocationUpdated', location));
   });
 }

@@ -4,15 +4,15 @@ import 'package:test/test.dart';
 void main() {
   test('OfflineRegionDefinition should convert to map correctly', () {
     // Arrange
-    LatLngBounds bounds = LatLngBounds(
-      southwest: LatLng(37.7749, -122.4194),
-      northeast: LatLng(37.8095, -122.3927),
+    final LatLngBounds bounds = LatLngBounds(
+      southwest: const LatLng(37.7749, -122.4194),
+      northeast: const LatLng(37.8095, -122.3927),
     );
-    String mapStyleUrl = "https://example.com/mapstyle";
-    double minZoom = 10.0;
-    double maxZoom = 15.0;
-    bool includeIdeographs = true;
-    OfflineRegionDefinition definition = OfflineRegionDefinition(
+    const String mapStyleUrl = "https://example.com/mapstyle";
+    const double minZoom = 10.0;
+    const double maxZoom = 15.0;
+    const bool includeIdeographs = true;
+    final OfflineRegionDefinition definition = OfflineRegionDefinition(
       bounds: bounds,
       mapStyleUrl: mapStyleUrl,
       minZoom: minZoom,
@@ -21,7 +21,7 @@ void main() {
     );
 
     // Act
-    Map<String, dynamic> result = definition.toMap();
+    final Map<String, dynamic> result = definition.toMap();
 
     // Assert
     expect(result['bounds'], equals(bounds.toList()));
@@ -33,15 +33,15 @@ void main() {
 
   test('OfflineRegionDefinition should convert from map correctly', () {
     // Arrange
-    LatLngBounds bounds = LatLngBounds(
-      southwest: LatLng(37.7749, -122.4194),
-      northeast: LatLng(37.8095, -122.3927),
+    final LatLngBounds bounds = LatLngBounds(
+      southwest: const LatLng(37.7749, -122.4194),
+      northeast: const LatLng(37.8095, -122.3927),
     );
-    String mapStyleUrl = "https://example.com/mapstyle";
-    double minZoom = 10.0;
-    double maxZoom = 15.0;
-    bool includeIdeographs = true;
-    Map<String, dynamic> map = {
+    const String mapStyleUrl = "https://example.com/mapstyle";
+    const double minZoom = 10.0;
+    const double maxZoom = 15.0;
+    const bool includeIdeographs = true;
+    final Map<String, dynamic> map = {
       'bounds': bounds.toList(),
       'mapStyleUrl': mapStyleUrl,
       'minZoom': minZoom,
@@ -50,7 +50,7 @@ void main() {
     };
 
     // Act
-    OfflineRegionDefinition result = OfflineRegionDefinition.fromMap(map);
+    final OfflineRegionDefinition result = OfflineRegionDefinition.fromMap(map);
 
     // Assert
     expect(result.bounds, equals(bounds));
@@ -62,31 +62,31 @@ void main() {
 
   test('OfflineRegion should convert from map correctly', () {
     // Arrange
-    int id = 123;
-    LatLngBounds bounds = LatLngBounds(
-      southwest: LatLng(37.7749, -122.4194),
-      northeast: LatLng(37.8095, -122.3927),
+    const int id = 123;
+    final LatLngBounds bounds = LatLngBounds(
+      southwest: const  LatLng(37.7749, -122.4194),
+      northeast: const LatLng(37.8095, -122.3927),
     );
-    String mapStyleUrl = "https://example.com/mapstyle";
-    double minZoom = 10.0;
-    double maxZoom = 15.0;
-    bool includeIdeographs = true;
-    Map<String, dynamic> definitionMap = {
+    const String mapStyleUrl = "https://example.com/mapstyle";
+    const double minZoom = 10.0;
+    const double maxZoom = 15.0;
+    const bool includeIdeographs = true;
+    final Map<String, dynamic> definitionMap = {
       'bounds': bounds.toList(),
       'mapStyleUrl': mapStyleUrl,
       'minZoom': minZoom,
       'maxZoom': maxZoom,
       'includeIdeographs': includeIdeographs,
     };
-    Map<String, dynamic> metadata = {"key": "value"};
-    Map<String, dynamic> map = {
+    final Map<String, dynamic> metadata = {"key": "value"};
+    final Map<String, dynamic> map = {
       'id': id,
       'definition': definitionMap,
       'metadata': metadata,
     };
 
     // Act
-    OfflineRegion result = OfflineRegion.fromMap(map);
+    final OfflineRegion result = OfflineRegion.fromMap(map);
 
     // Assert
     expect(result.id, equals(id));

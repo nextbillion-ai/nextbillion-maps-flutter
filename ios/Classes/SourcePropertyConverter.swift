@@ -7,7 +7,7 @@ class SourcePropertyConverter {
 
         if let bounds = properties["bounds"] as? [Double] {
             options[.coordinateBounds] =
-            NSValue(nglCoordinateBounds: boundsFromArray(coordinates: bounds))
+                NSValue(nglCoordinateBounds: boundsFromArray(coordinates: bounds))
         }
         if let minzoom = properties["minzoom"] as? Double {
             options[.minimumZoomLevel] = minzoom
@@ -27,8 +27,7 @@ class SourcePropertyConverter {
     }
 
     class func buildRasterTileSource(identifier: String,
-                                     properties: [String: Any]) -> NGLRasterTileSource?
-    {
+                                     properties: [String: Any]) -> NGLRasterTileSource? {
         if let rawUrl = properties["url"] as? String, let url = URL(string: rawUrl) {
             return NGLRasterTileSource(identifier: identifier, configurationURL: url)
         }
@@ -44,8 +43,7 @@ class SourcePropertyConverter {
     }
 
     class func buildVectorTileSource(identifier: String,
-                                     properties: [String: Any]) -> NGLVectorTileSource?
-    {
+                                     properties: [String: Any]) -> NGLVectorTileSource? {
         if let rawUrl = properties["url"] as? String, let url = URL(string: rawUrl) {
             return NGLVectorTileSource(identifier: identifier, configurationURL: url)
         }
@@ -60,8 +58,7 @@ class SourcePropertyConverter {
     }
 
     class func buildRasterDemSource(identifier: String,
-                                    properties: [String: Any]) -> NGLRasterDEMSource?
-    {
+                                    properties: [String: Any]) -> NGLRasterDEMSource? {
         if let rawUrl = properties["url"] as? String, let url = URL(string: rawUrl) {
             return NGLRasterDEMSource(identifier: identifier, configurationURL: url)
         }
@@ -124,8 +121,7 @@ class SourcePropertyConverter {
 
     class func buildImageSource(identifier: String, properties: [String: Any]) -> NGLImageSource? {
         if let rawUrl = properties["url"] as? String, let url = URL(string: rawUrl),
-           let coordinates = properties["coordinates"] as? [[Double]]
-        {
+           let coordinates = properties["coordinates"] as? [[Double]] {
             return NGLImageSource(
                 identifier: identifier,
                 coordinateQuad: quadFromArray(coordinates: coordinates),

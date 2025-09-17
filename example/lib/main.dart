@@ -54,7 +54,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
 ];
 
 class MapsDemo extends StatefulWidget {
-  static const String ACCESS_KEY = String.fromEnvironment("ACCESS_KEY");
+  static const String accessKey = String.fromEnvironment("ACCESS_KEY");
 
   @override
   State<MapsDemo> createState() => _MapsDemoState();
@@ -64,18 +64,24 @@ class _MapsDemoState extends State<MapsDemo> {
   @override
   void initState() {
     super.initState();
-    NextBillion.initNextBillion(MapsDemo.ACCESS_KEY);
+    NextBillion.initNextBillion(MapsDemo.accessKey);
 
     NextBillion.getUserId().then((value) {
-      print("User id: $value");
+      if (kDebugMode) {
+        print("User id: $value");
+      }
     });
     NextBillion.setUserId("1234");
     NextBillion.getNbId().then((value) {
-      print("NB id: $value");
+      if (kDebugMode) {
+        print("NB id: $value");
+      }
     });
 
     NextBillion.getUserId().then((value) {
-      print("User id: $value");
+      if (kDebugMode) {
+        print("User id: $value");
+      }
     });
   }
 
@@ -95,25 +101,29 @@ class _MapsDemoState extends State<MapsDemo> {
     }
   }
 
-  void _pushPage(BuildContext context, ExamplePage page) async {
-    var status = await Permission.location.status;
+  Future<void> _pushPage(BuildContext context, ExamplePage page) async {
+    final status = await Permission.location.status;
     if (status.isDenied) {
       await [Permission.location].request();
     }
 
+    if (!mounted) return; // Check if the widget is still mounted
+
+    // ignore: use_build_context_synchronously
     Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => Scaffold(
-              appBar: AppBar(title: Text(page.title)),
-              body: page,
-            )));
+      builder: (_) => Scaffold(
+        appBar: AppBar(title: Text(page.title)),
+        body: page,
+      ),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('NbMaps examples')),
-      body: MapsDemo.ACCESS_KEY.isEmpty ||
-              MapsDemo.ACCESS_KEY.contains("YOUR_TOKEN")
+      body: MapsDemo.accessKey.isEmpty ||
+              MapsDemo.accessKey.contains("YOUR_TOKEN")
           ? buildAccessTokenWarning()
           : ListView.separated(
               itemCount: _allPages.length,
@@ -122,7 +132,9 @@ class _MapsDemoState extends State<MapsDemo> {
               itemBuilder: (_, int index) => ListTile(
                 leading: _allPages[index].leading,
                 title: Text(_allPages[index].title),
-                onTap: () => _pushPage(context, _allPages[index]),
+                onTap: () {
+                  _pushPage(context, _allPages[index]);
+                },
               ),
             ),
     );
@@ -135,23 +147,26 @@ class _MapsDemoState extends State<MapsDemo> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            "Using MapView requires calling Nextbillion.initNextbillion(String accessKey) "
-                "before inflating or creating NBMap Widget. ",
+            "Using MapView requires calling Nextbillion.initNextbillion(String accessKey) before inflating or creating NBMap Widget."
           ]
               .map((text) => Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text(text,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
-                  ))
+            padding: const EdgeInsets.all(8),
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ))
               .toList(),
         ),
       ),
     );
   }
+
 }
 
 void main() {

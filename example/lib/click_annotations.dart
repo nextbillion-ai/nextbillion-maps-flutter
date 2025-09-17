@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 class ClickAnnotationPage extends ExamplePage {
-  ClickAnnotationPage()
+  const ClickAnnotationPage()
       : super(const Icon(Icons.check_circle), 'Annotation tap');
 
   @override
@@ -23,7 +23,7 @@ class ClickAnnotationBody extends StatefulWidget {
 class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
   ClickAnnotationBodyState();
 
-  static const LatLng center = const LatLng(-33.88, 151.16);
+  static const LatLng center = LatLng(-33.88, 151.16);
   bool overlapping = false;
 
   NextbillionMapController? controller;
@@ -45,10 +45,10 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     super.dispose();
   }
 
-  _showSnackBar(String type, String id) {
+  void _showSnackBar(String type, String id) {
     final snackBar = SnackBar(
         content: Text('Tapped $type $id',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         backgroundColor: Theme.of(context).primaryColor);
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -72,7 +72,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
 
   void _onStyleLoaded() {
     controller!.addCircle(
-      CircleOptions(
+      const CircleOptions(
         geometry: LatLng(-33.881979408447314, 151.171361438502117),
         circleStrokeColor: "#00FF00",
         circleStrokeWidth: 2,
@@ -80,7 +80,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
       ),
     );
     controller!.addCircle(
-      CircleOptions(
+      const CircleOptions(
         geometry: LatLng(-33.894372606072309, 151.17576679759523),
         circleStrokeColor: "#00FF00",
         circleStrokeWidth: 2,
@@ -88,13 +88,13 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
       ),
     );
     controller!.addSymbol(
-      SymbolOptions(
+      const SymbolOptions(
           geometry: LatLng(-33.894372606072309, 151.17576679759523),
           iconImage: "fast-food-15",
           iconSize: 2),
     );
     controller!.addLine(
-      LineOptions(
+      const LineOptions(
         geometry: [
           LatLng(-33.874867744475786, 151.170627211986584),
           LatLng(-33.881979408447314, 151.171361438502117),
@@ -108,7 +108,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
     );
 
     controller!.addFill(
-      FillOptions(
+      const FillOptions(
         geometry: [
           [
             LatLng(-33.901517742631846, 151.178099204457737),
@@ -130,7 +130,7 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: NBMap(
-        annotationOrder: [
+        annotationOrder: const [
           AnnotationType.fill,
           AnnotationType.line,
           AnnotationType.circle,
@@ -154,8 +154,8 @@ class ClickAnnotationBodyState extends State<ClickAnnotationBody> {
             controller!.setSymbolTextAllowOverlap(overlapping);
             controller!.setSymbolTextIgnorePlacement(overlapping);
           },
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
+          child: const Padding(
+            padding: EdgeInsets.all(8.0),
             child: Text("Toggle overlapping"),
           )),
     );

@@ -1,83 +1,83 @@
 part of "../../nb_maps_flutter.dart";
 
 class NbMapStyles {
-  static const String NBMAP_STREETS =
+  static const String nbmapStreets =
       "https://api.nextbillion.io/tt/style/1/style/22.2.1-9?map=2/basic_street-light";
 
   /// Outdoors: A general-purpose style tailored to outdoor activities. Using this constant means
   /// your map style will always use the latest version and may change as we improve the style.
-  static const String OUTDOORS =
+  static const String outdoors =
       "https://api.nextbillion.io/tt/style/1/style/22.2.1-9?map=2/basic_street-light";
 
   /// Light: Subtle light backdrop for data visualizations. Using this constant means your map
   /// style will always use the latest version and may change as we improve the style.
-  static const String LIGHT =
+  static const String light =
       "https://api.nextbillion.io/tt/style/1/style/22.2.1-9?map=2/basic_street-light";
 
   /// Empty: Basic empty style
-  static const String EMPTY =
+  static const String empty =
       "https://api.nextbillion.io/tt/style/1/style/22.2.1-9?map=2/basic_street-light";
 
   /// Dark: Subtle dark backdrop for data visualizations. Using this constant means your map style
   /// will always use the latest version and may change as we improve the style.
-  static const String DARK =
+  static const String dark =
       "https://api.nextbillion.io/tt/style/1/style/22.2.1-9?map=2/basic_street-dark";
 
   /// Satellite: A beautiful global satellite and aerial imagery layer. Using this constant means
   /// your map style will always use the latest version and may change as we improve the style.
-  static const String SATELLITE =
+  static const String satellite =
       "https://api.nextbillion.io/tt/style/1/style/22.2.1-9?map=2/basic_street-satellite";
 
   /// Satellite Streets: Global satellite and aerial imagery with unobtrusive labels. Using this
   /// constant means your map style will always use the latest version and may change as we
   /// improve the style.
-  static const String SATELLITE_STREETS =
+  static const String satelliteStreets =
       "https://api.nextbillion.io/tt/style/1/style/22.2.1-9?map=2/basic_street-satellite";
 
   /// Traffic Day: Color-coded roads based on live traffic congestion data. Traffic data is currently
   /// available in
   /// countries</a>. Using this constant means your map style will always use the latest version and
   /// may change as we improve the style.
-  static const String TRAFFIC_DAY =
+  static const String trafficDay =
       "https://api.nextbillion.io/tt/style/1/style/22.2.1-9?map=2/basic_street-light&traffic_incidents=2/incidents_light&traffic_flow=2/flow_relative-light";
 
   /// Traffic Night: Color-coded roads based on live traffic congestion data, designed to maximize
   /// legibility in low-light situations. Traffic data is currently available in
   /// countries</a>. Using this constant means your map style will always use the latest version and
   /// may change as we improve the style.
-  static const String TRAFFIC_NIGHT =
+  static const String trafficNight =
       "https://api.nextbillion.io/tt/style/1/style/22.2.1-9?map=2/basic_street-dark&traffic_incidents=2/incidents_dark&traffic_flow=2/flow_relative-dark";
 }
 
 /// The camera mode, which determines how the map camera will track the rendered location.
 enum MyLocationTrackingMode {
-  None,
-  Tracking,
-  TrackingCompass,
-  TrackingGPS,
+  none,
+  tracking,
+  trackingCompass,
+  trackingGPS,
 }
 
 /// Render mode
 enum MyLocationRenderMode {
-  NORMAL,
-  COMPASS,
-  GPS,
+  normal,
+  compass,
+  gps,
 }
 
 /// Compass View Position
 enum CompassViewPosition {
-  TopLeft,
-  TopRight,
-  BottomLeft,
-  BottomRight,
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
 }
 
 /// Attribution Button Position
 enum AttributionButtonPosition {
-  TopLeft,
-  TopRight,
-  BottomLeft,
-  BottomRight,
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
 }
 
 /// Bounds for the map camera target.

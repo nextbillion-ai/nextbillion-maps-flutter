@@ -1,5 +1,5 @@
 //
-//  OfflineRegionData.swift
+//  OfflineRegion.swift
 //  location
 //
 //  Created by Patryk on 02/06/2020.

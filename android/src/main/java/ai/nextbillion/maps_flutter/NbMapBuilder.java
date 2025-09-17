@@ -9,8 +9,8 @@ import ai.nextbillion.maps.core.NextbillionMapOptions;
 import ai.nextbillion.maps.geometry.LatLngBounds;
 import io.flutter.plugin.common.BinaryMessenger;
 
+/** @noinspection ALL*/
 class NbMapBuilder implements NextbillionMapOptionsSink {
-  public final String TAG = getClass().getSimpleName();
   private final NextbillionMapOptions options = new NextbillionMapOptions().attributionEnabled(false);
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;

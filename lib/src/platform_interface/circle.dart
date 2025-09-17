@@ -7,6 +7,8 @@ class Circle implements Annotation {
   ///
   /// The identifier is an arbitrary unique string.
   final String _id;
+
+  @override
   String get id => _id;
 
   final Map? _data;
@@ -21,17 +23,24 @@ class Circle implements Annotation {
 
   @override
   Map<String, dynamic> toGeoJson() {
-    final geojson = options.toGeoJson();
-    geojson["id"] = id;
-    geojson["properties"]["id"] = id;
+    final geoJson = options.toGeoJson();
 
-    return geojson;
+    // Ensure 'properties' exists and is a Map<String, dynamic>
+    geoJson["properties"] ??= <String, dynamic>{};
+
+    final Map<String, dynamic> properties = geoJson["properties"] as Map<String, dynamic>;
+
+    // Add the 'id' to both top-level and nested 'properties'
+    geoJson["id"] = id;
+    properties["id"] = id;
+    geoJson["properties"] = properties;
+    return geoJson;
   }
 
   @override
   void translate(LatLng delta) {
     options = options
-        .copyWith(CircleOptions(geometry: this.options.geometry! + delta));
+        .copyWith(CircleOptions(geometry: options.geometry! + delta));
   }
 }
 
@@ -82,7 +91,7 @@ class CircleOptions {
     );
   }
 
-  dynamic toJson([bool addGeometry = true]) {
+  Map<String, dynamic> toJson([bool addGeometry = true]) {
     final Map<String, dynamic> json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {

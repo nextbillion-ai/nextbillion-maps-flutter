@@ -1,31 +1,34 @@
 part of "../nb_maps_flutter.dart";
 
-typedef void OnMapClickCallback(Point<double> point, LatLng coordinates);
+typedef OnMapClickCallback = void Function(
+    Point<double> point, LatLng coordinates);
 
-typedef void OnFeatureInteractionCallback(
+typedef OnFeatureInteractionCallback = void Function(
     dynamic id, Point<double> point, LatLng coordinates);
 
-typedef void OnFeatureDragnCallback(dynamic id,
+typedef OnFeatureDragnCallback = Function(dynamic id,
     {required Point<double> point,
     required LatLng origin,
     required LatLng current,
     required LatLng delta,
     required DragEventType eventType});
 
-typedef void OnMapLongClickCallback(Point<double> point, LatLng coordinates);
+typedef OnMapLongClickCallback = void Function(
+    Point<double> point, LatLng coordinates);
 
-typedef void OnAttributionClickCallback();
+typedef OnAttributionClickCallback = void Function();
 
-typedef void OnStyleLoadedCallback();
+typedef OnStyleLoadedCallback = void Function();
 
-typedef void OnUserLocationUpdated(UserLocation location);
+typedef OnUserLocationUpdated = void Function(UserLocation location);
 
-typedef void OnCameraTrackingDismissedCallback();
-typedef void OnCameraTrackingChangedCallback(MyLocationTrackingMode mode);
+typedef OnCameraTrackingDismissedCallback = void Function();
+typedef OnCameraTrackingChangedCallback = void Function(
+    MyLocationTrackingMode mode);
 
-typedef void OnCameraIdleCallback();
+typedef OnCameraIdleCallback = void Function();
 
-typedef void OnMapIdleCallback();
+typedef OnMapIdleCallback = void Function();
 
 /// Controller for a single NBMap instance running on the host platform.
 ///
@@ -63,7 +66,11 @@ class NextbillionMapController extends ChangeNotifier {
     _nbMapsGlPlatform.onFeatureTappedPlatform.add((payload) {
       for (final fun
           in List<OnFeatureInteractionCallback>.from(onFeatureTapped)) {
-        fun(payload["id"], payload["point"], payload["latLng"]);
+        fun(
+            payload["id"],
+            payload["point"] as Point<double>,
+            payload["latLng"] as LatLng,
+        );
       }
     });
 
@@ -72,10 +79,10 @@ class NextbillionMapController extends ChangeNotifier {
         final DragEventType enmDragEventType = DragEventType.values
             .firstWhere((element) => element.index == payload["eventType"]);
         fun(payload["id"],
-            point: payload["point"],
-            origin: payload["origin"],
-            current: payload["current"],
-            delta: payload["delta"],
+            point: payload["point"] as Point<double>,
+            origin: payload["origin"] as LatLng,
+            current: payload["current"] as LatLng,
+            delta: payload["delta"] as LatLng,
             eventType: enmDragEventType);
       }
     });
@@ -96,72 +103,74 @@ class NextbillionMapController extends ChangeNotifier {
         _cameraPosition = cameraPosition;
       }
       if (onCameraIdle != null) {
-        onCameraIdle!();
+        onCameraIdle?.call();
       }
       notifyListeners();
     });
 
     _nbMapsGlPlatform.onMapStyleLoadedPlatform.add((_) {
       final interactionEnabled = annotationConsumeTapEvents.toSet();
-      for (var type in annotationOrder.toSet()) {
+      for (final type in annotationOrder.toSet()) {
         final enableInteraction = interactionEnabled.contains(type);
         switch (type) {
           case AnnotationType.fill:
             fillManager = FillManager(this,
-                onTap: onFillTapped, enableInteraction: enableInteraction);
-            break;
+                onTap: onFillTapped.call, enableInteraction: enableInteraction);
           case AnnotationType.line:
             lineManager = LineManager(this,
-                onTap: onLineTapped, enableInteraction: enableInteraction);
-            break;
+                onTap: onLineTapped.call, enableInteraction: enableInteraction);
           case AnnotationType.circle:
             circleManager = CircleManager(this,
-                onTap: onCircleTapped, enableInteraction: enableInteraction);
-            break;
+                onTap: onCircleTapped.call,
+                enableInteraction: enableInteraction);
           case AnnotationType.symbol:
             symbolManager = SymbolManager(this,
-                onTap: onSymbolTapped, enableInteraction: enableInteraction);
-            break;
+                onTap: onSymbolTapped.call,
+                enableInteraction: enableInteraction);
         }
       }
       if (onStyleLoadedCallback != null) {
-        onStyleLoadedCallback!();
+        onStyleLoadedCallback?.call();
       }
     });
 
     _nbMapsGlPlatform.onMapClickPlatform.add((dict) {
       if (onMapClick != null) {
-        onMapClick!(dict['point'], dict['latLng']);
+        final points = dict['point'] as Point<double>;
+        final latLng = dict['latLng'] as LatLng;
+        onMapClick?.call(points, latLng);
       }
     });
 
     _nbMapsGlPlatform.onMapLongClickPlatform.add((dict) {
       if (onMapLongClick != null) {
-        onMapLongClick!(dict['point'], dict['latLng']);
+        final point = dict['point'] as Point<double>;
+        final latLng = dict['latLng'] as LatLng;
+        onMapLongClick?.call(point, latLng);
       }
     });
 
     _nbMapsGlPlatform.onAttributionClickPlatform.add((_) {
       if (onAttributionClick != null) {
-        onAttributionClick!();
+        onAttributionClick?.call();
       }
     });
 
     _nbMapsGlPlatform.onCameraTrackingChangedPlatform.add((mode) {
       if (onCameraTrackingChanged != null) {
-        onCameraTrackingChanged!(mode);
+        onCameraTrackingChanged?.call(mode);
       }
     });
 
     _nbMapsGlPlatform.onCameraTrackingDismissedPlatform.add((_) {
       if (onCameraTrackingDismissed != null) {
-        onCameraTrackingDismissed!();
+        onCameraTrackingDismissed?.call();
       }
     });
 
     _nbMapsGlPlatform.onMapIdlePlatform.add((_) {
       if (onMapIdle != null) {
-        onMapIdle!();
+        onMapIdle?.call();
       }
     });
     _nbMapsGlPlatform.onUserLocationUpdatedPlatform.add((location) {
@@ -1259,8 +1268,15 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return [];
     }
-    return await _nbMapsGlPlatform.queryRenderedFeatures(
-        point, layerIds, filter);
+    try {
+      return await _nbMapsGlPlatform.queryRenderedFeatures(
+          point, layerIds, filter);
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+      return [];
+    }
   }
 
   /// Query rendered features in a Rect in screen coordinates
@@ -1269,8 +1285,16 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
-    return await _nbMapsGlPlatform.queryRenderedFeaturesInRect(
-        rect, layerIds, filter);
+    try {
+      return await _nbMapsGlPlatform.queryRenderedFeaturesInRect(
+          rect, layerIds, filter);
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+      Future.error(e);
+    }
+    return null;
   }
 
   Future invalidateAmbientCache() async {
@@ -1287,7 +1311,14 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
-    return await _nbMapsGlPlatform.requestMyLocationLatLng();
+    try {
+      return await _nbMapsGlPlatform.requestMyLocationLatLng();
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+      return Future.error(e);
+    }
   }
 
   /// This method returns the boundaries of the region currently displayed in the map.
@@ -1295,7 +1326,14 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
-    return await _nbMapsGlPlatform.getVisibleRegion();
+    try {
+      return await _nbMapsGlPlatform.getVisibleRegion();
+    } catch(e) {
+      if (kDebugMode) {
+        print(e);
+      }
+      return Future.error(e);
+    }
   }
 
   /// Update map style for MapView
@@ -1346,7 +1384,13 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    return await _nbMapsGlPlatform.addImage(name, bytes, sdf);
+    try {
+      return await _nbMapsGlPlatform.addImage(name, bytes, sdf);
+    } catch(e) {
+      if (kDebugMode) {
+        print(e);
+      }
+    }
   }
 
   Future<void> setSymbolIconAllowOverlap(bool enable) async {
@@ -1383,8 +1427,12 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    return await _nbMapsGlPlatform.addImageSource(
-        imageSourceId, bytes, coordinates);
+    try {
+      return await _nbMapsGlPlatform.addImageSource(
+          imageSourceId, bytes, coordinates);
+    } catch(e) {
+      return Future.error(e);
+    }
   }
 
   /// Update an image source to the style currently displayed in the map, so that it can later be referred to by the provided id.
@@ -1478,18 +1526,29 @@ class NextbillionMapController extends ChangeNotifier {
   /// You therefore might want to round them appropriately, depending on your use case.
   ///
   /// Returns null if [latLng] is not currently visible on the map.
-  Future<Point> toScreenLocation(LatLng latLng) async {
+  Future<Point?> toScreenLocation(LatLng latLng) async {
     if (_disposed) {
-      return Point(0, 0);
+      return const Point(0, 0);
     }
-    return await _nbMapsGlPlatform.toScreenLocation(latLng);
+    try {
+      return await _nbMapsGlPlatform.toScreenLocation(latLng);
+    } catch (e) {
+      return Future.error(e);
+    }
   }
 
   Future<List<Point>?> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
     if (_disposed) {
       return null;
     }
-    return await _nbMapsGlPlatform.toScreenLocationBatch(latLngs);
+    try {
+      return await _nbMapsGlPlatform.toScreenLocationBatch(latLngs);
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+      return Future.error(e);
+    }
   }
 
   /// Returns the geographic location (as [LatLng]) that corresponds to a point on the screen. The screen location is specified in screen pixels (not display pixels) relative to the top left of the map (not the top left of the whole screen).
@@ -1497,8 +1556,16 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
-    return await _nbMapsGlPlatform.toLatLng(screenLocation);
+    try {
+      return await _nbMapsGlPlatform.toLatLng(screenLocation);
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+      return Future.error(e); // <--- must return
+    }
   }
+
 
   /// Returns the distance spanned by one pixel at the specified [latitude] and current zoom level.
   /// The distance between pixels decreases as the latitude approaches the poles. This relationship parallels the relationship between longitudinal coordinates at different latitudes.
@@ -1624,7 +1691,14 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
-    return await _nbMapsGlPlatform.takeSnapshot(snapshotOptions);
+    try {
+      return await _nbMapsGlPlatform.takeSnapshot(snapshotOptions);
+    } catch(e) {
+      if (kDebugMode) {
+        print(e);
+      }
+      return Future.error(e);
+    }
   }
 
   Future<String?> findBelowLayerId(List<String> belowAt) async {

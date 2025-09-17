@@ -20,8 +20,7 @@ class OfflineChannelHandler: NSObject, FlutterStreamHandler {
     // MARK: FlutterStreamHandler protocol compliance
 
     func onListen(withArguments _: Any?,
-                  eventSink events: @escaping FlutterEventSink) -> FlutterError?
-    {
+                  eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         sink = events
         return nil
     }

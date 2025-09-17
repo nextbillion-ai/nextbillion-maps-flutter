@@ -1,10 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 class TrackCurrentLocationPage extends ExamplePage {
-  TrackCurrentLocationPage()
+  const TrackCurrentLocationPage()
       : super(const Icon(Icons.place), 'TrackCurrentLocation');
 
   @override
@@ -24,18 +25,22 @@ class TrackCurrentLocationState extends State<TrackCurrentLocation> {
   String locationTrackImage = "assets/symbols/location_on.png";
 
   void _onMapCreated(NextbillionMapController controller) {
-    this.controller = controller;
+    setState(() {
+      this.controller = controller;
+    });
   }
 
-  _onStyleLoadedCallback() async {
-    controller?.updateMyLocationTrackingMode(MyLocationTrackingMode.Tracking);
+  Future<void> _onStyleLoadedCallback() async {
+    controller?.updateMyLocationTrackingMode(MyLocationTrackingMode.tracking);
   }
 
-  _onUserLocationUpdate(UserLocation location) {
-    print('${location.position.longitude}, ${location.position.latitude}');
+  void _onUserLocationUpdate(UserLocation location) {
+    if (kDebugMode) {
+      print('${location.position.longitude}, ${location.position.latitude}');
+    }
   }
 
-  _onCameraTrackingChanged() {
+  void _onCameraTrackingChanged() {
     setState(() {
       locationTrackImage = 'assets/symbols/location_off.png';
     });
@@ -55,7 +60,7 @@ class TrackCurrentLocationState extends State<TrackCurrentLocation> {
             ),
             trackCameraPosition: true,
             myLocationEnabled: true,
-            myLocationTrackingMode: MyLocationTrackingMode.Tracking,
+            myLocationTrackingMode: MyLocationTrackingMode.tracking,
             onUserLocationUpdated: _onUserLocationUpdate,
             onCameraTrackingDismissed: _onCameraTrackingChanged,
           ),
@@ -73,7 +78,7 @@ class TrackCurrentLocationState extends State<TrackCurrentLocation> {
                     ),
                     onTap: () {
                       controller?.updateMyLocationTrackingMode(
-                          MyLocationTrackingMode.Tracking);
+                          MyLocationTrackingMode.tracking);
                       setState(() {
                         locationTrackImage = 'assets/symbols/location_on.png';
                       });

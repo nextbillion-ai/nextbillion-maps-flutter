@@ -1,3 +1,3 @@
 enum MyLocationRenderMode: Int {
-    case Normal, Compass, Gps
+    case normal, compass, gps
 }
