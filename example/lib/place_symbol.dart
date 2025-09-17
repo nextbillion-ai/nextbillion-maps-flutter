@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 class PlaceSymbolPage extends ExamplePage {
-  PlaceSymbolPage() : super(const Icon(Icons.place), 'Place symbol');
+  const PlaceSymbolPage() : super(const Icon(Icons.place), 'Place symbol');
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class PlaceSymbolBody extends StatefulWidget {
 class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   PlaceSymbolBodyState();
 
-  static final LatLng center = const LatLng(-33.86711, 151.1947171);
+  static const LatLng center = LatLng(-33.86711, 151.1947171);
 
   NextbillionMapController? controller;
   int _symbolCount = 0;
@@ -60,7 +60,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   /// Adds a network image to the currently displayed style
   Future<void> addImageFromUrl(String name, Uri uri) async {
-    var response = await http.get(uri);
+    final response = await http.get(uri);
     return controller!.addImage(name, response.bodyBytes);
   }
 
@@ -74,21 +74,21 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
       _selectedSymbol = symbol;
     });
     _updateSelectedSymbol(
-      SymbolOptions(
+      const SymbolOptions(
         iconSize: 1.4,
       ),
     );
   }
 
-  void _updateSelectedSymbol(SymbolOptions changes) async {
+  Future<void> _updateSelectedSymbol(SymbolOptions changes) async {
     await controller!.updateSymbol(_selectedSymbol!, changes);
   }
 
   void _add(String iconImage) {
-    List<int> availableNumbers = Iterable<int>.generate(12).toList();
-    controller!.symbols.forEach(
-        (s) => availableNumbers.removeWhere((i) => i == s.data!['count']));
-    print("========add==${availableNumbers}");
+    final List<int> availableNumbers = Iterable<int>.generate(12).toList();
+    for (final s in controller!.symbols) {
+      availableNumbers.removeWhere((i) => i == s.data!['count']);
+    }
     if (availableNumbers.isNotEmpty) {
       controller!.addSymbol(
           _getSymbolOptions(iconImage, availableNumbers.first),
@@ -100,7 +100,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
   }
 
   SymbolOptions _getSymbolOptions(String iconImage, int symbolCount) {
-    LatLng geometry = LatLng(
+    final LatLng geometry = LatLng(
       center.latitude + sin(symbolCount * pi / 6.0) / 20.0,
       center.longitude + cos(symbolCount * pi / 6.0) / 20.0,
     );
@@ -111,7 +111,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
             fontNames: ['DIN Offc Pro Bold', 'Arial Unicode MS Regular'],
             textField: 'Airport',
             textSize: 12.5,
-            textOffset: Offset(0, 0.8),
+            textOffset: const Offset(0, 0.8),
             textAnchor: 'top',
             textColor: '#000000',
             textHaloBlur: 1,
@@ -121,15 +121,16 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
         : SymbolOptions(
             geometry: geometry,
             textField: 'Airport',
-            textOffset: Offset(0, 0.8),
+            textOffset: const Offset(0, 0.8),
             iconImage: iconImage,
           );
   }
 
   Future<void> _addAll(String iconImage) async {
-    List<int> symbolsToAddNumbers = Iterable<int>.generate(12).toList();
-    controller!.symbols.forEach(
-        (s) => symbolsToAddNumbers.removeWhere((i) => i == s.data!['count']));
+    final List<int> symbolsToAddNumbers = Iterable<int>.generate(12).toList();
+    for (final s in controller!.symbols) {
+      symbolsToAddNumbers.removeWhere((i) => i == s.data!['count']);
+    }
 
     if (symbolsToAddNumbers.isNotEmpty) {
       final List<SymbolOptions> symbolOptionsList = symbolsToAddNumbers
@@ -178,10 +179,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   void _changeIconOffset() {
     Offset? currentAnchor = _selectedSymbol!.options.iconOffset;
-    if (currentAnchor == null) {
-      // default value
-      currentAnchor = Offset(0.0, 0.0);
-    }
+    currentAnchor ??= Offset.zero;
     final Offset newAnchor = Offset(1.0 - currentAnchor.dy, currentAnchor.dx);
     _updateSelectedSymbol(SymbolOptions(iconOffset: newAnchor));
   }
@@ -200,10 +198,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   Future<void> _toggleDraggable() async {
     bool? draggable = _selectedSymbol!.options.draggable;
-    if (draggable == null) {
-      // default value
-      draggable = false;
-    }
+    draggable ??= false;
 
     _updateSelectedSymbol(
       SymbolOptions(draggable: !draggable),
@@ -212,10 +207,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   Future<void> _changeAlpha() async {
     double? current = _selectedSymbol!.options.iconOpacity;
-    if (current == null) {
-      // default value
-      current = 1.0;
-    }
+    current ??= 1.0;
 
     _updateSelectedSymbol(
       SymbolOptions(iconOpacity: current < 0.1 ? 1.0 : current * 0.75),
@@ -224,10 +216,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   Future<void> _changeRotation() async {
     double? current = _selectedSymbol!.options.iconRotate;
-    if (current == null) {
-      // default value
-      current = 0;
-    }
+    current ??= 0;
     _updateSelectedSymbol(
       SymbolOptions(iconRotate: current == 330.0 ? 0.0 : current + 30.0),
     );
@@ -235,10 +224,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   Future<void> _toggleVisible() async {
     double? current = _selectedSymbol!.options.iconOpacity;
-    if (current == null) {
-      // default value
-      current = 1.0;
-    }
+    current ??= 1.0;
 
     _updateSelectedSymbol(
       SymbolOptions(iconOpacity: current == 0.0 ? 1.0 : 0.0),
@@ -247,23 +233,37 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   Future<void> _changeZIndex() async {
     int? current = _selectedSymbol!.options.zIndex;
-    if (current == null) {
-      // default value
-      current = 0;
-    }
+    current ??= 0;
     _updateSelectedSymbol(
       SymbolOptions(zIndex: current == 12 ? 0 : current + 1),
     );
   }
 
-  void _getLatLng() async {
-    LatLng? latLng = await controller!.getSymbolLatLng(_selectedSymbol!);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(latLng.toString()),
-      ),
-    );
+  Future<void> _getLatLng() async {
+    // Store the context in a local variable before async gap
+    final currentContext = context;
+
+    final LatLng? latLng = await controller!.getSymbolLatLng(_selectedSymbol!);
+
+    // Check if the context is still valid before showing SnackBar
+    if (currentContext.mounted) {
+      // Check if latLng is null before displaying
+      if (latLng != null) {
+        ScaffoldMessenger.of(currentContext).showSnackBar(
+          SnackBar(
+            content: Text(latLng.toString()),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(currentContext).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to get LatLng for symbol'),
+          ),
+        );
+      }
+    }
   }
+
 
   Future<void> _changeIconOverlap() async {
     setState(() {
@@ -320,17 +320,17 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                               : _add("assets/symbols/custom-icon.png"),
                         ),
                         TextButton(
-                          child: const Text('remove'),
                           onPressed: (_selectedSymbol == null) ? null : _remove,
+                          child: const Text('remove'),
                         ),
                         TextButton(
+                          onPressed: _changeIconOverlap,
                           child: Text(
                               '${_iconAllowOverlap ? 'disable' : 'enable'} icon overlap'),
-                          onPressed: _changeIconOverlap,
                         ),
                         TextButton(
-                          child: const Text('remove all'),
                           onPressed: (_symbolCount == 0) ? null : _removeAll,
+                          child: const Text('remove all'),
                         ),
                         TextButton(
                           child: const Text('add (asset image)'),
@@ -356,54 +356,54 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                     Column(
                       children: <Widget>[
                         TextButton(
-                          child: const Text('change alpha'),
                           onPressed:
                               (_selectedSymbol == null) ? null : _changeAlpha,
+                          child: const Text('change alpha'),
                         ),
                         TextButton(
-                          child: const Text('change icon offset'),
                           onPressed: (_selectedSymbol == null)
                               ? null
                               : _changeIconOffset,
+                          child: const Text('change icon offset'),
                         ),
                         TextButton(
-                          child: const Text('change icon anchor'),
                           onPressed: (_selectedSymbol == null)
                               ? null
                               : _changeIconAnchor,
+                          child: const Text('change icon anchor'),
                         ),
                         TextButton(
-                          child: const Text('toggle draggable'),
                           onPressed: (_selectedSymbol == null)
                               ? null
                               : _toggleDraggable,
+                          child: const Text('toggle draggable'),
                         ),
                         TextButton(
-                          child: const Text('change position'),
                           onPressed: (_selectedSymbol == null)
                               ? null
                               : _changePosition,
+                          child: const Text('change position'),
                         ),
                         TextButton(
-                          child: const Text('change rotation'),
                           onPressed: (_selectedSymbol == null)
                               ? null
                               : _changeRotation,
+                          child: const Text('change rotation'),
                         ),
                         TextButton(
-                          child: const Text('toggle visible'),
                           onPressed:
                               (_selectedSymbol == null) ? null : _toggleVisible,
+                          child: const Text('toggle visible'),
                         ),
                         TextButton(
-                          child: const Text('change zIndex'),
                           onPressed:
                               (_selectedSymbol == null) ? null : _changeZIndex,
+                          child: const Text('change zIndex'),
                         ),
                         TextButton(
-                          child: const Text('get current LatLng'),
                           onPressed:
                               (_selectedSymbol == null) ? null : _getLatLng,
+                          child: const Text('get current LatLng'),
                         ),
                       ],
                     ),

@@ -1,10 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 class MoveCameraPage extends ExamplePage {
-  MoveCameraPage() : super(const Icon(Icons.map), 'Camera control');
+  const MoveCameraPage() : super(const Icon(Icons.map), 'Camera control');
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +23,9 @@ class MoveCameraState extends State<MoveCamera> {
   late NextbillionMapController mapController;
 
   void _onMapCreated(NextbillionMapController controller) {
-    mapController = controller;
+    setState(() {
+      mapController = controller;
+    });
   }
 
   @override
@@ -37,7 +40,11 @@ class MoveCameraState extends State<MoveCamera> {
             height: 200.0,
             child: NBMap(
               onMapCreated: _onMapCreated,
-              onCameraIdle: () => print("onCameraIdle"),
+              onCameraIdle: () {
+                if (kDebugMode) {
+                  print("onCameraIdle");
+                }
+              },
               initialCameraPosition:
                   const CameraPosition(target: LatLng(0.0, 0.0)),
             ),

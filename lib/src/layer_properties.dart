@@ -650,7 +650,7 @@ class SymbolLayerProperties implements LayerProperties {
   final dynamic textMaxAngle;
 
   /// The property allows control over a symbol's orientation. Note that the
-  /// property values act as a hint, so that a symbol whose language doesn’t
+  /// property values act as a hint, so that a symbol whose language doesn't
   /// support the provided orientation will be laid out in its natural
   /// orientation. Example: English point symbol will be rendered
   /// horizontally even if array value contains single 'vertical' enum
@@ -899,6 +899,7 @@ class SymbolLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -1223,6 +1224,7 @@ class CircleLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -1526,6 +1528,7 @@ class LineLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -1712,6 +1715,7 @@ class FillLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -1892,6 +1896,7 @@ class FillExtrusionLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -2068,6 +2073,7 @@ class RasterLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -2217,6 +2223,7 @@ class HillshadeLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 
@@ -2346,6 +2353,7 @@ class HeatmapLayerProperties implements LayerProperties {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = <String, dynamic>{};
 

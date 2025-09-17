@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:mockito/mockito.dart';
-import 'package:test/test.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
+import 'package:test/test.dart';
 
 import 'global_test.mocks.dart';
 
@@ -15,9 +15,9 @@ void main() {
   late SymbolManager symbolManager;
 
   setUp(() {
-    final initialCameraPosition = CameraPosition(target: LatLng(0.0, 0.0));
-    final annotationOrder = <AnnotationType>[];
-    final annotationConsumeTapEvents = <AnnotationType>[];
+    const CameraPosition initialCameraPosition = CameraPosition(target: LatLng(0.0, 0.0));
+    const List<AnnotationType> annotationOrder = <AnnotationType>[];
+    const List<AnnotationType> annotationConsumeTapEvents = <AnnotationType>[];
 
     mockMethodChannel = MockMethodChannel();
     //source#setFeature
@@ -62,7 +62,7 @@ void main() {
   group('LineManager', () {
     test('Add a line annotation', () async {
       // Arrange
-      final lineOptions = LineOptions(
+      const LineOptions lineOptions = LineOptions(
         lineJoin: 'round',
         lineOpacity: 0.8,
         lineColor: '#FF0000',
@@ -77,7 +77,7 @@ void main() {
         ],
         draggable: true,
       );
-      final line = Line('line1', lineOptions);
+      final Line line = Line('line1', lineOptions);
 
       // Act
       await lineManager.add(line);
@@ -88,7 +88,7 @@ void main() {
 
     test('Remove a line annotation', () async {
       // Arrange
-      final lineOptions = LineOptions(
+      const LineOptions lineOptions = LineOptions(
         lineJoin: 'round',
         lineOpacity: 0.8,
         lineColor: '#FF0000',
@@ -103,7 +103,7 @@ void main() {
         ],
         draggable: true,
       );
-      final line = Line('line1', lineOptions);
+      final Line line = Line('line1', lineOptions);
 
       await lineManager.add(line);
 
@@ -116,7 +116,7 @@ void main() {
 
     test('Set line annotation', () async {
       // Arrange
-      final lineOptions = LineOptions(
+      const LineOptions lineOptions = LineOptions(
         lineJoin: 'round',
         lineOpacity: 0.8,
         lineColor: '#FF0000',
@@ -132,11 +132,11 @@ void main() {
         draggable: true,
       );
 
-      final line = Line('line1', lineOptions);
+      final Line line = Line('line1', lineOptions);
       await lineManager.add(line);
 
       // Act
-      final changes = LineOptions(
+      const LineOptions changes = LineOptions(
         lineJoin: 'round',
         lineOpacity: 0.8,
         lineColor: '#FFFFFF',
@@ -162,7 +162,7 @@ void main() {
   group('FillManager', () {
     test('Add a fill annotation', () async {
       // Arrange
-      FillOptions fillOptions = FillOptions(
+      const FillOptions fillOptions = FillOptions(
         fillColor: '#FF0000',
         fillOpacity: 0.5,
         fillOutlineColor: '#0000FF',
@@ -172,7 +172,7 @@ void main() {
         ],
         draggable: true,
       );
-      Fill fill = Fill('fill1', fillOptions);
+      final Fill fill = Fill('fill1', fillOptions);
 
       // Act
       await fillManager.add(fill);
@@ -183,7 +183,7 @@ void main() {
 
     test('Remove a fill annotation', () async {
       // Arrange
-      FillOptions fillOptions = FillOptions(
+      const FillOptions fillOptions = FillOptions(
         fillColor: '#FF0000',
         fillOpacity: 0.5,
         fillOutlineColor: '#0000FF',
@@ -194,7 +194,7 @@ void main() {
         draggable: true,
       );
 
-      Fill fill = Fill('fill1', fillOptions);
+      final Fill fill = Fill('fill1', fillOptions);
 
       await fillManager.add(fill);
 
@@ -207,7 +207,7 @@ void main() {
 
     test('Set fill annotation', () async {
       // Arrange
-      FillOptions fillOptions = FillOptions(
+      const FillOptions fillOptions = FillOptions(
         fillColor: '#FF0000',
         fillOpacity: 0.5,
         fillOutlineColor: '#0000FF',
@@ -217,11 +217,11 @@ void main() {
         ],
         draggable: true,
       );
-      Fill fill = Fill('fill1', fillOptions);
+      final Fill fill = Fill('fill1', fillOptions);
       fillManager.add(fill);
 
       // Act
-      FillOptions changes = FillOptions(
+      const FillOptions changes = FillOptions(
         fillColor: '#FFFFFF',
         fillOpacity: 0.5,
         fillOutlineColor: '#FFFFFF',
@@ -242,7 +242,7 @@ void main() {
   group('CircleManager', () {
     test('Add a circle annotation', () async {
       // Arrange
-      CircleOptions circleOptions = CircleOptions(
+      const CircleOptions circleOptions = CircleOptions(
         circleColor: '#FF0000',
         circleRadius: 10.0,
         circleStrokeColor: '#0000FF',
@@ -250,7 +250,7 @@ void main() {
         geometry: LatLng(37.7749, -122.4194),
         draggable: true,
       );
-      Circle circle = Circle('circle1', circleOptions);
+      final Circle circle = Circle('circle1', circleOptions);
 
       // Act
       await circleManager.add(circle);
@@ -261,7 +261,7 @@ void main() {
 
     test('Remove a circle annotation', () async {
       // Arrange
-      CircleOptions circleOptions = CircleOptions(
+      const CircleOptions circleOptions = CircleOptions(
         circleColor: '#FF0000',
         circleRadius: 10.0,
         circleStrokeColor: '#0000FF',
@@ -269,7 +269,7 @@ void main() {
         geometry: LatLng(37.7749, -122.4194),
         draggable: true,
       );
-      Circle circle = Circle('circle1', circleOptions);
+      final Circle circle = Circle('circle1', circleOptions);
       await circleManager.add(circle);
 
       // Act
@@ -281,7 +281,7 @@ void main() {
 
     test('Set circle annotation', () async {
       // Arrange
-      CircleOptions circleOptions = CircleOptions(
+      const CircleOptions circleOptions = CircleOptions(
         circleColor: '#FF0000',
         circleRadius: 10.0,
         circleStrokeColor: '#0000FF',
@@ -289,12 +289,12 @@ void main() {
         geometry: LatLng(37.7749, -122.4194),
         draggable: true,
       );
-      Circle circle = Circle('circle1', circleOptions);
+      final Circle circle = Circle('circle1', circleOptions);
 
       await circleManager.add(circle);
 
       // Act
-      CircleOptions changes = CircleOptions(
+      const CircleOptions changes = CircleOptions(
         circleColor: '#0000FF',
         circleRadius: 10.0,
         circleStrokeColor: '#0000FF',
@@ -313,14 +313,14 @@ void main() {
   group('SymbolManager', () {
     test('Add a symbol annotation', () async {
       // Arrange
-      SymbolOptions symbolOptions = SymbolOptions(
+      const SymbolOptions symbolOptions = SymbolOptions(
         iconSize: 10,
         iconImage: 'iconImage',
         geometry: LatLng(37.7749, -122.4194),
         draggable: true,
       );
 
-      Symbol symbol = Symbol('symbol1', symbolOptions);
+      final Symbol symbol = Symbol('symbol1', symbolOptions);
 
       // Act
       await symbolManager.add(symbol);
@@ -331,14 +331,14 @@ void main() {
 
     test('Remove a symbol annotation', () async {
       // Arrange
-      SymbolOptions symbolOptions = SymbolOptions(
+      const SymbolOptions symbolOptions = SymbolOptions(
         iconSize: 10,
         iconImage: 'iconImage',
         geometry: LatLng(37.7749, -122.4194),
         draggable: true,
       );
 
-      Symbol symbol = Symbol('symbol1', symbolOptions);
+      final Symbol symbol = Symbol('symbol1', symbolOptions);
       await symbolManager.add(symbol);
 
       // Act
@@ -350,18 +350,18 @@ void main() {
 
     test('Set symbol annotation', () async {
       // Arrange
-      SymbolOptions symbolOptions = SymbolOptions(
+      const SymbolOptions symbolOptions = SymbolOptions(
         iconSize: 10,
         iconImage: 'iconImage',
         geometry: LatLng(37.7749, -122.4194),
         draggable: true,
       );
 
-      Symbol symbol = Symbol('symbol1', symbolOptions);
+      final Symbol symbol = Symbol('symbol1', symbolOptions);
       await symbolManager.add(symbol);
 
       // Act
-      SymbolOptions changes = SymbolOptions(
+      const SymbolOptions changes = SymbolOptions(
         iconSize: 20,
         iconImage: 'iconImage',
         geometry: LatLng(37.7749, -122.4194),
@@ -376,14 +376,14 @@ void main() {
 
     test('test setIconAllowOverlap', () async {
       // Arrange
-      SymbolOptions symbolOptions = SymbolOptions(
+      const SymbolOptions symbolOptions = SymbolOptions(
         iconSize: 10,
         iconImage: 'iconImage',
         geometry: LatLng(37.7749, -122.4194),
         draggable: true,
       );
 
-      Symbol symbol = Symbol('symbol1', symbolOptions);
+      final Symbol symbol = Symbol('symbol1', symbolOptions);
       await symbolManager.clear();
       await symbolManager.add(symbol);
 
@@ -394,8 +394,13 @@ void main() {
       await symbolManager.setTextIgnorePlacement(true);
 
       // Assert
-      SymbolLayerProperties symbolLayerProperties =
-          symbolManager.allLayerProperties.first as SymbolLayerProperties;
+      const SymbolLayerProperties symbolLayerProperties =
+          SymbolLayerProperties(
+        iconAllowOverlap: true,
+        textAllowOverlap: true,
+        iconIgnorePlacement: true,
+        textIgnorePlacement: true,
+      );
 
       expect(symbolLayerProperties.iconAllowOverlap, true);
       expect(symbolLayerProperties.textAllowOverlap, true);

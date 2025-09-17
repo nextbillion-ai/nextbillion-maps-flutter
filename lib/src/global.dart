@@ -3,7 +3,7 @@ part of "../nb_maps_flutter.dart";
 typedef EventChannelCreator = EventChannel Function(String name);
 
 MethodChannel globalChannel =
-    MethodChannel('plugins.flutter.io/nb_maps_flutter');
+    const MethodChannel('plugins.flutter.io/nb_maps_flutter');
 
 @visibleForTesting
 void setTestingGlobalChannel(MethodChannel channel) {
@@ -45,47 +45,57 @@ Future<void> setHttpHeaders(Map<String, String> headers) {
 }
 
 Future<List<OfflineRegion>> mergeOfflineRegions(
-  String path, {
-  String? accessToken,
-}) async {
-  String regionsJson = await globalChannel.invokeMethod(
+    String path, {
+      String? accessToken,
+    }) async {
+  final String regionsJson = await globalChannel.invokeMethod(
     'mergeOfflineRegions',
     <String, dynamic>{
       'path': path,
       'accessToken': accessToken,
     },
-  );
-  Iterable regions = json.decode(regionsJson);
-  return regions.map((region) => OfflineRegion.fromMap(region)).toList();
+  ) ?? '[]';
+
+
+  final List<dynamic> regions = json.decode(regionsJson) as List<dynamic>;
+
+  return regions
+      .map((region) => OfflineRegion.fromMap(region as Map<String, dynamic>))
+      .toList();
 }
+
 
 Future<List<OfflineRegion>> getListOfRegions({String? accessToken}) async {
-  String regionsJson = await globalChannel.invokeMethod(
+  final regionsJson = await globalChannel.invokeMethod<String>(
     'getListOfRegions',
-    <String, dynamic>{
-      'accessToken': accessToken,
-    },
-  );
-  Iterable regions = json.decode(regionsJson);
-  return regions.map((region) => OfflineRegion.fromMap(region)).toList();
+    {'accessToken': accessToken},
+  ) ?? '[]'; // fallback if null
+
+  final List<dynamic> regions = json.decode(regionsJson) as List<dynamic>;
+
+  return regions
+      .map((region) => OfflineRegion.fromMap(region as Map<String, dynamic>))
+      .toList();
 }
 
+
 Future<OfflineRegion> updateOfflineRegionMetadata(
-  int id,
-  Map<String, dynamic> metadata, {
-  String? accessToken,
-}) async {
-  final regionJson = await globalChannel.invokeMethod(
+    int id,
+    Map<String, dynamic> metadata, {
+      String? accessToken,
+    }) async {
+  final regionJson = await globalChannel.invokeMethod<String>(
     'updateOfflineRegionMetadata',
-    <String, dynamic>{
+    {
       'id': id,
       'accessToken': accessToken,
       'metadata': metadata,
     },
-  );
+  ) ?? '{}';
 
-  return OfflineRegion.fromMap(json.decode(regionJson));
+  return OfflineRegion.fromMap(json.decode(regionJson) as Map<String, dynamic>);
 }
+
 
 Future<dynamic> setOfflineTileCountLimit(int limit, {String? accessToken}) =>
     globalChannel.invokeMethod(
@@ -112,7 +122,7 @@ Future<OfflineRegion> downloadOfflineRegion(
   Function(DownloadRegionStatus event)? onEvent,
   EventChannelCreator? eventChannelCreator,
 }) async {
-  String channelName =
+  final String channelName =
       'downloadOfflineRegion_${DateTime.now().microsecondsSinceEpoch}';
 
   final result = await globalChannel
@@ -124,15 +134,15 @@ Future<OfflineRegion> downloadOfflineRegion(
   });
 
   if (onEvent != null) {
-    EventChannel eventChannel =
-        eventChannelCreator?.call(channelName) ?? EventChannel('channelName');
+    final EventChannel eventChannel =
+        eventChannelCreator?.call(channelName) ?? const EventChannel('channelName');
 
     eventChannel.receiveBroadcastStream().handleError((error) {
       if (error is PlatformException) {
         onEvent(Error(error));
         return Error(error);
       }
-      var unknownError = Error(
+      final unknownError = Error(
         PlatformException(
           code: 'UnknowException',
           message:
@@ -143,12 +153,11 @@ Future<OfflineRegion> downloadOfflineRegion(
       onEvent(unknownError);
       return unknownError;
     }).listen((data) {
-      final Map<String, dynamic> jsonData = json.decode(data);
+      final Map<String, dynamic> jsonData = json.decode(data as String) as Map<String, dynamic> ;
       DownloadRegionStatus? status;
       switch (jsonData['status']) {
         case 'start':
           status = InProgress(0.0);
-          break;
         case 'progress':
           final dynamic value = jsonData['progress'];
           double progress = 0.0;
@@ -162,14 +171,12 @@ Future<OfflineRegion> downloadOfflineRegion(
           }
 
           status = InProgress(progress);
-          break;
         case 'success':
           status = Success();
-          break;
       }
       onEvent(status ?? (throw 'Invalid event status ${jsonData['status']}'));
     });
   }
-
-  return OfflineRegion.fromMap(json.decode(result));
+  final decodeResult  = json.decode(result as String) as Map<String, dynamic> ;
+  return OfflineRegion.fromMap(decodeResult);
 }

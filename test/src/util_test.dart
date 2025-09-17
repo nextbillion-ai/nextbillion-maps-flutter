@@ -4,14 +4,14 @@ import 'package:test/test.dart';
 void main() {
   test('buildFeatureCollection should return a valid feature collection', () {
     // Arrange
-    List<Map<String, dynamic>> features = [
+    final List<Map<String, dynamic>> features = [
       {"name": "Feature 1", "type": "Point"},
       {"name": "Feature 2", "type": "Polygon"},
       {"name": "Feature 3", "type": "LineString"},
     ];
 
     // Act
-    Map<String, dynamic> result = buildFeatureCollection(features);
+    final Map<String, dynamic> result = buildFeatureCollection(features);
 
     // Assert
     expect(result["type"], equals("FeatureCollection"));
@@ -20,10 +20,10 @@ void main() {
 
   test('getRandomString should return a random string of specified length', () {
     // Arrange
-    int length = 8;
+    const int length = 8;
 
     // Act
-    String result = getRandomString(length);
+    final String result = getRandomString(length);
 
     // Assert
     expect(result.length, equals(length));

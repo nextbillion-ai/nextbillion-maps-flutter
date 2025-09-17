@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   test('test fromList', () {
-    List<dynamic> list = [
+    final List<List<double>> list = [
       [1.0, 2.0],
       [3.0, 4.0],
       [5.0, 6.0],
@@ -17,12 +17,13 @@ void main() {
     expect(location?.bottomRight, equals(LatLng(list[2][0], list[2][1])));
   });
 
+
   test('test fromMultiLatLng', () {
-    List<LatLng> list = [
-      LatLng(1.0, 2.0),
-      LatLng(3.0, 4.0),
-      LatLng(5.0, 6.0),
-      LatLng(7.0, 8.0)
+    final List<LatLng> list = [
+      const LatLng(1.0, 2.0),
+      const LatLng(3.0, 4.0),
+      const LatLng(5.0, 6.0),
+      const LatLng(7.0, 8.0)
     ];
     final location = LatLngBounds.fromMultiLatLng(list);
     expect(location, isNotNull);

@@ -4,19 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart'; // ignore: unnecessary_import
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 class ScrollingMapPage extends ExamplePage {
-  ScrollingMapPage() : super(const Icon(Icons.map), 'Scrolling map');
+  const ScrollingMapPage() : super(const Icon(Icons.map), 'Scrolling map');
 
   @override
   Widget build(BuildContext context) {
-    return ScrollingMapBody();
+    return const ScrollingMapBody();
   }
 }
 
 class ScrollingMapBody extends StatefulWidget {
-  ScrollingMapBody();
+  const ScrollingMapBody();
 
   @override
   _ScrollingMapBodyState createState() => _ScrollingMapBodyState();
@@ -53,11 +53,11 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
                         zoom: 11.0,
                       ),
                       gestureRecognizers:
-                          <Factory<OneSequenceGestureRecognizer>>[
+                          <Factory<OneSequenceGestureRecognizer>>{
                         Factory<OneSequenceGestureRecognizer>(
                           () => EagerGestureRecognizer(),
                         ),
-                      ].toSet(),
+                      },
                     ),
                   ),
                 ),
@@ -70,7 +70,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
             padding: const EdgeInsets.symmetric(vertical: 30.0),
             child: Column(
               children: <Widget>[
-                const Text('This map doesn\'t consume the vertical drags.'),
+                const Text("This map doesn't consume the vertical drags."),
                 const Padding(
                   padding: EdgeInsets.only(bottom: 12.0),
                   child:
@@ -88,11 +88,11 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
                         zoom: 11.0,
                       ),
                       gestureRecognizers:
-                          <Factory<OneSequenceGestureRecognizer>>[
+                          <Factory<OneSequenceGestureRecognizer>>{
                         Factory<OneSequenceGestureRecognizer>(
                           () => ScaleGestureRecognizer(),
                         ),
-                      ].toSet(),
+                      },
                     ),
                   ),
                 ),
@@ -105,11 +105,15 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
   }
 
   void onMapCreatedOne(NextbillionMapController controller) {
-    this.controllerOne = controller;
+    setState(() {
+      controllerOne = controller;
+    });
   }
 
   void onMapCreatedTwo(NextbillionMapController controller) {
-    this.controllerTwo = controller;
+    setState(() {
+      controllerTwo = controller;
+    });
   }
 
   void onStyleLoaded(NextbillionMapController controller) {
@@ -120,7 +124,7 @@ class _ScrollingMapBodyState extends State<ScrollingMapBody> {
         ),
         iconImage: "airport-15"));
     controller.addLine(
-      LineOptions(
+      const LineOptions(
         geometry: [
           LatLng(-33.86711, 151.1947171),
           LatLng(-33.86711, 151.1947171),

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'offline_regions.dart';
+import 'package:nb_maps_flutter_example/offline_regions.dart';
 
 class OfflineRegionMap extends StatefulWidget {
-  OfflineRegionMap(this.item);
+  const OfflineRegionMap(this.item);
 
   final OfflineRegionListItem item;
 

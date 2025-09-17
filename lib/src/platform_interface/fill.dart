@@ -2,10 +2,10 @@ part of "../../nb_maps_flutter.dart";
 
 FillOptions translateFillOptions(FillOptions options, LatLng delta) {
   if (options.geometry != null) {
-    List<List<LatLng>> newGeometry = [];
-    for (var ring in options.geometry!) {
-      List<LatLng> newRing = [];
-      for (var coords in ring) {
+    final List<List<LatLng>> newGeometry = [];
+    for (final ring in options.geometry!) {
+      final List<LatLng> newRing = [];
+      for (final coords in ring) {
         newRing.add(coords + delta);
       }
       newGeometry.add(newRing);
@@ -22,6 +22,8 @@ class Fill implements Annotation {
   ///
   /// The identifier is an arbitrary unique string.
   final String _id;
+
+  @override
   String get id => _id;
 
   final Map? _data;
@@ -36,11 +38,14 @@ class Fill implements Annotation {
 
   @override
   Map<String, dynamic> toGeoJson() {
-    final geojson = options.toGeoJson();
-    geojson["id"] = id;
-    geojson["properties"]["id"] = id;
+    final geoJson = options.toGeoJson();
+    final properties = geoJson['properties'] as Map<String, dynamic>? ?? <String, dynamic>{};
+    properties['id'] = id;
+    geoJson['properties'] = properties;
 
-    return geojson;
+    geoJson['id'] = id;
+
+    return geoJson;
   }
 
   @override
@@ -86,7 +91,7 @@ class FillOptions {
     );
   }
 
-  dynamic toJson([bool addGeometry = true]) {
+  Map<String, dynamic> toJson([bool addGeometry = true]) {
     final Map<String, dynamic> json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {

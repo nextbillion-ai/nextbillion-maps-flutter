@@ -1,11 +1,11 @@
-import 'package:test/test.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('Symbol', () {
     test('toGeoJson should return the correct GeoJSON representation', () {
       // Arrange
-      final options = SymbolOptions(
+      const options = SymbolOptions(
         iconSize: 1.0,
         iconImage: 'symbol_icon',
         geometry: LatLng(37.7749, -122.4194),
@@ -13,25 +13,30 @@ void main() {
       final symbol = Symbol('symbol_id', options);
 
       // Act
-      final geojson = symbol.toGeoJson();
+      final geoJson = symbol.toGeoJson();
 
       // Assert
       expect(symbol.data, isNull);
-      expect(geojson['type'], equals('Feature'));
-      expect(geojson['properties']['iconSize'], equals(1.0));
-      expect(geojson['properties']['iconImage'], equals('symbol_icon'));
-      expect(geojson['properties']['id'], equals('symbol_id'));
-      expect(geojson['geometry']['type'], equals('Point'));
-      expect(geojson['geometry']['coordinates'], equals([-122.4194, 37.7749]));
+      expect(geoJson['type'], equals('Feature'));
+
+      final properties = geoJson['properties'] as Map<String, dynamic>;
+      expect(properties['iconSize'], equals(1.0));
+      expect(properties['iconImage'], equals('symbol_icon'));
+      expect(properties['id'], equals('symbol_id'));
+
+      final geometry = geoJson['geometry'] as Map<String, dynamic>;
+      expect(geometry['type'], equals('Point'));
+      expect(geometry['coordinates'], equals([-122.4194, 37.7749]));
     });
+
 
     test('translate should update the symbol options geometry', () {
       // Arrange
-      final options = SymbolOptions(
+      const options = SymbolOptions(
         geometry: LatLng(37.7749, -122.4194),
       );
       final symbol = Symbol('symbol_id', options);
-      final delta = LatLng(0.1, 0.1);
+      const delta = LatLng(0.1, 0.1);
 
       // Act
       symbol.translate(delta);
@@ -46,7 +51,7 @@ void main() {
   group('SymbolOptions', () {
     test('toJson should return the correct JSON representation', () {
       // Arrange
-      final options = SymbolOptions(
+      const options = SymbolOptions(
         iconSize: 1.0,
         iconImage: 'symbol_icon',
         geometry: LatLng(37.7749, -122.4194),
@@ -58,37 +63,45 @@ void main() {
       // Assert
       expect(json['iconSize'], equals(1.0));
       expect(json['iconImage'], equals('symbol_icon'));
-      expect(json['geometry'], equals([37.7749, -122.4194]));
+
+      final geometry = json['geometry'] as List<dynamic>;
+      expect(geometry, equals([37.7749, -122.4194]));
     });
+
 
     test('toGeoJson should return the correct GeoJSON representation', () {
       // Arrange
-      final options = SymbolOptions(
+      const options = SymbolOptions(
         iconSize: 1.0,
         iconImage: 'symbol_icon',
         geometry: LatLng(37.7749, -122.4194),
       );
 
       // Act
-      final geojson = options.toGeoJson();
+      final geoJson = options.toGeoJson();
 
       // Assert
-      expect(geojson['type'], equals('Feature'));
-      expect(geojson['properties']['iconSize'], equals(1.0));
-      expect(geojson['properties']['iconImage'], equals('symbol_icon'));
-      expect(geojson['geometry']['type'], equals('Point'));
-      expect(geojson['geometry']['coordinates'], equals([-122.4194, 37.7749]));
+      expect(geoJson['type'], equals('Feature'));
+
+      final properties = geoJson['properties'] as Map<String, dynamic>;
+      expect(properties['iconSize'], equals(1.0));
+      expect(properties['iconImage'], equals('symbol_icon'));
+
+      final geometry = geoJson['geometry'] as Map<String, dynamic>;
+      expect(geometry['type'], equals('Point'));
+      expect(geometry['coordinates'], equals([-122.4194, 37.7749]));
     });
+
 
     test('copyWith should create a new SymbolOptions with the given changes',
         () {
       // Arrange
-      final options = SymbolOptions(
+          const options = SymbolOptions(
         iconSize: 1.0,
         iconImage: 'symbol_icon',
-        geometry: LatLng(37.7749, -122.4194),
+        geometry:  LatLng(37.7749, -122.4194),
       );
-      final changes = SymbolOptions(
+          const changes = SymbolOptions(
         iconSize: 2.0,
         iconImage: 'new_symbol_icon',
       );
@@ -99,7 +112,7 @@ void main() {
       // Assert
       expect(newOptions.iconSize, equals(2.0));
       expect(newOptions.iconImage, equals('new_symbol_icon'));
-      expect(newOptions.geometry, equals(LatLng(37.7749, -122.4194)));
+      expect(newOptions.geometry, equals(const LatLng(37.7749, -122.4194)));
     });
   });
 }

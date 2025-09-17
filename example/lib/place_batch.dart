@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 const fillOptions = [
   FillOptions(
@@ -40,7 +40,7 @@ const fillOptions = [
 ];
 
 class BatchAddPage extends ExamplePage {
-  BatchAddPage() : super(const Icon(Icons.check_circle), 'Batch add/remove');
+  const BatchAddPage() : super(const Icon(Icons.check_circle), 'Batch add/remove');
 
   @override
   Widget build(BuildContext context) {
@@ -62,12 +62,14 @@ class BatchAddBodyState extends State<BatchAddBody> {
   List<Line>? _lines = [];
   List<Symbol>? _symbols = [];
 
-  static final LatLng center = const LatLng(-33.86711, 151.1947171);
+  static const LatLng center = LatLng(-33.86711, 151.1947171);
 
   late NextbillionMapController controller;
 
   void _onMapCreated(NextbillionMapController controller) {
-    this.controller = controller;
+    setState(() {
+      this.controller = controller;
+    });
   }
 
   List<LineOptions> makeLinesOptionsForFillOptions(
@@ -99,16 +101,16 @@ class BatchAddBodyState extends State<BatchAddBody> {
     final symbolOptions = <SymbolOptions>[];
     for (final option in options) {
       // put symbols only on the inner most ring if it exists
-      if (option.geometry!.length > 1)
+      if (option.geometry!.length > 1) {
         for (final latLng in option.geometry!.last) {
-          symbolOptions
-              .add(SymbolOptions(iconImage: 'hospital-11', geometry: latLng));
+          symbolOptions.add(SymbolOptions(iconImage: 'hospital-11', geometry: latLng));
         }
+      }
     }
     return symbolOptions;
   }
 
-  void _add() async {
+  Future<void> _add() async {
     if (_fills.isEmpty) {
       _fills = await controller.addFills(fillOptions);
       _lines = await controller
@@ -171,10 +173,11 @@ class BatchAddBodyState extends State<BatchAddBody> {
                     Column(
                       children: <Widget>[
                         TextButton(
-                            child: const Text('batch add'), onPressed: _add),
+                            onPressed: _add,
+                            child: const Text('batch add')),
                         TextButton(
-                            child: const Text('batch remove'),
-                            onPressed: _remove),
+                            onPressed: _remove,
+                            child: const Text('batch remove')),
                       ],
                     ),
                   ],

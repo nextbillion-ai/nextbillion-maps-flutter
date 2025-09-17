@@ -8,6 +8,7 @@ class Symbol implements Annotation {
   /// The identifier is an arbitrary unique string.
   final String _id;
 
+  @override
   String get id => _id;
 
   final Map? _data;
@@ -24,15 +25,14 @@ class Symbol implements Annotation {
   Map<String, dynamic> toGeoJson() {
     final geojson = options.toGeoJson();
     geojson["id"] = id;
-    geojson["properties"]["id"] = id;
-
+    (geojson["properties"] as Map<String, dynamic>)["id"] = id;
     return geojson;
   }
 
   @override
   void translate(LatLng delta) {
     options = options
-        .copyWith(SymbolOptions(geometry: this.options.geometry! + delta));
+        .copyWith(SymbolOptions(geometry: options.geometry! + delta));
   }
 }
 
@@ -149,7 +149,7 @@ class SymbolOptions {
     );
   }
 
-  dynamic toJson([bool addGeometry = true]) {
+  Map<String, dynamic> toJson([bool addGeometry = true]) {
     final Map<String, dynamic> json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {

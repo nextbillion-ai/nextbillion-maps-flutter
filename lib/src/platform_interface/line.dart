@@ -8,6 +8,7 @@ class Line implements Annotation {
   /// The identifier is an arbitrary unique string.
   final String _id;
 
+  @override
   String get id => _id;
 
   final Map? _data;
@@ -21,18 +22,24 @@ class Line implements Annotation {
   /// touch events. Add listeners to the owning map controller to track those.
   LineOptions options;
 
+  @override
   Map<String, dynamic> toGeoJson() {
     final geojson = options.toGeoJson();
-    geojson["id"] = id;
-    geojson["properties"]["id"] = id;
 
+    // Ensure the 'properties' field exists in the GeoJSON
+    geojson['properties'] ??= {};
+    final Map<String, dynamic> properties = geojson['properties'] as Map<String, dynamic>? ?? {};
+    // Add the 'id' to both top-level and nested 'properties'
+    geojson['id'] = id;
+    properties['id'] = id;
+    geojson['properties'] = properties;
     return geojson;
   }
 
   @override
   void translate(LatLng delta) {
     options = options.copyWith(LineOptions(
-        geometry: this.options.geometry?.map((e) => e + delta).toList()));
+        geometry: options.geometry?.map((e) => e + delta).toList()));
   }
 }
 
@@ -110,7 +117,7 @@ class LineOptions {
     );
   }
 
-  dynamic toJson([bool addGeometry = true]) {
+  Map<String, dynamic> toJson([bool addGeometry = true]) {
     final Map<String, dynamic> json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {

@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 import 'package:nb_maps_flutter_example/page.dart';
 
 class LayerPage extends ExamplePage {
-  LayerPage() : super(const Icon(Icons.share), 'Layer');
+  const LayerPage() : super(const Icon(Icons.share), 'Layer');
 
   @override
   Widget build(BuildContext context) => LayerBody();
@@ -18,7 +19,7 @@ class LayerBody extends StatefulWidget {
 }
 
 class LayerState extends State {
-  static final LatLng center = const LatLng(-33.86711, 151.1947171);
+  static const LatLng center = LatLng(-33.86711, 151.1947171);
 
   late NextbillionMapController controller;
   Timer? bikeTimer;
@@ -33,10 +34,13 @@ class LayerState extends State {
       dragEnabled: false,
       myLocationEnabled: true,
       onMapCreated: _onMapCreated,
-      onMapClick: (point, latLong) =>
-          print(point.toString() + latLong.toString()),
+      onMapClick: (point, latLong) {
+        if (kDebugMode) {
+          print(point.toString() + latLong.toString());
+        }
+      },
       onStyleLoadedCallback: _onStyleLoadedCallback,
-      initialCameraPosition: CameraPosition(
+      initialCameraPosition: const CameraPosition(
         target: center,
         zoom: 11.0,
       ),
@@ -54,7 +58,7 @@ class LayerState extends State {
     final snackBar = SnackBar(
       content: Text(
         'Tapped feature with id $featureId',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
       backgroundColor: Theme.of(context).primaryColor,
     );
@@ -62,7 +66,7 @@ class LayerState extends State {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  void _onStyleLoadedCallback() async {
+  Future<void> _onStyleLoadedCallback() async {
     await controller.addGeoJsonSource("points", _points);
     await controller.addGeoJsonSource("moving", _movingFeature(0));
 
@@ -72,7 +76,7 @@ class LayerState extends State {
     await controller.addFillLayer(
       "fills",
       "fills",
-      FillLayerProperties(fillColor: [
+      const FillLayerProperties(fillColor: [
         Expressions.interpolate,
         ['exponential', 0.5],
         [Expressions.zoom],
@@ -113,7 +117,7 @@ class LayerState extends State {
     await controller.addSymbolLayer(
       "points",
       "symbols",
-      SymbolLayerProperties(
+      const SymbolLayerProperties(
         iconImage: "{type}-15",
         iconSize: 2,
         iconAllowOverlap: true,
@@ -140,16 +144,16 @@ class LayerState extends State {
       minzoom: 11,
     );
 
-    bikeTimer = Timer.periodic(Duration(milliseconds: 10), (t) {
+    bikeTimer = Timer.periodic(const Duration(milliseconds: 10), (t) {
       controller.setGeoJsonSource("moving", _movingFeature(t.tick / 2000));
     });
 
-    filterTimer = Timer.periodic(Duration(seconds: 3), (t) {
+    filterTimer = Timer.periodic(const Duration(seconds: 3), (t) {
       filteredId = filteredId == 0 ? 1 : 0;
       controller.setFilter('fills', ['==', 'id', filteredId]);
     });
 
-    visibilityTimer = Timer.periodic(Duration(seconds: 5), (t) {
+    visibilityTimer = Timer.periodic(const Duration(seconds: 5), (t) {
       isVisible = !isVisible;
       controller.setVisibility('water', isVisible);
     });
@@ -168,11 +172,11 @@ Map<String, dynamic> _movingFeature(double t) {
   List<double> makeLatLong(double t) {
     final angle = t * 2 * pi;
     const r = 0.025;
-    const center_x = 151.1849;
-    const center_y = -33.8748;
+    const centerX = 151.1849;
+    const centerY = -33.8748;
     return [
-      center_x + r * sin(angle),
-      center_y + r * cos(angle),
+      centerX + r * sin(angle),
+      centerY + r * cos(angle),
     ];
   }
 

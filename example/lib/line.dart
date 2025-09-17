@@ -1,13 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
 
 class LinePage extends ExamplePage {
-  LinePage() : super(const Icon(Icons.share), 'Line');
+  const LinePage() : super(const Icon(Icons.share), 'Line');
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +26,7 @@ class LineBody extends StatefulWidget {
 class LineBodyState extends State<LineBody> {
   LineBodyState();
 
-  static final LatLng center = const LatLng(-33.86711, 151.1947171);
+  static const LatLng center = LatLng(-33.86711, 151.1947171);
 
   NextbillionMapController? controller;
   int _lineCount = 0;
@@ -50,19 +51,19 @@ class LineBodyState extends State<LineBody> {
     return controller!.addImage(name, list);
   }
 
-  _onLineTapped(Line line) async {
+  Future<void> _onLineTapped(Line line) async {
     await _updateSelectedLine(
-      LineOptions(lineColor: "#ff0000"),
+      const LineOptions(lineColor: "#ff0000"),
     );
     setState(() {
       _selectedLine = line;
     });
     await _updateSelectedLine(
-      LineOptions(lineColor: "#ffe100"),
+      const LineOptions(lineColor: "#ffe100"),
     );
   }
 
-  _updateSelectedLine(LineOptions changes) async {
+  Future<void> _updateSelectedLine(LineOptions changes) async {
     if (_selectedLine != null) controller!.updateLine(_selectedLine!, changes);
   }
 
@@ -85,7 +86,7 @@ class LineBodyState extends State<LineBody> {
     });
   }
 
-  _move() async {
+  Future<void> _move() async {
     final currentStart = _selectedLine!.options.geometry![0];
     final currentEnd = _selectedLine!.options.geometry![1];
     final end =
@@ -105,7 +106,7 @@ class LineBodyState extends State<LineBody> {
   }
 
   Future<void> _changeLinePattern() async {
-    String? current =
+    final String? current =
         _selectedLine!.options.linePattern == null ? "assetImage" : null;
     await _updateSelectedLine(
       LineOptions(linePattern: current),
@@ -114,10 +115,7 @@ class LineBodyState extends State<LineBody> {
 
   Future<void> _changeAlpha() async {
     double? current = _selectedLine!.options.lineOpacity;
-    if (current == null) {
-      // default value
-      current = 1.0;
-    }
+    current ??= 1.0;
 
     await _updateSelectedLine(
       LineOptions(lineOpacity: current < 0.1 ? 1.0 : current * 0.75),
@@ -126,19 +124,16 @@ class LineBodyState extends State<LineBody> {
 
   Future<void> _toggleVisible() async {
     double? current = _selectedLine!.options.lineOpacity;
-    if (current == null) {
-      // default value
-      current = 1.0;
-    }
+    current ??= 1.0;
     await _updateSelectedLine(
       LineOptions(lineOpacity: current == 0.0 ? 1.0 : 0.0),
     );
   }
 
-  _onStyleLoadedCallback() async {
+  Future<void> _onStyleLoadedCallback() async {
     addImageFromAsset("assetImage", _linePatternImage);
     await controller!.addLine(
-      LineOptions(
+      const LineOptions(
         geometry: [LatLng(37.4220, -122.0841), LatLng(37.4240, -122.0941)],
         lineColor: "#ff0000",
         lineWidth: 14.0,
@@ -176,54 +171,56 @@ class LineBodyState extends State<LineBody> {
                     Row(
                       children: <Widget>[
                         TextButton(
-                          child: const Text('add'),
                           onPressed: (_lineCount == 12) ? null : _add,
+                          child: const Text('add'),
                         ),
                         TextButton(
-                          child: const Text('remove'),
                           onPressed: (_selectedLine == null) ? null : _remove,
+                          child: const Text('remove'),
                         ),
                         TextButton(
-                          child: const Text('move'),
                           onPressed: (_selectedLine == null)
                               ? null
                               : () async {
                                   await _move();
                                 },
+                          child: const Text('move'),
                         ),
                         TextButton(
-                          child: const Text('change line-pattern'),
                           onPressed: (_selectedLine == null)
                               ? null
                               : _changeLinePattern,
+                          child: const Text('change line-pattern'),
                         ),
                       ],
                     ),
                     Row(
                       children: <Widget>[
                         TextButton(
-                          child: const Text('change alpha'),
                           onPressed:
                               (_selectedLine == null) ? null : _changeAlpha,
+                          child: const Text('change alpha'),
                         ),
                         TextButton(
-                          child: const Text('toggle visible'),
                           onPressed:
                               (_selectedLine == null) ? null : _toggleVisible,
+                          child: const Text('toggle visible'),
                         ),
                         TextButton(
-                          child: const Text('print current LatLng'),
                           onPressed: (_selectedLine == null)
                               ? null
                               : () async {
-                                  var latLngs = await controller!
+                                  final positions = await controller!
                                       .getLineLatLngs(_selectedLine!);
-                                  if (latLngs != null) {
-                                    for (var latLng in latLngs) {
-                                      print(latLng.toString());
+                                  if (positions != null) {
+                                    for (final latLng in positions) {
+                                      if (kDebugMode) {
+                                        print(latLng);
+                                      }
                                     }
                                   }
                                 },
+                          child: const Text('print current LatLng'),
                         ),
                       ],
                     ),
