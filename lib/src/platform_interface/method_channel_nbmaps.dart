@@ -202,7 +202,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   @override
   Future<CameraPosition?> updateMapOptions(
       Map<String, dynamic> optionsUpdate) async {
-    final Map<String, dynamic>? json = await _channel.invokeMethod(
+    final Map<String, dynamic>? json = await _channel.invokeMapMethod(
       'map#update',
       <String, dynamic>{
         'options': optionsUpdate,
@@ -834,6 +834,17 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
       return uri;
     } on PlatformException catch (e) {
       return Future.error(e);
+    }
+  }
+
+  @override
+  Future<void> setStyleType(NBMapStyleType styleType) async {
+    try {
+      var uri = await _channel
+          .invokeMethod('style#setStyleType', {"styleType": styleType.value});
+      return uri;
+    } on PlatformException catch (e) {
+      return new Future.error(e);
     }
   }
 }

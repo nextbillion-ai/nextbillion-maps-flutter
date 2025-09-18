@@ -41,20 +41,9 @@ class MapUiBodyState extends State<MapUiBody> {
   bool _mapExpanded = true;
   CameraTargetBounds _cameraTargetBounds = CameraTargetBounds.unbounded;
   MinMaxZoomPreference _minMaxZoomPreference = MinMaxZoomPreference.unbounded;
-  int _styleStringIndex = 0;
 
   // Style string can a reference to a local or remote resources.
   // On Android the raw JSON can also be passed via a styleString, on iOS this is not supported.
-  final List<String> _styleStrings = [
-    NbMapStyles.nbmapStreets,
-    NbMapStyles.satellite,
-    NbMapStyles.dark
-  ];
-  final List<String> _styleStringLabels = [
-    "nbmapStreets",
-    "SATELLITE",
-    "LOCAL_ASSET"
-  ];
   bool _rotateGesturesEnabled = true;
   bool _scrollGesturesEnabled = true;
   bool? _doubleClickToZoomEnabled;
@@ -172,18 +161,6 @@ class MapUiBodyState extends State<MapUiBody> {
           _minMaxZoomPreference = _minMaxZoomPreference.minZoom == null
               ? const MinMaxZoomPreference(12.0, 16.0)
               : MinMaxZoomPreference.unbounded;
-        });
-      },
-    );
-  }
-
-  Widget _setStyleToSatellite() {
-    return TextButton(
-      child: Text(
-          'change map style to ${_styleStringLabels[(_styleStringIndex + 1) % _styleStringLabels.length]}'),
-      onPressed: () {
-        setState(() {
-          _styleStringIndex = (_styleStringIndex + 1) % _styleStrings.length;
         });
       },
     );
@@ -355,7 +332,6 @@ class MapUiBodyState extends State<MapUiBody> {
       compassEnabled: _compassEnabled,
       cameraTargetBounds: _cameraTargetBounds,
       minMaxZoomPreference: _minMaxZoomPreference,
-      styleString: _styleStrings[_styleStringIndex],
       rotateGesturesEnabled: _rotateGesturesEnabled,
       scrollGesturesEnabled: _scrollGesturesEnabled,
       tiltGesturesEnabled: _tiltGesturesEnabled,
@@ -427,7 +403,6 @@ class MapUiBodyState extends State<MapUiBody> {
           _compassToggler(),
           _myLocationTrackingModeCycler(),
           _latLngBoundsToggler(),
-          _setStyleToSatellite(),
           _zoomBoundsToggler(),
           _rotateToggler(),
           _scrollToggler(),

@@ -1,9 +1,18 @@
 package ai.nextbillion.maps_flutter;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import ai.nextbillion.maps.Nextbillion;
+import ai.nextbillion.maps.style.NGLDefaultMapStyle;
+import ai.nextbillion.maps.style.NGLWellKnownTileServer;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -27,6 +36,20 @@ public class NextBillionMethodHandler implements MethodChannel.MethodCallHandler
             case "nextbillion/init_nextbillion":
                 String accessToken = call.argument("accessKey");
                 NbMapUtils.getNextbillion(context, accessToken);
+                Nextbillion.getInstance(context, accessToken);
+                NbMapUtils.setCrossPlatformInfo();
+                result.success(null);
+                break;
+            case "nextbillion/init_nextbillion_tile_server":
+                String token = call.argument("accessKey");
+                String serverName = call.argument("server");
+                if (serverName != null) {
+                    NGLWellKnownTileServer wellKnownTileServer = NGLWellKnownTileServer.valueOf(serverName);
+                    Nextbillion.getInstance(context, token, wellKnownTileServer);
+                    Log.e("Styles","wellKnownTileServer : " + wellKnownTileServer);
+                } else {
+                    Nextbillion.getInstance(context, token);
+                }
                 NbMapUtils.setCrossPlatformInfo();
                 result.success(null);
                 break;
@@ -71,6 +94,38 @@ public class NextBillionMethodHandler implements MethodChannel.MethodCallHandler
                 result.success(userId);
                 break;
 
+            case "nextbillion/predefined_styles":
+                try {
+                    List<NGLDefaultMapStyle> styles = Nextbillion.predefinedStyles();
+                    List<Map<String, Object>> serializableStyles = new ArrayList<>();
+                    
+                    if (styles != null) {
+                        for (NGLDefaultMapStyle style : styles) {
+                            Map<String, Object> styleMap = new HashMap<>();
+                            styleMap.put("name", style.getName());
+                            styleMap.put("url", style.getUrl());
+                            styleMap.put("version", style.getVersion());
+                            serializableStyles.add(styleMap);
+                        }
+                    }
+                    
+                    result.success(serializableStyles);
+                } catch (Exception e) {
+                    Log.e("NextBillionMethodHandler", "Error getting predefined styles", e);
+                    result.error("ERROR", "Failed to get predefined styles", e.getMessage());
+                }
+                break;
+            case "nextbillion/switch_tile_server":
+                String name = call.argument("server");
+                if (name != null) {
+                    NGLWellKnownTileServer wellKnownTileServer = NGLWellKnownTileServer.valueOf(name);
+                    Nextbillion.setWellKnownTileServer(wellKnownTileServer);
+                    Log.e("Styles","wellKnownTileServer : " + wellKnownTileServer);
+                    result.success(true);
+                } else {
+                    result.success(false);
+                }
+                break;
             default:
                 result.notImplemented();
         }
