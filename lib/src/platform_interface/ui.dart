@@ -47,6 +47,8 @@ class NbMapStyles {
   /// may change as we improve the style.
   static const String trafficNight =
       "https://api.nextbillion.io/tt/style/1/style/22.2.1-9?map=2/basic_street-dark&traffic_incidents=2/incidents_dark&traffic_flow=2/flow_relative-dark";
+
+
 }
 
 /// The camera mode, which determines how the map camera will track the rendered location.

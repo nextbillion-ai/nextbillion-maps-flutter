@@ -108,7 +108,6 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
         ? SymbolOptions(
             geometry: geometry,
             iconImage: 'airport-15',
-            fontNames: ['DIN Offc Pro Bold', 'Arial Unicode MS Regular'],
             textField: 'Airport',
             textSize: 12.5,
             textOffset: const Offset(0, 0.8),
@@ -123,6 +122,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
             textField: 'Airport',
             textOffset: const Offset(0, 0.8),
             iconImage: iconImage,
+            textSize: 12.5
           );
   }
 
@@ -287,7 +287,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
               onStyleLoadedCallback: _onStyleLoaded,
               initialCameraPosition: const CameraPosition(
                 target: LatLng(-33.852, 151.211),
-                zoom: 11.0,
+                zoom: 14.0,
               ),
             ),
           ),

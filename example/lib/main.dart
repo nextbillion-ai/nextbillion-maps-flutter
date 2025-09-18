@@ -4,12 +4,14 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
+import 'package:nb_maps_flutter_example/map_ui.dart';
 import 'package:nb_maps_flutter_example/scrolling_map.dart';
 import 'package:nb_maps_flutter_example/sources.dart';
 import 'package:nb_maps_flutter_example/take_snapshot.dart';
 import 'package:nb_maps_flutter_example/track_current_location.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'add_image_test.dart';
 import 'animate_camera.dart';
 import 'annotation_order_maps.dart';
 import 'click_annotations.dart';
@@ -19,7 +21,6 @@ import 'layer.dart';
 import 'line.dart';
 import 'local_style.dart';
 import 'map_style_switch.dart';
-import 'map_ui.dart';
 import 'move_camera.dart';
 import 'offline_regions.dart';
 import 'page.dart';
@@ -50,11 +51,12 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const ClickAnnotationPage(),
   const Sources(),
   const TrackCurrentLocationPage(),
-  const EncodedGeometryPage()
+  const EncodedGeometryPage(),
+  AddImageTestPage()
 ];
 
 class MapsDemo extends StatefulWidget {
-  static const String accessKey = String.fromEnvironment("ACCESS_KEY");
+  static const String accessKey = "opensesame";//String.fromEnvironment("ACCESS_KEY");
 
   @override
   State<MapsDemo> createState() => _MapsDemoState();
