@@ -50,7 +50,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const ClickAnnotationPage(),
   const Sources(),
   const TrackCurrentLocationPage(),
-  EncodedGeometryPage()
+  const EncodedGeometryPage()
 ];
 
 class MapsDemo extends StatefulWidget {
