@@ -62,7 +62,7 @@ class Convert {
         nextbillionMap.scrollBy(
             toFractionalPixels(data.get(1), density), toFractionalPixels(data.get(2), density));
         return null;
-      case "zoozmBy":
+      case "zoomBy":
         if (data.size() == 2) {
           return CameraUpdateFactory.zoomBy(toFloat(data.get(1)));
         } else {
@@ -223,6 +223,12 @@ class Convert {
     if (styleString != null) {
       sink.setStyleString(toString(styleString));
     }
+
+    final Object styleType = data.get("styleType");
+    if (styleString != null) {
+      sink.setStyleType(toString(styleType));
+    }
+
     final Object minMaxZoomPreference = data.get("minMaxZoomPreference");
     if (minMaxZoomPreference != null) {
       final List<?> zoomPreferenceData = toList(minMaxZoomPreference);

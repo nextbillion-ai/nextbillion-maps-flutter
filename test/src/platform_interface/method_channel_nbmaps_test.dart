@@ -58,7 +58,7 @@ void main() {
       tilt: 3.0,
     );
 
-    when(channel.invokeMethod<Map<String, dynamic>>('map#update', any))
+    when(channel.invokeMapMethod<String, dynamic>('map#update', any))
         .thenAnswer((_) async => expectedCameraPosition.toMap());
 
     final result = await nbMapsGlChannel.updateMapOptions(options.toMap());

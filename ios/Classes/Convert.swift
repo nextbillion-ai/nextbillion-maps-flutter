@@ -18,6 +18,18 @@ class Convert {
         }
         if let styleString = options["styleString"] as? String {
             delegate.setStyleString(styleString: styleString)
+        } else if let typeString = options["styleType"] as? String {
+            var styleType: NGMapStyleType?
+            if typeString == "bright" {
+                styleType = .Bright
+            } else if typeString == "night" {
+                styleType = .Night
+            } else if typeString == "satellite" {
+                styleType = .Satellite
+            }
+            if let styleType = styleType {
+                delegate.setStyleType(styleType: styleType)
+            }
         }
         if let rotateGesturesEnabled = options["rotateGesturesEnabled"] as? Bool {
             delegate.setRotateGesturesEnabled(rotateGesturesEnabled: rotateGesturesEnabled)

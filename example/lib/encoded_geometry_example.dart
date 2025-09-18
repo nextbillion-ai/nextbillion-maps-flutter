@@ -1,11 +1,12 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
-import 'route_marker.dart';
-import 'page.dart';
+import 'package:nb_maps_flutter_example/page.dart';
+import 'package:nb_maps_flutter_example/route_marker.dart';
 
 class EncodedGeometryPage extends ExamplePage {
-  EncodedGeometryPage() : super(const Icon(Icons.timeline), 'Encoded Geometry');
+  const EncodedGeometryPage() : super(const Icon(Icons.timeline), 'Encoded Geometry');
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +15,7 @@ class EncodedGeometryPage extends ExamplePage {
 }
 
 class EncodedGeometryExample extends StatefulWidget {
-  const EncodedGeometryExample({Key? key}) : super(key: key);
+  const EncodedGeometryExample({super.key});
 
   @override
   State createState() => EncodedGeometryExampleState();
@@ -24,8 +25,8 @@ class EncodedGeometryExampleState extends State<EncodedGeometryExample> {
   NextbillionMapController? controller;
   bool _hasLine = false;
   Line? _currentLine;
-  List<RouteMarker> _markers = [];
-  List<RouteMarkerState> _markerStates = [];
+  final List<RouteMarker> _markers = [];
+  final List<RouteMarkerState> _markerStates = [];
 
   void _onMapCreated(NextbillionMapController controller) {
     this.controller = controller;
@@ -70,25 +71,25 @@ class EncodedGeometryExampleState extends State<EncodedGeometryExample> {
     ));
   }
 
-  static final LatLng center = const LatLng(12.974335, 77.597575);
+  static const LatLng center = LatLng(12.974335, 77.597575);
 
-  static final LatLng origin = const LatLng(12.96206481, 77.56687669);
+  static const LatLng origin = LatLng(12.96206481, 77.56687669);
 
-  static final LatLng destination = const LatLng(12.99150562, 77.61940507);
+  static const LatLng destination = LatLng(12.99150562, 77.61940507);
 
   /// Example encoded polyline string (represents a simple route)
   /// This is much more efficient than sending hundreds of LatLng points
   /// This example represents a simple line with a few points
   /// Encoded from coordinates: (37.7749, -122.4194) to (37.7849, -122.4094)
 
-  static final String _encodedPolylineExample =
+  static const String _encodedPolylineExample =
       "itbnAgwlxM]@C?_@DU?eAHNn@XvAE@E@KDG@EBMo@AGQ}@G[Ow@Oo@CGOa@EMGSm@gBEIGOKa@AEUu@Ik@AMUcA??AGEOCMMk@G[Kc@?W?EAKAG?SAa@Am@GmAEa@?AAUC[?EEmBE{A?CAKAKEwAC[EgAGiA?IEk@Ca@C[E]E_@Ca@?C?E@W?KF[BI@KDMDSBIL[^cA@CDOFUFYJk@BOECECGCAACCEEGKASCUBc@@]Bq@DuAHmB@U@MD{@Dq@?KH_BBc@HsADs@@WDgA?E@W@WB{@@U@Y@QB}@@M?OD{@@w@Bk@?KBm@?SBcA@Y?G?C@WAM?GAQAOCSCGCIGMOWGGMK_@]q@m@OKkBcBEC_@_@GCCCUAWGI?UEKCKEMGKG]WGGq@k@CEGEYQMEICEAQCEAUBaBTG?GAGCKEGEAAACEI?WD{B?I?IAEC]CQCSEOCKCKIWEKCIEICGCIGKEGEGEECEKMOQqAuAuF}GsBiCCEY]kByB]a@WYOQa@c@II[]W]GGIOGKGC]SEEIIGEi@_@_@[ECKIi@a@SOQQSQIKOSGGMQQU]e@QWUWKMSYw@aACCu@eACCGKKMa@s@EGCEOUKOEGy@oAKOGKGIIMa@m@ACOUW[c@q@S]CGCGCGCICM?M@}@@mB@gA@}@?sA@m@@]?IBI@K?G@EDOFg@Fc@T_BHi@N}@b@{CBOBKVoBn@cEHi@~@wFZoBGC[G[IqA[GASGWIy@UuA]ICICKEUIUIEAKCuAc@ICaA[e@KwA_@e@MiBe@YGwA[yA]}@WICOGBSP}@BOBO@MBM@M?CEOCIIMMQCCGGCA{@u@ECc@c@_@]_Au@CCy@u@CAAAACAAMKs@q@GGQOCCAAMMBEFIDMFQTkA@KRkAFa@?CBO@[?Y?IAa@CSGw@?s@IQEMCCCCAE?KBI[YEGMWYq@KQQc@CGWe@]o@KOMQUWOOGI_@[AC]YQQq@m@gA_A}@w@][MIGGa@YoAu@i@Wm@Yc@KWGGAMA@D@B@JCHEH[^KNGJICIEGCG?EAI@IAk@Ia@Ea@Ew@Iw@IUAWCw@C[?g@@e@D{BA}@@K@_@@y@Fa@DWB]DK@M@SDIB]JIB_@Nk@Va@N[Lg@R[NQFo@XeCdAw@^IDGBEIFEJCdBu@zAo@JGp@[ZMb@Ql@Ux@_@RGRIFAf@Oj@IB?";
 
   // The precision of the geometry. Valid values are 5 or 6.
   // In this example, the geometry string above uses a precision of 5.
-  static final int _encodedGeometryPrecision = 5;
+  static const int _encodedGeometryPrecision = 5;
   
-  void _addEncodedLine() async {
+  Future<void> _addEncodedLine() async {
     if (controller == null || _hasLine) return;
 
     print(
@@ -97,7 +98,7 @@ class EncodedGeometryExampleState extends State<EncodedGeometryExample> {
     try {
       // Using encoded geometry - much more efficient for large datasets
       final line = await controller!.addLine(
-        LineOptions(
+        const LineOptions(
           encodedGeometry: _encodedPolylineExample,
           encodedGeometryPrecision: _encodedGeometryPrecision,
           // Standard precision
@@ -176,7 +177,7 @@ class EncodedGeometryExampleState extends State<EncodedGeometryExample> {
     });
   }
 
-  void _updateEncodedLine() async {
+  Future<void> _updateEncodedLine() async {
     if (controller == null || !_hasLine || _currentLine == null) return;
 
     try {
@@ -189,7 +190,7 @@ class EncodedGeometryExampleState extends State<EncodedGeometryExample> {
       
       // Create new line with updated properties but same encoded geometry
       final updatedLine = await controller!.addLine(
-        LineOptions(
+        const LineOptions(
           encodedGeometry: _encodedPolylineExample, // Use original encoded string
           encodedGeometryPrecision: 5,
           lineColor: "#00FF00", // Green color
@@ -224,7 +225,7 @@ class EncodedGeometryExampleState extends State<EncodedGeometryExample> {
     }
   }
 
-  void _clearLines() async {
+  Future<void> _clearLines() async {
     if (controller == null) return;
 
     await controller!.clearLines();
@@ -275,7 +276,7 @@ class EncodedGeometryExampleState extends State<EncodedGeometryExample> {
               children: [
                 NBMap(
                   onMapCreated: _onMapCreated,
-                  initialCameraPosition: CameraPosition(
+                  initialCameraPosition: const CameraPosition(
                     target: center,
                     zoom: 10,
                   ),
@@ -285,7 +286,6 @@ class EncodedGeometryExampleState extends State<EncodedGeometryExample> {
                   trackCameraPosition: true,
                 ),
                 IgnorePointer(
-                  ignoring: true,
                   child: Stack(
                     children: _markers,
                   ),
