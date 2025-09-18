@@ -311,7 +311,15 @@ class SymbolManager extends AnnotationManager<Symbol> {
                   [Expressions.get, 'fontNames'],
                   [
                     Expressions.literal,
-                    ["Open Sans Regular", "Arial Unicode MS Regular"]
+                    [
+                      "Noto-Regular",           // TomTom样式主要字体
+                      "Noto Sans Regular",      // 通用Noto字体
+                      "Open Sans Regular", 
+                      "Arial Unicode MS Regular",
+                      "Arial",
+                      "Helvetica",
+                      "sans-serif"
+                    ]
                   ],
                 ],
           textField: [Expressions.get, 'textField'],

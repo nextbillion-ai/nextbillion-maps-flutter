@@ -58,7 +58,7 @@ class SymbolOptions {
     this.iconRotate,
     this.iconOffset,
     this.iconAnchor,
-    this.fontNames,
+    this.fontNames = const ["Noto-Regular"],
     this.textField,
     this.textSize,
     this.textMaxWidth,
