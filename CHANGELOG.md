@@ -1,3 +1,87 @@
+## v3.0.0, Sep 18, 2025
+### Major Features
+* **Map Style Switching**: Add comprehensive support for dynamic map style switching
+  - Add `WellKnownTileServer` enum for TomTom and MapTiler tile servers
+  - Add `NBMapStyleType` enum for bright, night, and satellite styles
+  - Add `NbDefaultStyle` class for style configuration with name, URL, and version
+  - Implement `getPredefinedMapStyles()` method to fetch available styles from tile server
+  - Implement `setMapStyleType()` method for programmatic style switching
+  - Add style switching example page with both type-based and URL-based switching
+
+* **iOS Metal Rendering**: Major performance upgrade for iOS platform
+  - Migrate to Metal-based rendering engine (NextBillionMap 2.0.1)
+  - Significant performance improvements over OpenGL-based rendering
+  - Better GPU utilization and reduced battery consumption
+  - Enhanced graphics quality and smoother animations
+  - Support for advanced iOS graphics capabilities
+
+### API Enhancements
+* **NextBillion Configuration**: Add new configuration methods
+  - Add `getBaseUri()` and `setBaseUri()` methods for custom tile server configuration
+  - Add support for dynamic tile server switching
+  - Improve API flexibility for custom deployment scenarios
+
+### Bug Fixes
+* **Camera Updates**: Fix critical camera operation issues
+  - Fix typo in Android `Convert.java`: "zoozmBy" → "zoomBy" 
+  - Fix `zoomBy` camera update with focus point support
+  - Fix `scrollBy` method return value handling
+  - Resolve `IllegalArgumentException` when using `zoomBy` with focus coordinates
+
+### Testing & Quality
+* **Test Coverage**: Improve test reliability and coverage
+  - Fix Mockito test configuration for `updateMapOptions` method
+  - Update mock method channel to use `invokeMapMethod` instead of `invokeMethod`
+  - Add comprehensive test coverage for new map style features
+  - Fix CI/CD pipeline issues and Flutter version compatibility
+
+### Development & Tooling
+* **Build System**: Update build configurations
+  - Update Android Gradle Plugin to 8.9.2 for better compatibility
+  - Update Gradle wrapper to support newer Java versions
+  - Fix lint issues across Android and iOS native code
+  - Update Flutter version requirements to 3.24.0+
+  - Degrade Mockito version for better compatibility
+
+### Example Application
+* **Map Style Demo**: Add comprehensive style switching demonstration
+  - New `MapStyleSwitchPage` with dual-mode switching (type vs URL)
+  - Real-time style preview and switching capabilities
+  - Style loading status indicators and error handling
+  - Support for both predefined and custom style URLs
+
+### Breaking Changes
+* **Version Bump**: Major version increase to 3.0.0
+  - Updated minimum Flutter version to 3.24.0
+  - Updated Dart SDK requirement to >=3.5.0 <4.0.0
+  - Some internal API changes for improved type safety
+
+* **iOS Metal Migration**: Important iOS compatibility notes
+  - iOS SDK upgraded to NextBillionMap 2.0.1 (Metal-based)
+  - Requires iOS 12+ for Metal rendering support
+  - May require testing on iOS devices to verify Metal compatibility
+  - OpenGL-based rendering is no longer supported on iOS
+
+### Platform Support
+* **iOS Metal Migration**: Major iOS rendering engine upgrade
+  - Migrate iOS SDK from NextBillionMap 1.1.5 to 2.0.0
+  - Transition from OpenGL to Metal rendering engine for improved performance
+  - Enhanced GPU utilization and reduced CPU overhead on iOS devices
+  - Better graphics performance and smoother map rendering
+  - Improved memory management and power efficiency
+  - Support for advanced iOS graphics features and optimizations
+
+* **Android SDK Update**: Update Android native SDK
+  - Update Android SDK from 1.2.0 to 1.3.0-beta.2
+  - Enhanced tile server configuration capabilities
+  - Improved performance and stability
+
+* **Cross-Platform**: Enhanced platform implementations
+  - Improved iOS style switching implementation with Metal support
+  - Enhanced Android tile server configuration
+  - Better error handling across both platforms
+  - Unified API experience despite different underlying rendering engines
+
 ## v2.3.0, Aug 28
 * **Encoded Geometry Support**: Add support for Google polyline encoded geometry strings in LineOptions
   - Add `encodedGeometry` and `encodedGeometryPrecision` fields to LineOptions for efficient route rendering
