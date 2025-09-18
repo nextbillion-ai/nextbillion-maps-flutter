@@ -59,9 +59,10 @@ class Convert {
       case "newLatLngZoom":
         return CameraUpdateFactory.newLatLngZoom(toLatLng(data.get(1)), toFloat(data.get(2)));
       case "scrollBy":
-        return nextbillionMap.scrollBy(
+        nextbillionMap.scrollBy(
             toFractionalPixels(data.get(1), density), toFractionalPixels(data.get(2), density));
-      case "zoozmBy":
+        return null;
+      case "zoomBy":
         if (data.size() == 2) {
           return CameraUpdateFactory.zoomBy(toFloat(data.get(1)));
         } else {
