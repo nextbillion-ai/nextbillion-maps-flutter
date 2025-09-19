@@ -15,106 +15,179 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
         }
 
       case 'feature#onTap':
-        final id = arguments?['id'];
-        final double x = arguments?['x'] as double;
-        final double y = arguments?['y'] as double;
-        final double lng = arguments?['lng'] as double;
-        final double lat = arguments?['lat'] as double;
-        onFeatureTappedPlatform({
-          'id': id,
-          'point': Point<double>(x, y),
-          'latLng': LatLng(lat, lng)
-        });
+        try {
+          final id = arguments?['id'];
+          final double x = (arguments?['x'] as num?)?.toDouble() ?? 0.0;
+          final double y = (arguments?['y'] as num?)?.toDouble() ?? 0.0;
+          final double lng = (arguments?['lng'] as num?)?.toDouble() ?? 0.0;
+          final double lat = (arguments?['lat'] as num?)?.toDouble() ?? 0.0;
+          onFeatureTappedPlatform({
+            'id': id,
+            'point': Point<double>(x, y),
+            'latLng': LatLng(lat, lng)
+          });
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error processing feature tap: $e');
+          }
+        }
       case 'feature#onDrag':
-        final id = arguments?['id'];
-        final double x = arguments?['x'] as double;
-        final double y = arguments?['y'] as double;
-        final double originLat = arguments?['originLat'] as double;
-        final double originLng = arguments?['originLng'] as double;
+        try {
+          final id = arguments?['id'];
+          final double x = (arguments?['x'] as num?)?.toDouble() ?? 0.0;
+          final double y = (arguments?['y'] as num?)?.toDouble() ?? 0.0;
+          final double originLat = (arguments?['originLat'] as num?)?.toDouble() ?? 0.0;
+          final double originLng = (arguments?['originLng'] as num?)?.toDouble() ?? 0.0;
 
-        final double currentLat = arguments?['currentLat'] as double;
-        final double currentLng = arguments?['currentLng'] as double;
+          final double currentLat = (arguments?['currentLat'] as num?)?.toDouble() ?? 0.0;
+          final double currentLng = (arguments?['currentLng'] as num?)?.toDouble() ?? 0.0;
 
-        final double deltaLat = arguments?['deltaLat'] as double;
-        final double deltaLng = arguments?['deltaLng'] as double;
-        final String eventType = arguments?['eventType'] as String;
+          final double deltaLat = (arguments?['deltaLat'] as num?)?.toDouble() ?? 0.0;
+          final double deltaLng = (arguments?['deltaLng'] as num?)?.toDouble() ?? 0.0;
+          final String eventType = (arguments?['eventType'] as String?) ?? '';
 
-        onFeatureDraggedPlatform({
-          'id': id,
-          'point': Point<double>(x, y),
-          'origin': LatLng(originLat, originLng),
-          'current': LatLng(currentLat, currentLng),
-          'delta': LatLng(deltaLat, deltaLng),
-          'eventType': eventType,
-        });
+          onFeatureDraggedPlatform({
+            'id': id,
+            'point': Point<double>(x, y),
+            'origin': LatLng(originLat, originLng),
+            'current': LatLng(currentLat, currentLng),
+            'delta': LatLng(deltaLat, deltaLng),
+            'eventType': eventType,
+          });
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error processing feature drag: $e');
+          }
+        }
 
       case 'camera#onMoveStarted':
         onCameraMoveStartedPlatform(null);
       case 'camera#onMove':
-        final position = arguments?['position'] as Map<String, dynamic>?;
-        final cameraPosition = CameraPosition.fromMap(position);
-        if (cameraPosition != null) {
-          onCameraMovePlatform.call(cameraPosition);
-        } else {}
+        try {
+          final dynamic positionDynamic = arguments?['position'];
+          final Map<String, dynamic>? position = positionDynamic is Map
+              ? Map<String, dynamic>.from(positionDynamic)
+              : null;
+          final cameraPosition = CameraPosition.fromMap(position);
+          if (cameraPosition != null) {
+            onCameraMovePlatform.call(cameraPosition);
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error processing camera move: $e');
+          }
+        }
       case 'camera#onIdle':
-        final position = arguments?['position'] as Map<String, dynamic>?;
-        final cameraPosition = CameraPosition.fromMap(position);
-        onCameraIdlePlatform(cameraPosition);
+        try {
+          final dynamic positionDynamic = arguments?['position'];
+          final Map<String, dynamic>? position = positionDynamic is Map
+              ? Map<String, dynamic>.from(positionDynamic)
+              : null;
+          final cameraPosition = CameraPosition.fromMap(position);
+          onCameraIdlePlatform(cameraPosition);
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error processing camera idle: $e');
+          }
+        }
       case 'map#onStyleLoaded':
         onMapStyleLoadedPlatform(null);
       case 'map#onMapClick':
-        final double x = arguments?['x'] as double;
-        final double y = arguments?['y'] as double;
-        final double lng = arguments?['lng'] as double;
-        final double lat = arguments?['lat'] as double;
-        onMapClickPlatform(
-            {'point': Point<double>(x, y), 'latLng': LatLng(lat, lng)});
+        try {
+          final double x = (arguments?['x'] as num?)?.toDouble() ?? 0.0;
+          final double y = (arguments?['y'] as num?)?.toDouble() ?? 0.0;
+          final double lng = (arguments?['lng'] as num?)?.toDouble() ?? 0.0;
+          final double lat = (arguments?['lat'] as num?)?.toDouble() ?? 0.0;
+          onMapClickPlatform(
+              {'point': Point<double>(x, y), 'latLng': LatLng(lat, lng)});
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error processing map click: $e');
+          }
+        }
       case 'map#onMapLongClick':
-        final double x = arguments?['x'] as double;
-        final double y = arguments?['y'] as double;
-        final double lng = arguments?['lng'] as double;
-        final double lat = arguments?['lat'] as double;
-        onMapLongClickPlatform(
-            {'point': Point<double>(x, y), 'latLng': LatLng(lat, lng)});
+        try {
+          final double x = (arguments?['x'] as num?)?.toDouble() ?? 0.0;
+          final double y = (arguments?['y'] as num?)?.toDouble() ?? 0.0;
+          final double lng = (arguments?['lng'] as num?)?.toDouble() ?? 0.0;
+          final double lat = (arguments?['lat'] as num?)?.toDouble() ?? 0.0;
+          onMapLongClickPlatform(
+              {'point': Point<double>(x, y), 'latLng': LatLng(lat, lng)});
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error processing map long click: $e');
+          }
+        }
 
       case 'map#onAttributionClick':
         onAttributionClickPlatform(null);
       case 'map#onCameraTrackingChanged':
-        final int mode = arguments?['mode'] as int;
-        onCameraTrackingChangedPlatform(MyLocationTrackingMode.values[mode]);
+        try {
+          final int mode = (arguments?['mode'] as int?) ?? 0;
+          if (mode >= 0 && mode < MyLocationTrackingMode.values.length) {
+            onCameraTrackingChangedPlatform(MyLocationTrackingMode.values[mode]);
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error processing camera tracking changed: $e');
+          }
+        }
       case 'map#onCameraTrackingDismissed':
         onCameraTrackingDismissedPlatform(null);
       case 'map#onIdle':
         onMapIdlePlatform(null);
       case 'map#onUserLocationUpdated':
-        final userLocation = arguments?['userLocation'] as Map<String, dynamic>;
-        final heading = arguments?['heading'] as Map<String, dynamic>?;
+        try {
+          final dynamic userLocationDynamic = arguments?['userLocation'];
+          final dynamic headingDynamic = arguments?['heading'];
+          
+          // Safely convert to Map<String, dynamic>
+          final Map<String, dynamic>? userLocation = userLocationDynamic is Map 
+              ? Map<String, dynamic>.from(userLocationDynamic) 
+              : null;
+          final Map<String, dynamic>? heading = headingDynamic is Map 
+              ? Map<String, dynamic>.from(headingDynamic) 
+              : null;
+          
+          if (userLocation == null) {
+            return;
+          }
 
-        final List<dynamic> positionDynamic = userLocation['position'] as List<dynamic>;
-        final List<double> position = positionDynamic.cast<double>();
-        final LatLng latLng = LatLng(position[0], position[1]);
+          final List<dynamic>? positionDynamic = userLocation['position'] as List<dynamic>?;
+          if (positionDynamic == null || positionDynamic.length < 2) {
+            return;
+          }
+          
+          final List<double> position = positionDynamic.cast<double>();
+          final LatLng latLng = LatLng(position[0], position[1]);
 
-        onUserLocationUpdatedPlatform(UserLocation(
-            position: latLng,
-            altitude: userLocation['altitude'] as double,
-            bearing: userLocation['bearing'] as double,
-            speed: userLocation['speed'] as double,
-            horizontalAccuracy: userLocation['horizontalAccuracy'] as double,
-            verticalAccuracy: userLocation['verticalAccuracy'] as double,
-            heading: heading == null
-                ? null
-                : UserHeading(
-                    magneticHeading: heading['magneticHeading'] as double,
-                    trueHeading: heading['trueHeading'] as double,
-                    headingAccuracy: heading['headingAccuracy'] as double,
-                    x: heading['x'] as double,
-                    y: heading['y'] as double,
-                    z: heading['x'] as double,
-                    timestamp: DateTime.fromMillisecondsSinceEpoch(
-                        heading['timestamp'] as int),
-                  ),
-            timestamp: DateTime.fromMillisecondsSinceEpoch(
-                userLocation['timestamp'] as int)));
+          onUserLocationUpdatedPlatform(UserLocation(
+              position: latLng,
+              altitude: (userLocation['altitude'] as num?)?.toDouble() ?? 0.0,
+              bearing: (userLocation['bearing'] as num?)?.toDouble() ?? 0.0,
+              speed: (userLocation['speed'] as num?)?.toDouble() ?? 0.0,
+              horizontalAccuracy: (userLocation['horizontalAccuracy'] as num?)?.toDouble() ?? 0.0,
+              verticalAccuracy: (userLocation['verticalAccuracy'] as num?)?.toDouble() ?? 0.0,
+              heading: heading == null
+                  ? null
+                  : UserHeading(
+                      magneticHeading: (heading['magneticHeading'] as num?)?.toDouble() ?? 0.0,
+                      trueHeading: (heading['trueHeading'] as num?)?.toDouble() ?? 0.0,
+                      headingAccuracy: (heading['headingAccuracy'] as num?)?.toDouble() ?? 0.0,
+                      x: (heading['x'] as num?)?.toDouble() ?? 0.0,
+                      y: (heading['y'] as num?)?.toDouble() ?? 0.0,
+                      z: (heading['z'] as num?)?.toDouble() ?? 0.0,
+                      timestamp: DateTime.fromMillisecondsSinceEpoch(
+                          (heading['timestamp'] as int?) ?? 0),
+                    ),
+              timestamp: DateTime.fromMillisecondsSinceEpoch(
+                  (userLocation['timestamp'] as int?) ?? 0)));
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error processing user location update: $e');
+          }
+          // Don't rethrow to avoid breaking the method channel
+        }
       default:
         throw MissingPluginException();
     }
@@ -202,13 +275,26 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   @override
   Future<CameraPosition?> updateMapOptions(
       Map<String, dynamic> optionsUpdate) async {
-    final Map<String, dynamic>? json = await _channel.invokeMapMethod(
-      'map#update',
-      <String, dynamic>{
-        'options': optionsUpdate,
-      },
-    );
-    return CameraPosition.fromMap(json);
+    try {
+      final dynamic result = await _channel.invokeMapMethod(
+        'map#update',
+        <String, dynamic>{
+          'options': optionsUpdate,
+        },
+      );
+      
+      // Safely convert the result to Map<String, dynamic>
+      final Map<String, dynamic>? json = result is Map
+          ? Map<String, dynamic>.from(result)
+          : null;
+          
+      return CameraPosition.fromMap(json);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error updating map options: $e');
+      }
+      return null;
+    }
   }
 
   @override
@@ -284,7 +370,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   Future<List<dynamic>> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
     try {
-      final Map? reply = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+      final dynamic reply = await _channel.invokeMethod<Map<dynamic, dynamic>>(
         'map#queryRenderedFeatures',
         <String, Object?>{
           'x': point.x,
@@ -293,14 +379,34 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
           'filter': filter,
         },
       );
-      final features = reply?['features'] as List<dynamic>?;
-      final decodeFeatures =  features?.map((feature) => jsonDecode(feature as String)).toList();
-      if(decodeFeatures == null) {
+      
+      // Safely extract features from reply
+      final dynamic featuresData = reply is Map ? reply['features'] : null;
+      final List<dynamic>? features = featuresData is List ? featuresData : null;
+      
+      if (features == null) {
         return [];
       }
+      
+      final decodeFeatures = features.map((feature) {
+        try {
+          return jsonDecode(feature as String);
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error decoding feature: $e');
+          }
+          return null;
+        }
+      }).where((feature) => feature != null).toList();
+      
       return decodeFeatures;
     } on PlatformException catch (e) {
       return Future.error(e);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error querying rendered features: $e');
+      }
+      return [];
     }
   }
 
@@ -309,7 +415,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   Future<List> queryRenderedFeaturesInRect(
       Rect rect, List<String> layerIds, String? filter) async {
     try {
-      final Map<dynamic, dynamic>? reply = await _channel.invokeMethod(
+      final dynamic reply = await _channel.invokeMethod(
         'map#queryRenderedFeatures',
         <String, Object?>{
           'left': rect.left,
@@ -320,14 +426,34 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
           'filter': filter,
         },
       );
-      final features = reply?['features'] as List<dynamic>?;
-      final decodeFeatures =  features?.map((feature) => jsonDecode(feature as String)).toList();
-      if(decodeFeatures == null) {
+      
+      // Safely extract features from reply
+      final dynamic featuresData = reply is Map ? reply['features'] : null;
+      final List<dynamic>? features = featuresData is List ? featuresData : null;
+      
+      if (features == null) {
         return [];
       }
+      
+      final decodeFeatures = features.map((feature) {
+        try {
+          return jsonDecode(feature as String);
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error decoding feature in rect: $e');
+          }
+          return null;
+        }
+      }).where((feature) => feature != null).toList();
+      
       return decodeFeatures;
     } on PlatformException catch (e) {
       return Future.error(e);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error querying rendered features in rect: $e');
+      }
+      return [];
     }
   }
 
@@ -344,47 +470,92 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   @override
   Future<LatLng?> requestMyLocationLatLng() async {
     try {
-      final Map<dynamic, dynamic>? reply = await _channel.invokeMethod(
+      final dynamic replyDynamic = await _channel.invokeMethod(
           'locationComponent#getLastLocation');
-      double latitude = 0.0;
-      double longitude = 0.0;
-      if(reply == null) {
+      
+      // Safely convert reply to Map
+      final Map? reply = replyDynamic is Map ? replyDynamic : null;
+      
+      if (reply == null) {
         return null;
       }
+      
+      double latitude = 0.0;
+      double longitude = 0.0;
+      
       if (reply.containsKey('latitude') && reply['latitude'] != null) {
-        latitude = double.parse(reply['latitude'].toString());
+        try {
+          latitude = (reply['latitude'] as num?)?.toDouble() ?? 
+                     double.parse(reply['latitude'].toString());
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error parsing latitude: $e');
+          }
+        }
       }
+      
       if (reply.containsKey('longitude') && reply['longitude'] != null) {
-        longitude = double.parse(reply['longitude'].toString());
+        try {
+          longitude = (reply['longitude'] as num?)?.toDouble() ?? 
+                      double.parse(reply['longitude'].toString());
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error parsing longitude: $e');
+          }
+        }
       }
+      
       return LatLng(latitude, longitude);
     } on PlatformException catch (e) {
       return Future.error(e);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error requesting location: $e');
+      }
+      return null;
     }
   }
 
   @override
   Future<LatLngBounds?> getVisibleRegion() async {
     try {
-      final Map<dynamic, dynamic>? reply =
-      await _channel.invokeMethod('map#getVisibleRegion');
+      final dynamic replyDynamic = await _channel.invokeMethod('map#getVisibleRegion');
+      
+      // Safely convert reply to Map
+      final Map? reply = replyDynamic is Map ? replyDynamic : null;
+      
       if (reply == null) {
         return null;
       }
-      final southwest = reply['sw'] as List<dynamic>;
-      final northeast = reply['ne'] as List<dynamic>;
+      
+      final dynamic southwestData = reply['sw'];
+      final dynamic northeastData = reply['ne'];
+      
+      final List<dynamic>? southwest = southwestData is List ? southwestData : null;
+      final List<dynamic>? northeast = northeastData is List ? northeastData : null;
+      
+      if (southwest == null || northeast == null || 
+          southwest.length < 2 || northeast.length < 2) {
+        return null;
+      }
+      
       return LatLngBounds(
         southwest: LatLng(
-          (southwest[0] as num).toDouble(),
-          (southwest[1] as num).toDouble(),
+          (southwest[0] as num?)?.toDouble() ?? 0.0,
+          (southwest[1] as num?)?.toDouble() ?? 0.0,
         ),
         northeast: LatLng(
-          (northeast[0] as num).toDouble(),
-          (northeast[1] as num).toDouble(),
+          (northeast[0] as num?)?.toDouble() ?? 0.0,
+          (northeast[1] as num?)?.toDouble() ?? 0.0,
         ),
       );
     } on PlatformException catch (e) {
       return Future.error(e);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting visible region: $e');
+      }
+      return null;
     }
   }
 
@@ -440,19 +611,28 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   @override
   Future<Point?> toScreenLocation(LatLng latLng) async {
     try {
-      final Map<dynamic, dynamic>? screenPosMap  =
-          await _channel.invokeMethod('map#toScreenLocation', <String, dynamic>{
+      final dynamic screenPosMapDynamic = await _channel.invokeMethod('map#toScreenLocation', <String, dynamic>{
         'latitude': latLng.latitude,
         'longitude': latLng.longitude,
       });
-      if(screenPosMap == null) {
+      
+      // Safely convert reply to Map
+      final Map? screenPosMap = screenPosMapDynamic is Map ? screenPosMapDynamic : null;
+      
+      if (screenPosMap == null) {
         return null;
       }
-      final x = screenPosMap['x'] as double;
-      final y = screenPosMap['y'] as double;
+      
+      final double x = (screenPosMap['x'] as num?)?.toDouble() ?? 0.0;
+      final double y = (screenPosMap['y'] as num?)?.toDouble() ?? 0.0;
       return Point(x, y);
     } on PlatformException catch (e) {
       return Future.error(e);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error converting to screen location: $e');
+      }
+      return null;
     }
   }
 
@@ -557,35 +737,54 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   @override
   Future<LatLng?> toLatLng(Point screenLocation) async {
     try {
-      final Map<dynamic, dynamic>? latLngMap =
-          await _channel.invokeMethod('map#toLatLng', <String, dynamic>{
+      final dynamic latLngMapDynamic = await _channel.invokeMethod('map#toLatLng', <String, dynamic>{
         'x': screenLocation.x,
         'y': screenLocation.y,
       });
-      if(latLngMap == null ) {
+      
+      // Safely convert reply to Map
+      final Map? latLngMap = latLngMapDynamic is Map ? latLngMapDynamic : null;
+      
+      if (latLngMap == null) {
         return null;
       }
-      final latitude = (latLngMap['latitude'] as num).toDouble() ;
-      final longitude = (latLngMap['longitude'] as num).toDouble();
+      
+      final double latitude = (latLngMap['latitude'] as num?)?.toDouble() ?? 0.0;
+      final double longitude = (latLngMap['longitude'] as num?)?.toDouble() ?? 0.0;
       return LatLng(latitude, longitude);
     } on PlatformException catch (e) {
       return Future.error(e);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error converting to LatLng: $e');
+      }
+      return null;
     }
   }
 
   @override
   Future<double?> getMetersPerPixelAtLatitude(double latitude) async {
     try {
-      final Map<String, dynamic>? latLngMap = await _channel
+      final dynamic latLngMapDynamic = await _channel
           .invokeMethod('map#getMetersPerPixelAtLatitude', <String, dynamic>{
         'latitude': latitude,
       });
-      if(latLngMap == null) {
+      
+      // Safely convert reply to Map
+      final Map? latLngMap = latLngMapDynamic is Map ? latLngMapDynamic : null;
+      
+      if (latLngMap == null) {
         return null;
       }
-      return (latLngMap['metersperpixel'] as num).toDouble();
+      
+      return (latLngMap['metersperpixel'] as num?)?.toDouble() ?? 0.0;
     } on PlatformException catch (e) {
       return Future.error(e);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting meters per pixel: $e');
+      }
+      return null;
     }
   }
 
