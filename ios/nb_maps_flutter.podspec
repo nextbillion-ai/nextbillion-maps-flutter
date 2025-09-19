@@ -16,7 +16,7 @@ A new Flutter plugin.
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
   s.swift_version = '5.0'
-  s.dependency 'NextBillionMap', '= 2.0.1'
+  s.dependency 'NextBillionMap', '= 2.0.2'
   s.ios.deployment_target = '9.0'
 end
 

@@ -1,3 +1,6 @@
+## v3.0.1, Sep 19, 2025
+* Remove some print logs on iOS native SDK
+* 
 ## v3.0.0, Sep 18, 2025
 ### Major Features
 * **Map Style Switching**: Add comprehensive support for dynamic map style switching
