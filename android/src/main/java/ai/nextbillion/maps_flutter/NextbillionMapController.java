@@ -1980,8 +1980,12 @@ final class NextbillionMapController
     }
 
     private void updateMyLocationEnabled() {
-        if (this.locationComponent == null && myLocationEnabled && nextbillionMap.getStyle() != null) {
-            enableLocationComponent(nextbillionMap.getStyle());
+        if (this.locationComponent == null && myLocationEnabled) {
+            Style currentStyle = nextbillionMap.getStyle();
+            if (currentStyle != null) {
+                enableLocationComponent(currentStyle);
+            }
+            // If style is not ready yet, location component will be enabled in onStyleLoaded callback
         }
 
         if (myLocationEnabled) {
