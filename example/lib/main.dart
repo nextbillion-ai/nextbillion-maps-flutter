@@ -56,7 +56,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
 ];
 
 class MapsDemo extends StatefulWidget {
-  static const String accessKey = "opensesame";//String.fromEnvironment("ACCESS_KEY");
+  static const String accessKey = String.fromEnvironment("ACCESS_KEY");
 
   @override
   State<MapsDemo> createState() => _MapsDemoState();
