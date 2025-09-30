@@ -303,6 +303,7 @@ class SymbolManager extends AnnotationManager<Symbol> {
           iconHaloBlur: [Expressions.get, 'iconHaloBlur'],
           // note that web does not support setting this in a fully data driven
           // way this is a upstream issue
+          // textFont: null,
           textFont: kIsWeb
               ? null
               : [
@@ -314,7 +315,7 @@ class SymbolManager extends AnnotationManager<Symbol> {
                     [
                       "Noto-Regular",           // TomTom样式主要字体
                       "Noto Sans Regular",      // 通用Noto字体
-                      "Open Sans Regular", 
+                      "Open Sans Regular",
                       "Arial Unicode MS Regular",
                       "Arial",
                       "Helvetica",
