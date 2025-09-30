@@ -4,7 +4,7 @@
 
 ## Prerequisites
 * Access Key
-* Android minSdkVersion 21+
+* Android minSdkVersion 23+
 * iOS 12+
 * Flutter 3.22+
 * In the build settings, locate "**Build Libraries for Distribution**" and ensure it is set to "**No**".

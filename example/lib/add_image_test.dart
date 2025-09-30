@@ -6,7 +6,7 @@ import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 import 'page.dart';
 
 class AddImageTestPage extends ExamplePage {
-  AddImageTestPage() : super(const Icon(Icons.add_photo_alternate), 'Add Image Test');
+  AddImageTestPage() : super(const Icon(Icons.add_photo_alternate), 'Add Image symbol Test');
 
   @override
   Widget build(BuildContext context) {
