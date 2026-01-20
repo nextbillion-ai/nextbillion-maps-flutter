@@ -148,7 +148,7 @@ abstract class OfflineManagerUtils {
                                                 // region still keeps part
                                                 // of it in database, so we
                                                 // have to remove it
-                                                deleteRegion(null, context, _offlineRegion.getID());
+                                                deleteRegion(null, context, _offlineRegion.getId());
                                             }
                                         };
                                 _offlineRegion.setObserver(observer);
@@ -196,7 +196,7 @@ abstract class OfflineManagerUtils {
                             @Override
                             public void onList(OfflineRegion[] offlineRegions) {
                                 for (OfflineRegion offlineRegion : offlineRegions) {
-                                    if (offlineRegion.getID() != id) continue;
+                                    if (offlineRegion.getId() != id) continue;
 
                                     String metadata = "{}";
                                     if (metadataMap != null) {
@@ -244,7 +244,7 @@ abstract class OfflineManagerUtils {
                             @Override
                             public void onList(OfflineRegion[] offlineRegions) {
                                 for (OfflineRegion offlineRegion : offlineRegions) {
-                                    if (offlineRegion.getID() != id) continue;
+                                    if (offlineRegion.getId() != id) continue;
 
                                     offlineRegion.delete(
                                             new OfflineRegion.OfflineRegionDeleteCallback() {
@@ -335,7 +335,7 @@ abstract class OfflineManagerUtils {
 
     static Map<String, Object> offlineRegionToMap(OfflineRegion region) {
         Map<String, Object> result = new HashMap<>();
-        result.put("id", region.getID());
+        result.put("id", region.getId());
         result.put("definition", offlineRegionDefinitionToMap(region.getDefinition()));
         result.put("metadata", metadataBytesToMap(region.getMetadata()));
         return result;

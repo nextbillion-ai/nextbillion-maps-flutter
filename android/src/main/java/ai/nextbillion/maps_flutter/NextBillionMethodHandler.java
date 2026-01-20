@@ -13,6 +13,7 @@ import java.util.Map;
 import ai.nextbillion.maps.Nextbillion;
 import ai.nextbillion.maps.style.NGLDefaultMapStyle;
 import ai.nextbillion.maps.style.NGLWellKnownTileServer;
+import ai.nextbillion.maps.util.DefaultStyle;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -96,11 +97,13 @@ public class NextBillionMethodHandler implements MethodChannel.MethodCallHandler
 
             case "nextbillion/predefined_styles":
                 try {
-                    List<NGLDefaultMapStyle> styles = Nextbillion.predefinedStyles();
+
+                    DefaultStyle[] styles = Nextbillion.getPredefinedStyles();
+                    List<DefaultStyle> defaultMapStyles = styles != null ? java.util.Arrays.asList(styles) : new java.util.ArrayList<>();
                     List<Map<String, Object>> serializableStyles = new ArrayList<>();
-                    
+
                     if (styles != null) {
-                        for (NGLDefaultMapStyle style : styles) {
+                        for (DefaultStyle style : defaultMapStyles) {
                             Map<String, Object> styleMap = new HashMap<>();
                             styleMap.put("name", style.getName());
                             styleMap.put("url", style.getUrl());
@@ -108,7 +111,7 @@ public class NextBillionMethodHandler implements MethodChannel.MethodCallHandler
                             serializableStyles.add(styleMap);
                         }
                     }
-                    
+
                     result.success(serializableStyles);
                 } catch (Exception e) {
                     Log.e("NextBillionMethodHandler", "Error getting predefined styles", e);
