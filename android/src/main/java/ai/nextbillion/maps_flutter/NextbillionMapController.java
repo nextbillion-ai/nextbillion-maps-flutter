@@ -56,6 +56,7 @@ import ai.nextbillion.maps.geometry.LatLngBounds;
 import ai.nextbillion.maps.geometry.LatLngQuad;
 import ai.nextbillion.maps.geometry.VisibleRegion;
 import ai.nextbillion.maps.location.LocationComponent;
+import ai.nextbillion.maps.location.LocationComponentActivationOptions;
 import ai.nextbillion.maps.location.LocationComponentOptions;
 import ai.nextbillion.maps.location.OnCameraTrackingChangedListener;
 import ai.nextbillion.maps.location.engine.LocationEngine;
@@ -331,8 +332,7 @@ final class NextbillionMapController
         if (hasLocationPermission()) {
             locationEngine = LocationEngineProvider.getBestLocationEngine(context);
             locationComponent = nextbillionMap.getLocationComponent();
-            locationComponent.activateLocationComponent(
-                    context, style, buildLocationComponentOptions(style));
+            locationComponent.activateLocationComponent(buildLocationActivationOptions(style));
             locationComponent.setLocationComponentEnabled(true);
             // locationComponent.setRenderMode(RenderMode.COMPASS); // remove or keep default?
             locationComponent.setLocationEngine(locationEngine);
@@ -371,6 +371,22 @@ final class NextbillionMapController
     boolean locationComponentRequiresUpdate() {
         final String lastLayerId = getLastLayerOnStyle(style);
         return lastLayerId != null && !lastLayerId.equals("nbmap-location-bearing-layer");
+    }
+
+    private LocationComponentActivationOptions buildLocationActivationOptions(Style style) {
+
+        final LocationComponentOptions.Builder optionsBuilder =
+                LocationComponentOptions.builder(context);
+        optionsBuilder.trackingGesturesManagement(true);
+
+        final String lastLayerId = getLastLayerOnStyle(style);
+        if (lastLayerId != null) {
+            optionsBuilder.layerAbove(lastLayerId);
+        }
+
+        return LocationComponentActivationOptions
+                .builder(context, style)
+                .locationComponentOptions(optionsBuilder.build()).build();
     }
 
     private LocationComponentOptions buildLocationComponentOptions(Style style) {
