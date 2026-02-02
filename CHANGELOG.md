@@ -1,3 +1,6 @@
+## v3.2.0, Feb 02, 2026
+* Upgrade Android maps native version to 3.0.0
+
 ## v3.0.3, Sep 30, 2025
 * Upgrade Android maps native version to 2.0.1 to support 16kb alignment
 * Upgrade the minSdkVersion from 21 to 23 to support 16kb alignment configuration
