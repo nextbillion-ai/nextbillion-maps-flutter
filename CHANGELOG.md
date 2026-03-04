@@ -1,3 +1,7 @@
+## v3.2.1, Mar 04, 2026
+- Bump iOS Maps SDK to 2.0.3 to solve `ngl_interpolate:withCurveType:parameters:stops:` warning
+- Bump to solve `NSPredicate: Use of NGL_MATCH as an NSExpression function is forbidden` warning
+
 ## v3.2.0, Feb 02, 2026
 * Upgrade Android maps native version to 3.0.0
 
