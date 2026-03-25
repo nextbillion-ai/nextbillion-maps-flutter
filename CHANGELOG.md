@@ -1,3 +1,7 @@
+## v3.3.0, Mar 25, 2026
+- Bump iOS Maps SDK to 2.1.2 to support apikey security enhancement
+- Bump iOS Maps SDK to 3.1.0 to support apikey security enhancement
+- Starting from this version, you can configure security restrictions for Android and iOS apps at [https://console.nextbillion.ai/credentials](https://console.nextbillion.ai/credentials).
 ## v3.2.1, Mar 04, 2026
 - Bump iOS Maps SDK to 2.0.3 to solve `ngl_interpolate:withCurveType:parameters:stops:` warning
 - Bump to solve `NSPredicate: Use of NGL_MATCH as an NSExpression function is forbidden` warning

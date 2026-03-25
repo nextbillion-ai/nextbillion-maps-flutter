@@ -165,7 +165,7 @@ class MapStyleSwitchState extends State<MapStyleSwitch> {
     });
     
     // Use controller to switch style type
-    mapController!.setStyleType(nextStyleType);
+    mapController?.setStyleType(nextStyleType);
     
     // Show feedback to user
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -186,7 +186,7 @@ class MapStyleSwitchState extends State<MapStyleSwitch> {
     });
     
     // Use controller to switch style type
-    mapController!.setStyleType(previousStyleType);
+    mapController?.setStyleType(previousStyleType);
     
     // Show feedback to user
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -210,7 +210,7 @@ class MapStyleSwitchState extends State<MapStyleSwitch> {
     // On Android, the base URL must be prepended to the style URL
     String mapUrl = Platform.isAndroid ? baseUrl! + nextStyle.url : nextStyle.url;
     print("mapUrl : " + mapUrl);
-    mapController!.setStyleString(mapUrl);
+    mapController?.setStyleString(mapUrl);
     
     // Show feedback to user
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -231,7 +231,7 @@ class MapStyleSwitchState extends State<MapStyleSwitch> {
     });
     
     // Use controller to switch style string
-    mapController!.setStyleString(previousStyle.url);
+    mapController?.setStyleString(previousStyle.url);
     
     // Show feedback to user
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(

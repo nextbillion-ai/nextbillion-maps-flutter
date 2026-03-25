@@ -102,79 +102,123 @@ class NextbillionMapController extends ChangeNotifier {
       if (cameraPosition != null) {
         _cameraPosition = cameraPosition;
       }
-      if (onCameraIdle != null) {
+      try {
         onCameraIdle?.call();
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error in onCameraIdle callback: $e');
+        }
       }
       notifyListeners();
     });
 
     _nbMapsGlPlatform.onMapStyleLoadedPlatform.add((_) {
-      final interactionEnabled = annotationConsumeTapEvents.toSet();
-      for (final type in annotationOrder.toSet()) {
-        final enableInteraction = interactionEnabled.contains(type);
-        switch (type) {
-          case AnnotationType.fill:
-            fillManager = FillManager(this,
-                onTap: onFillTapped.call, enableInteraction: enableInteraction);
-          case AnnotationType.line:
-            lineManager = LineManager(this,
-                onTap: onLineTapped.call, enableInteraction: enableInteraction);
-          case AnnotationType.circle:
-            circleManager = CircleManager(this,
-                onTap: onCircleTapped.call,
-                enableInteraction: enableInteraction);
-          case AnnotationType.symbol:
-            symbolManager = SymbolManager(this,
-                onTap: onSymbolTapped.call,
-                enableInteraction: enableInteraction);
+      try {
+        final interactionEnabled = annotationConsumeTapEvents.toSet();
+        for (final type in annotationOrder.toSet()) {
+          final enableInteraction = interactionEnabled.contains(type);
+          switch (type) {
+            case AnnotationType.fill:
+              fillManager = FillManager(this,
+                  onTap: onFillTapped.call,
+                  enableInteraction: enableInteraction);
+            case AnnotationType.line:
+              lineManager = LineManager(this,
+                  onTap: onLineTapped.call,
+                  enableInteraction: enableInteraction);
+            case AnnotationType.circle:
+              circleManager = CircleManager(this,
+                  onTap: onCircleTapped.call,
+                  enableInteraction: enableInteraction);
+            case AnnotationType.symbol:
+              symbolManager = SymbolManager(this,
+                  onTap: onSymbolTapped.call,
+                  enableInteraction: enableInteraction);
+          }
         }
-      }
-      if (onStyleLoadedCallback != null) {
         onStyleLoadedCallback?.call();
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error in onStyleLoaded callback: $e');
+        }
       }
     });
 
     _nbMapsGlPlatform.onMapClickPlatform.add((dict) {
-      if (onMapClick != null) {
-        final points = dict['point'] as Point<double>;
-        final latLng = dict['latLng'] as LatLng;
-        onMapClick?.call(points, latLng);
+      try {
+        if (onMapClick != null) {
+          final points = dict['point'] as Point<double>;
+          final latLng = dict['latLng'] as LatLng;
+          onMapClick?.call(points, latLng);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error in onMapClick callback: $e');
+        }
       }
     });
 
     _nbMapsGlPlatform.onMapLongClickPlatform.add((dict) {
-      if (onMapLongClick != null) {
-        final point = dict['point'] as Point<double>;
-        final latLng = dict['latLng'] as LatLng;
-        onMapLongClick?.call(point, latLng);
+      try {
+        if (onMapLongClick != null) {
+          final point = dict['point'] as Point<double>;
+          final latLng = dict['latLng'] as LatLng;
+          onMapLongClick?.call(point, latLng);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error in onMapLongClick callback: $e');
+        }
       }
     });
 
     _nbMapsGlPlatform.onAttributionClickPlatform.add((_) {
-      if (onAttributionClick != null) {
+      try {
         onAttributionClick?.call();
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error in onAttributionClick callback: $e');
+        }
       }
     });
 
     _nbMapsGlPlatform.onCameraTrackingChangedPlatform.add((mode) {
-      if (onCameraTrackingChanged != null) {
+      try {
         onCameraTrackingChanged?.call(mode);
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error in onCameraTrackingChanged callback: $e');
+        }
       }
     });
 
     _nbMapsGlPlatform.onCameraTrackingDismissedPlatform.add((_) {
-      if (onCameraTrackingDismissed != null) {
+      try {
         onCameraTrackingDismissed?.call();
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error in onCameraTrackingDismissed callback: $e');
+        }
       }
     });
 
     _nbMapsGlPlatform.onMapIdlePlatform.add((_) {
-      if (onMapIdle != null) {
+      try {
         onMapIdle?.call();
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error in onMapIdle callback: $e');
+        }
       }
     });
     _nbMapsGlPlatform.onUserLocationUpdatedPlatform.add((location) {
-      onUserLocationUpdated?.call(location);
+      try {
+        onUserLocationUpdated?.call(location);
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error in onUserLocationUpdated callback: $e');
+        }
+      }
     });
   }
 

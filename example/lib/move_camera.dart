@@ -20,7 +20,7 @@ class MoveCamera extends StatefulWidget {
 }
 
 class MoveCameraState extends State<MoveCamera> {
-  late NextbillionMapController mapController;
+  NextbillionMapController? mapController;
 
   void _onMapCreated(NextbillionMapController controller) {
     setState(() {
@@ -57,7 +57,7 @@ class MoveCameraState extends State<MoveCamera> {
               children: <Widget>[
                 TextButton(
                   onPressed: () {
-                    mapController.moveCamera(
+                    mapController?.moveCamera(
                       CameraUpdate.newCameraPosition(
                         const CameraPosition(
                           bearing: 270.0,
@@ -72,7 +72,7 @@ class MoveCameraState extends State<MoveCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.moveCamera(
+                    mapController?.moveCamera(
                       CameraUpdate.newLatLng(
                         const LatLng(56.1725505, 10.1850512),
                       ),
@@ -82,7 +82,7 @@ class MoveCameraState extends State<MoveCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.moveCamera(
+                    mapController?.moveCamera(
                       CameraUpdate.newLatLngBounds(
                         LatLngBounds(
                           southwest: const LatLng(-38.483935, 113.248673),
@@ -98,7 +98,7 @@ class MoveCameraState extends State<MoveCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.moveCamera(
+                    mapController?.moveCamera(
                       CameraUpdate.newLatLngZoom(
                         const LatLng(37.4231613, -122.087159),
                         11.0,
@@ -109,7 +109,7 @@ class MoveCameraState extends State<MoveCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.moveCamera(
+                    mapController?.moveCamera(
                       CameraUpdate.scrollBy(150.0, -225.0),
                     );
                   },
@@ -121,7 +121,7 @@ class MoveCameraState extends State<MoveCamera> {
               children: <Widget>[
                 TextButton(
                   onPressed: () {
-                    mapController.moveCamera(
+                    mapController?.moveCamera(
                       CameraUpdate.zoomBy(
                         -0.5,
                         const Offset(30.0, 20.0),
@@ -132,7 +132,7 @@ class MoveCameraState extends State<MoveCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.moveCamera(
+                    mapController?.moveCamera(
                       CameraUpdate.zoomBy(-0.5),
                     );
                   },
@@ -140,7 +140,7 @@ class MoveCameraState extends State<MoveCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.moveCamera(
+                    mapController?.moveCamera(
                       CameraUpdate.zoomIn(),
                     );
                   },
@@ -148,7 +148,7 @@ class MoveCameraState extends State<MoveCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.moveCamera(
+                    mapController?.moveCamera(
                       CameraUpdate.zoomOut(),
                     );
                   },
@@ -156,7 +156,7 @@ class MoveCameraState extends State<MoveCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.moveCamera(
+                    mapController?.moveCamera(
                       CameraUpdate.zoomTo(16.0),
                     );
                   },
@@ -164,7 +164,7 @@ class MoveCameraState extends State<MoveCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.moveCamera(
+                    mapController?.moveCamera(
                       CameraUpdate.bearingTo(45.0),
                     );
                   },
@@ -172,7 +172,7 @@ class MoveCameraState extends State<MoveCamera> {
                 ),
                 TextButton(
                   onPressed: () {
-                    mapController.moveCamera(
+                    mapController?.moveCamera(
                       CameraUpdate.tiltTo(30.0),
                     );
                   },

@@ -67,9 +67,11 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   void _extractMapInfo() {
-    final position = mapController!.cameraPosition;
+    final controller = mapController;
+    if (controller == null) return;
+    final position = controller.cameraPosition;
     if (position != null) _position = position;
-    _isMoving = mapController!.isCameraMoving;
+    _isMoving = controller.isCameraMoving;
   }
 
   @override
@@ -264,7 +266,7 @@ class MapUiBodyState extends State<MapUiBody> {
             final scaffoldMessenger = ScaffoldMessenger.of(
                 context); // capture context-dependent object early
 
-            final result = await mapController!.getVisibleRegion();
+            final result = await mapController?.getVisibleRegion();
             scaffoldMessenger.showSnackBar(
               SnackBar(
                 content:
@@ -279,7 +281,7 @@ class MapUiBodyState extends State<MapUiBody> {
 
   void _clearFill() {
     if (_selectedFill != null) {
-      mapController!.removeFill(_selectedFill!);
+      mapController?.removeFill(_selectedFill!);
       setState(() {
         _selectedFill = null;
       });
@@ -308,7 +310,7 @@ class MapUiBodyState extends State<MapUiBody> {
               .toList())
           .toList();
 
-      final Fill? fill = await mapController!.addFill(FillOptions(
+      final Fill? fill = await mapController?.addFill(FillOptions(
         geometry: geometry,
         fillColor: "#FF0000",
         fillOutlineColor: "#FF0000",
@@ -341,8 +343,10 @@ class MapUiBodyState extends State<MapUiBody> {
       myLocationTrackingMode: _myLocationTrackingMode,
       myLocationRenderMode: MyLocationRenderMode.gps,
       onMapClick: (point, latLng) async {
+        final controller = mapController;
+        if (controller == null) return;
         final scaffoldMessenger = ScaffoldMessenger.of(context);
-        final List features = await mapController!
+        final List features = await controller
             .queryRenderedFeatures(point, ["landuse"], _featureQueryFilter);
         _clearFill();
         if (features.isEmpty && _featureQueryFilter != null) {
@@ -353,13 +357,15 @@ class MapUiBodyState extends State<MapUiBody> {
         }
       },
       onMapLongClick: (point, latLng) async {
+        final controller = mapController;
+        if (controller == null) return;
         if (kDebugMode) {
           print(
               "Map long press: ${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
         }
 
         final double? metersPerPixel =
-            await mapController!.getMetersPerPixelAtLatitude(latLng.latitude);
+            await controller.getMetersPerPixelAtLatitude(latLng.latitude);
 
         if (kDebugMode) {
           print(
@@ -367,7 +373,7 @@ class MapUiBodyState extends State<MapUiBody> {
         }
 
         final List features =
-            await mapController!.queryRenderedFeatures(point, [], null);
+            await controller.queryRenderedFeatures(point, [], null);
         if (features.isNotEmpty) {
           if (kDebugMode) {
             print(features[0]);
@@ -436,10 +442,10 @@ class MapUiBodyState extends State<MapUiBody> {
 
   void onMapCreated(NextbillionMapController controller) {
     mapController = controller;
-    mapController!.addListener(_onMapChanged);
+    controller.addListener(_onMapChanged);
     _extractMapInfo();
 
-    mapController!.getTelemetryEnabled().then((isEnabled) => setState(() {
+    controller.getTelemetryEnabled().then((isEnabled) => setState(() {
           _telemetryEnabled = isEnabled;
         }));
   }
