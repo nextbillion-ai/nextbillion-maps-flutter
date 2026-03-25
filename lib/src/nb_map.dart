@@ -337,7 +337,13 @@ class _NBMapState extends State<NBMap> {
       annotationOrder: widget.annotationOrder,
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
     );
-    await _nbmapsGlPlatform.initPlatform(id);
+    try {
+      await _nbmapsGlPlatform.initPlatform(id);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error initializing map platform: $e');
+      }
+    }
     _controller.complete(controller);
     if (widget.onMapCreated != null) {
       widget.onMapCreated?.call(controller);
