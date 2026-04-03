@@ -1,3 +1,6 @@
+## v3.3.1, Apr 03, 2026
+- Bump iOS Maps SDK to 2.1.3 to fix UA format issue
+- 
 ## v3.3.0, Mar 25, 2026
 - Bump iOS Maps SDK to 2.1.2 to support apikey security enhancement
 - Bump iOS Maps SDK to 3.1.0 to support apikey security enhancement
