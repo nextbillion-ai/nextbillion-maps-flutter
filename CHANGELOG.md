@@ -1,3 +1,5 @@
+## v3.3.2-dev.1, Apr 03, 2026
+- Upgrade iOS Maps SDK to 2.1.4-beta.1 and Android maps to 3.1.1-beta2 to support **line-trim-offset** expression
 ## v3.3.1, Apr 03, 2026
 - Bump iOS Maps SDK to 2.1.3 to fix UA format issue
 - 
