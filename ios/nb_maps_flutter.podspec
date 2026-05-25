@@ -12,8 +12,7 @@ A new Flutter plugin.
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
-  s.public_header_files = 'Classes/**/*.h'
+  s.source_files = 'nb_maps_flutter/Sources/nb_maps_flutter/**/*.swift'
   s.dependency 'Flutter'
   s.swift_version = '5.0'
   s.dependency 'NextBillionMap', '= 2.1.5'

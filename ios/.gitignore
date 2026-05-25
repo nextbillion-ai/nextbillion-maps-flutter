@@ -33,3 +33,6 @@ Icon?
 .tags*
 
 /Flutter/Generated.xcconfig
+nb_maps_flutter/.build/
+nb_maps_flutter/.swiftpm/
+nb_maps_flutter/Package.resolved

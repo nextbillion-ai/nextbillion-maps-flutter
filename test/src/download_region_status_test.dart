@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
-import 'package:test/test.dart';
 
 void main() {
   group('DownloadRegionStatus', () {
