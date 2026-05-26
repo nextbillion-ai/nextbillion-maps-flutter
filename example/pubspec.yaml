@@ -12,11 +12,10 @@ dependencies:
     sdk: flutter
   http: ^0.13.0
   collection: ^1.0.0
-  device_info_plus: ^11.3.0
+  device_info_plus: ^13.1.0
   nb_maps_flutter:
     path: ../
   path_provider: ^2.0.0
-  permission_handler: ^12.0.1
 
 
 dev_dependencies:
@@ -24,6 +23,8 @@ dev_dependencies:
     sdk: flutter
 
 flutter:
+  config:
+    enable-swift-package-manager: true
   uses-material-design: true
 
   assets:
