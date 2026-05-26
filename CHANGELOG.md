@@ -1,3 +1,8 @@
+## v3.4.0-dev.1, May 26, 2026
+- Migrate iOS plugin integration to Swift Package Manager (SPM), including new `Package.swift` and iOS source layout updates.
+- Update CI Flutter version to `3.44.0` to align with newer Dart/SDK requirements.
+- Fix dependency resolution for CI and tests by aligning `mockito` and test imports with current Flutter SDK constraints.
+
 ## v3.3.2, Apr 29, 2026
 - Upgrade iOS Maps SDK to 2.1.5 and Android maps to 3.1.1 to support **line-trim-offset** expression
 ## v3.3.1, Apr 03, 2026
