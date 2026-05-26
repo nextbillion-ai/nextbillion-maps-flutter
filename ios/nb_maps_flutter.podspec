@@ -16,6 +16,6 @@ A new Flutter plugin.
   s.dependency 'Flutter'
   s.swift_version = '5.0'
   s.dependency 'NextBillionMap', '= 2.1.5'
-  s.ios.deployment_target = '9.0'
+  s.ios.deployment_target = '12.0'
 end
 

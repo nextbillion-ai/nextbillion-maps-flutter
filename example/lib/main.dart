@@ -3,13 +3,14 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 import 'package:nb_maps_flutter_example/map_ui.dart';
+import 'package:nb_maps_flutter_example/move_camera.dart';
 import 'package:nb_maps_flutter_example/scrolling_map.dart';
 import 'package:nb_maps_flutter_example/sources.dart';
 import 'package:nb_maps_flutter_example/take_snapshot.dart';
 import 'package:nb_maps_flutter_example/track_current_location.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import 'add_image_test.dart';
 import 'animate_camera.dart';
@@ -21,7 +22,6 @@ import 'layer.dart';
 import 'line.dart';
 import 'local_style.dart';
 import 'map_style_switch.dart';
-import 'move_camera.dart';
 import 'offline_regions.dart';
 import 'page.dart';
 import 'place_batch.dart';
@@ -63,6 +63,10 @@ class MapsDemo extends StatefulWidget {
 }
 
 class _MapsDemoState extends State<MapsDemo> {
+  static const MethodChannel _permissionChannel = MethodChannel(
+    'nb_maps_flutter_example/permissions',
+  );
+
   // By default , the maps SDK is using the 'WellKnownTileServer.nbTomtom' tile server
   WellKnownTileServer currentTileServer = WellKnownTileServer.nbTomtom;
   bool isSwitchingTileServer = false;
@@ -108,10 +112,7 @@ class _MapsDemoState extends State<MapsDemo> {
   }
 
   Future<void> _pushPage(BuildContext context, ExamplePage page) async {
-    final status = await Permission.location.status;
-    if (status.isDenied) {
-      await [Permission.location].request();
-    }
+    await _ensureLocationPermission();
 
     if (!mounted) return; // Check if the widget is still mounted
 
@@ -122,6 +123,29 @@ class _MapsDemoState extends State<MapsDemo> {
         body: page,
       ),
     ));
+  }
+
+  Future<void> _ensureLocationPermission() async {
+    if (kIsWeb) return;
+
+    try {
+      final granted =
+          await _permissionChannel.invokeMethod<bool>('ensureLocationPermission') ??
+              true;
+      if (!granted && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Location permission is required for location examples.'),
+          duration: Duration(seconds: 2),
+        ));
+      }
+    } on MissingPluginException {
+      // Native permission bridge may be unavailable on some builds/tests.
+      return;
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print('Location permission request failed: ${e.message}');
+      }
+    }
   }
 
   Future<void> _switchTileServer() async {

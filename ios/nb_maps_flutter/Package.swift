@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "nb_maps_flutter",
     platforms: [
-        .iOS("13.0")
+        .iOS("12.0")
     ],
     products: [
         .library(name: "nb-maps-flutter", targets: ["nb_maps_flutter"])
