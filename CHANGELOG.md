@@ -1,8 +1,16 @@
-## v3.4.0-dev.1, May 26, 2026
+## v3.4.0, May 26, 2026
 - Migrate iOS plugin integration to Swift Package Manager (SPM), including new `Package.swift` and iOS source layout updates.
 - Raise the minimum supported iOS version to `12.0` for SPM-based integration.
 - Update CI Flutter version to `3.44.0` to align with newer Dart/SDK requirements.
 - Fix dependency resolution for CI and tests by aligning `mockito` and test imports with current Flutter SDK constraints.
+- Remove `permission_handler` from example and replace location permission requests with native Android/iOS channel implementations.
+- Clean up example iOS project to remove CocoaPods integration artifacts and keep SPM-only dependency wiring.
+- Upgrade example Android toolchain to reduce upcoming Flutter compatibility warnings:
+  - Gradle wrapper `8.14`
+  - Android Gradle Plugin `8.11.1`
+  - Kotlin plugin `2.2.20`
+  - Java/Kotlin JVM target `17`
+  - `device_info_plus` to `^13.1.0`
 
 ## v3.3.2, Apr 29, 2026
 - Upgrade iOS Maps SDK to 2.1.5 and Android maps to 3.1.1 to support **line-trim-offset** expression
