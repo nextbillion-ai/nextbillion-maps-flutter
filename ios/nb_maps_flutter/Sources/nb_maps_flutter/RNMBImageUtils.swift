@@ -5,6 +5,9 @@
 //  Created by mac on 30/05/2022.
 //
 
+import Foundation
+import UIKit
+
 enum RNMBImageUtils {
     static func createTempFile(_ image: UIImage) -> URL? {
         let fileID = UUID().uuidString

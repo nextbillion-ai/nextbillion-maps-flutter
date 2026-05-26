@@ -16,7 +16,7 @@ dependencies:
   nb_maps_flutter:
     path: ../
   path_provider: ^2.0.0
-  permission_handler: ^11.0.1
+  permission_handler: ^12.0.1
 
 
 dev_dependencies:

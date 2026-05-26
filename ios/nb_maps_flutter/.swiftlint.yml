@@ -43,7 +43,7 @@ file_length:
 type_body_length:
   warning: 600   # Increase type body length limit
   error: 650
-  
+
 identifier_name:
   min_length: 2
   max_length: 50  # Increase the maximum length as needed

@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('NbMapColorConversion', () {
