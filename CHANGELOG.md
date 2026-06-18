@@ -1,3 +1,6 @@
+## v3.4.1, Jun 20, 2026
+- Upgrade iOS Maps SDK to 2.1.7 to fix `NextBillion.setApiKeyHeaderName` not work on iOS
+
 ## v3.4.0, May 26, 2026
 - Migrate iOS plugin integration to Swift Package Manager (SPM), including new `Package.swift` and iOS source layout updates.
 - Raise the minimum supported iOS version to `12.0` for SPM-based integration.

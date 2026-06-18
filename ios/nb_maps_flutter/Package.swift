@@ -15,7 +15,7 @@ let package = Package(
         .package(name: "FlutterFramework", path: "../FlutterFramework"),
         .package(
             url: "https://github.com/nextbillion-ai/maps-native-distribution",
-            from: "2.1.5"
+            from: "2.1.7"
         )
     ],
     targets: [
