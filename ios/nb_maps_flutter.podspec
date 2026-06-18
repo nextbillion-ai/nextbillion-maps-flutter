@@ -3,7 +3,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'nb_maps_flutter'
-  s.version          = '3.3.2'
+  s.version          = '3.3.3'
   s.summary          = 'A new Flutter plugin.'
   s.description      = <<-DESC
 A new Flutter plugin.
@@ -15,7 +15,7 @@ A new Flutter plugin.
   s.source_files = 'nb_maps_flutter/Sources/nb_maps_flutter/**/*.swift'
   s.dependency 'Flutter'
   s.swift_version = '5.0'
-  s.dependency 'NextBillionMap', '= 2.1.5'
+  s.dependency 'NextBillionMap', '= 2.1.6'
   s.ios.deployment_target = '12.0'
 end
 
