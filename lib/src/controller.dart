@@ -45,6 +45,10 @@ typedef OnMapIdleCallback = void Function();
 /// Symbol tap events can be received by adding callbacks to [onSymbolTapped].
 /// Line tap events can be received by adding callbacks to [onLineTapped].
 /// Circle tap events can be received by adding callbacks to [onCircleTapped].
+///
+/// Asynchronous annotation mutations wait for their annotation manager when
+/// called before the map style is loaded. Synchronous collection getters such
+/// as [symbols] return an empty snapshot until their manager is available.
 class NextbillionMapController extends ChangeNotifier {
   NextbillionMapController({
     required NbMapsGlPlatform nbMapsGlPlatform,
@@ -62,14 +66,15 @@ class NextbillionMapController extends ChangeNotifier {
     this.onCameraIdle,
   }) : _nbMapsGlPlatform = nbMapsGlPlatform {
     _cameraPosition = initialCameraPosition;
+    _annotationTypes = annotationOrder.toSet();
 
     _nbMapsGlPlatform.onFeatureTappedPlatform.add((payload) {
       for (final fun
           in List<OnFeatureInteractionCallback>.from(onFeatureTapped)) {
         fun(
-            payload["id"],
-            payload["point"] as Point<double>,
-            payload["latLng"] as LatLng,
+          payload["id"],
+          payload["point"] as Point<double>,
+          payload["latLng"] as LatLng,
         );
       }
     });
@@ -113,9 +118,12 @@ class NextbillionMapController extends ChangeNotifier {
     });
 
     _nbMapsGlPlatform.onMapStyleLoadedPlatform.add((_) {
+      if (_disposed) {
+        return;
+      }
       try {
         final interactionEnabled = annotationConsumeTapEvents.toSet();
-        for (final type in annotationOrder.toSet()) {
+        for (final type in _annotationTypes) {
           final enableInteraction = interactionEnabled.contains(type);
           switch (type) {
             case AnnotationType.fill:
@@ -136,8 +144,10 @@ class NextbillionMapController extends ChangeNotifier {
                   enableInteraction: enableInteraction);
           }
         }
+        _completeAnnotationManagersReady();
         onStyleLoadedCallback?.call();
       } catch (e) {
+        _completeAnnotationManagersReady();
         if (kDebugMode) {
           print('Error in onStyleLoaded callback: $e');
         }
@@ -231,6 +241,74 @@ class NextbillionMapController extends ChangeNotifier {
   CircleManager? circleManager;
   SymbolManager? symbolManager;
 
+  late final Set<AnnotationType> _annotationTypes;
+  final Completer<void> _annotationManagersReady = Completer<void>();
+
+  void _completeAnnotationManagersReady() {
+    if (!_annotationManagersReady.isCompleted) {
+      _annotationManagersReady.complete();
+    }
+  }
+
+  Future<T?> _annotationManagerForOperation<T>(
+    T? Function() manager,
+    AnnotationType type,
+    String operation,
+  ) async {
+    if (_disposed) {
+      return null;
+    }
+    if (!_annotationTypes.contains(type)) {
+      if (kDebugMode) {
+        print(
+          'The $type annotation manager is disabled; $operation cannot run. '
+          'Include $type in annotationOrder to enable it.',
+        );
+      }
+      return null;
+    }
+
+    final initializedManager = manager();
+    if (initializedManager != null) {
+      return initializedManager;
+    }
+
+    await _annotationManagersReady.future;
+    if (_disposed) {
+      return null;
+    }
+
+    final readyManager = manager();
+    if (readyManager != null) {
+      return readyManager;
+    }
+    if (kDebugMode) {
+      print(
+        'The $type annotation manager failed to initialize; '
+        '$operation cannot run.',
+      );
+    }
+    return null;
+  }
+
+  Map? _annotationDataAt(List<Map>? data, int index) {
+    return data != null && index < data.length ? data[index] : null;
+  }
+
+  Set<T> _annotationSnapshot<T extends Annotation>(
+    AnnotationManager<T>? manager,
+    AnnotationType type,
+  ) {
+    try {
+      return manager?.annotations ?? <T>{};
+    } catch (error) {
+      if (kDebugMode) {
+        print('Unable to read $type annotations: $error');
+      }
+      return <T>{};
+    }
+  }
+
   final OnStyleLoadedCallback? onStyleLoadedCallback;
   final OnMapClickCallback? onMapClick;
   final OnMapLongClickCallback? onMapLongClick;
@@ -267,7 +345,10 @@ class NextbillionMapController extends ChangeNotifier {
   /// The current set of symbols on this map.
   ///
   /// The returned set will be a detached snapshot of the symbols collection.
-  Set<Symbol> get symbols => symbolManager!.annotations;
+  /// Returns an empty set while the style is not loaded or symbol annotations
+  /// are disabled.
+  Set<Symbol> get symbols =>
+      _annotationSnapshot(symbolManager, AnnotationType.symbol);
 
   /// Callbacks to receive tap events for lines placed on this map.
   final ArgumentCallbacks<Line> onLineTapped = ArgumentCallbacks<Line>();
@@ -275,17 +356,24 @@ class NextbillionMapController extends ChangeNotifier {
   /// The current set of lines on this map.
   ///
   /// The returned set will be a detached snapshot of the lines collection.
-  Set<Line> get lines => lineManager!.annotations;
+  /// Returns an empty set while the style is not loaded or line annotations
+  /// are disabled.
+  Set<Line> get lines => _annotationSnapshot(lineManager, AnnotationType.line);
 
   /// The current set of circles on this map.
   ///
   /// The returned set will be a detached snapshot of the circles collection.
-  Set<Circle> get circles => circleManager!.annotations;
+  /// Returns an empty set while the style is not loaded or circle annotations
+  /// are disabled.
+  Set<Circle> get circles =>
+      _annotationSnapshot(circleManager, AnnotationType.circle);
 
   /// The current set of fills on this map.
   ///
   /// The returned set will be a detached snapshot of the fills collection.
-  Set<Fill> get fills => fillManager!.annotations;
+  /// Returns an empty set while the style is not loaded or fill annotations
+  /// are disabled.
+  Set<Fill> get fills => _annotationSnapshot(fillManager, AnnotationType.fill);
 
   /// True if the map camera is currently moving.
   bool get isCameraMoving => _isCameraMoving;
@@ -820,9 +908,18 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
+    final manager = symbolManager ??
+        await _annotationManagerForOperation(
+          () => symbolManager,
+          AnnotationType.symbol,
+          'addSymbol',
+        );
+    if (manager == null) {
+      return null;
+    }
     final effectiveOptions = SymbolOptions.defaultOptions.copyWith(options);
     final symbol = Symbol(getRandomString(), effectiveOptions, data);
-    await symbolManager!.add(symbol);
+    await manager.add(symbol);
     if (_disposed) {
       return null;
     }
@@ -843,12 +940,23 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
+    final manager = symbolManager ??
+        await _annotationManagerForOperation(
+          () => symbolManager,
+          AnnotationType.symbol,
+          'addSymbols',
+        );
+    if (manager == null) {
+      return null;
+    }
     final symbols = [
       for (var i = 0; i < options.length; i++)
-        Symbol(getRandomString(),
-            SymbolOptions.defaultOptions.copyWith(options[i]), data?[i])
+        Symbol(
+            getRandomString(),
+            SymbolOptions.defaultOptions.copyWith(options[i]),
+            _annotationDataAt(data, i))
     ];
-    await symbolManager!.addAll(symbols);
+    await manager.addAll(symbols);
     if (_disposed) {
       return null;
     }
@@ -867,8 +975,16 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await symbolManager!
-        .set(symbol..options = symbol.options.copyWith(changes));
+    final manager = symbolManager ??
+        await _annotationManagerForOperation(
+          () => symbolManager,
+          AnnotationType.symbol,
+          'updateSymbol',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.set(symbol..options = symbol.options.copyWith(changes));
     if (_disposed) {
       return;
     }
@@ -882,7 +998,7 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
-    return symbol.options.geometry!;
+    return symbol.options.geometry;
   }
 
   /// Removes the specified [symbol] from the map. The symbol must be a current
@@ -896,7 +1012,16 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await symbolManager!.remove(symbol);
+    final manager = symbolManager ??
+        await _annotationManagerForOperation(
+          () => symbolManager,
+          AnnotationType.symbol,
+          'removeSymbol',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.remove(symbol);
     if (_disposed) {
       return;
     }
@@ -914,7 +1039,16 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await symbolManager!.removeAll(symbols);
+    final manager = symbolManager ??
+        await _annotationManagerForOperation(
+          () => symbolManager,
+          AnnotationType.symbol,
+          'removeSymbols',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.removeAll(symbols);
     if (_disposed) {
       return;
     }
@@ -931,7 +1065,19 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    symbolManager!.clear();
+    final manager = symbolManager ??
+        await _annotationManagerForOperation(
+          () => symbolManager,
+          AnnotationType.symbol,
+          'clearSymbols',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.clear();
+    if (_disposed) {
+      return;
+    }
     notifyListeners();
   }
 
@@ -946,9 +1092,18 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
+    final manager = lineManager ??
+        await _annotationManagerForOperation(
+          () => lineManager,
+          AnnotationType.line,
+          'addLine',
+        );
+    if (manager == null) {
+      return null;
+    }
     final effectiveOptions = LineOptions.defaultOptions.copyWith(options);
     final line = Line(getRandomString(), effectiveOptions, data);
-    await lineManager!.add(line);
+    await manager.add(line);
     if (_disposed) {
       return null;
     }
@@ -968,12 +1123,21 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
+    final manager = lineManager ??
+        await _annotationManagerForOperation(
+          () => lineManager,
+          AnnotationType.line,
+          'addLines',
+        );
+    if (manager == null) {
+      return null;
+    }
     final lines = [
       for (var i = 0; i < options.length; i++)
         Line(getRandomString(), LineOptions.defaultOptions.copyWith(options[i]),
-            data?[i])
+            _annotationDataAt(data, i))
     ];
-    await lineManager!.addAll(lines);
+    await manager.addAll(lines);
     if (_disposed) {
       return null;
     }
@@ -992,8 +1156,17 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
+    final manager = lineManager ??
+        await _annotationManagerForOperation(
+          () => lineManager,
+          AnnotationType.line,
+          'updateLine',
+        );
+    if (manager == null) {
+      return;
+    }
     line.options = line.options.copyWith(changes);
-    await lineManager!.set(line);
+    await manager.set(line);
     if (_disposed) {
       return;
     }
@@ -1007,7 +1180,7 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
-    return line.options.geometry!;
+    return line.options.geometry;
   }
 
   /// Removes the specified [line] from the map. The line must be a current
@@ -1021,7 +1194,16 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await lineManager!.remove(line);
+    final manager = lineManager ??
+        await _annotationManagerForOperation(
+          () => lineManager,
+          AnnotationType.line,
+          'removeLine',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.remove(line);
     if (_disposed) {
       return;
     }
@@ -1039,7 +1221,16 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await lineManager!.removeAll(lines);
+    final manager = lineManager ??
+        await _annotationManagerForOperation(
+          () => lineManager,
+          AnnotationType.line,
+          'removeLines',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.removeAll(lines);
     if (_disposed) {
       return;
     }
@@ -1056,7 +1247,16 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await lineManager!.clear();
+    final manager = lineManager ??
+        await _annotationManagerForOperation(
+          () => lineManager,
+          AnnotationType.line,
+          'clearLines',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.clear();
     if (_disposed) {
       return;
     }
@@ -1074,10 +1274,19 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
+    final manager = circleManager ??
+        await _annotationManagerForOperation(
+          () => circleManager,
+          AnnotationType.circle,
+          'addCircle',
+        );
+    if (manager == null) {
+      return null;
+    }
     final CircleOptions effectiveOptions =
         CircleOptions.defaultOptions.copyWith(options);
     final circle = Circle(getRandomString(), effectiveOptions, data);
-    await circleManager!.add(circle);
+    await manager.add(circle);
     if (_disposed) {
       return null;
     }
@@ -1098,17 +1307,27 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
+    final manager = circleManager ??
+        await _annotationManagerForOperation(
+          () => circleManager,
+          AnnotationType.circle,
+          'addCircles',
+        );
+    if (manager == null) {
+      return null;
+    }
     final cricles = [
       for (var i = 0; i < options.length; i++)
-        Circle(getRandomString(),
-            CircleOptions.defaultOptions.copyWith(options[i]), data?[i])
+        Circle(
+            getRandomString(),
+            CircleOptions.defaultOptions.copyWith(options[i]),
+            _annotationDataAt(data, i))
     ];
-    await circleManager!.addAll(cricles);
-
-    notifyListeners();
+    await manager.addAll(cricles);
     if (_disposed) {
       return null;
     }
+    notifyListeners();
     return cricles;
   }
 
@@ -1123,8 +1342,17 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
+    final manager = circleManager ??
+        await _annotationManagerForOperation(
+          () => circleManager,
+          AnnotationType.circle,
+          'updateCircle',
+        );
+    if (manager == null) {
+      return;
+    }
     circle.options = circle.options.copyWith(changes);
-    await circleManager!.set(circle);
+    await manager.set(circle);
     if (_disposed) {
       return;
     }
@@ -1138,7 +1366,7 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
-    return circle.options.geometry!;
+    return circle.options.geometry;
   }
 
   /// Removes the specified [circle] from the map. The circle must be a current
@@ -1152,7 +1380,16 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await circleManager!.remove(circle);
+    final manager = circleManager ??
+        await _annotationManagerForOperation(
+          () => circleManager,
+          AnnotationType.circle,
+          'removeCircle',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.remove(circle);
     if (_disposed) {
       return;
     }
@@ -1170,7 +1407,16 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await circleManager!.removeAll(circles);
+    final manager = circleManager ??
+        await _annotationManagerForOperation(
+          () => circleManager,
+          AnnotationType.circle,
+          'removeCircles',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.removeAll(circles);
     if (_disposed) {
       return;
     }
@@ -1187,7 +1433,16 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await circleManager!.clear();
+    final manager = circleManager ??
+        await _annotationManagerForOperation(
+          () => circleManager,
+          AnnotationType.circle,
+          'clearCircles',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.clear();
     if (_disposed) {
       return;
     }
@@ -1205,10 +1460,19 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return null;
     }
+    final manager = fillManager ??
+        await _annotationManagerForOperation(
+          () => fillManager,
+          AnnotationType.fill,
+          'addFill',
+        );
+    if (manager == null) {
+      return null;
+    }
     final FillOptions effectiveOptions =
         FillOptions.defaultOptions.copyWith(options);
     final fill = Fill(getRandomString(), effectiveOptions, data);
-    await fillManager!.add(fill);
+    await manager.add(fill);
     if (_disposed) {
       return null;
     }
@@ -1229,13 +1493,24 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return [];
     }
+    final manager = fillManager ??
+        await _annotationManagerForOperation(
+          () => fillManager,
+          AnnotationType.fill,
+          'addFills',
+        );
+    if (manager == null) {
+      return [];
+    }
     final fills = [
       for (var i = 0; i < options.length; i++)
         Fill(getRandomString(), FillOptions.defaultOptions.copyWith(options[i]),
-            data?[i])
+            _annotationDataAt(data, i))
     ];
-    await fillManager!.addAll(fills);
-
+    await manager.addAll(fills);
+    if (_disposed) {
+      return [];
+    }
     notifyListeners();
     return fills;
   }
@@ -1251,8 +1526,17 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
+    final manager = fillManager ??
+        await _annotationManagerForOperation(
+          () => fillManager,
+          AnnotationType.fill,
+          'updateFill',
+        );
+    if (manager == null) {
+      return;
+    }
     fill.options = fill.options.copyWith(changes);
-    await fillManager!.set(fill);
+    await manager.set(fill);
     if (_disposed) {
       return;
     }
@@ -1269,7 +1553,16 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await fillManager!.clear();
+    final manager = fillManager ??
+        await _annotationManagerForOperation(
+          () => fillManager,
+          AnnotationType.fill,
+          'clearFills',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.clear();
     if (_disposed) {
       return;
     }
@@ -1287,7 +1580,19 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await fillManager!.remove(fill);
+    final manager = fillManager ??
+        await _annotationManagerForOperation(
+          () => fillManager,
+          AnnotationType.fill,
+          'removeFill',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.remove(fill);
+    if (_disposed) {
+      return;
+    }
     notifyListeners();
   }
 
@@ -1302,7 +1607,19 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await fillManager!.removeAll(fills);
+    final manager = fillManager ??
+        await _annotationManagerForOperation(
+          () => fillManager,
+          AnnotationType.fill,
+          'removeFills',
+        );
+    if (manager == null) {
+      return;
+    }
+    await manager.removeAll(fills);
+    if (_disposed) {
+      return;
+    }
     notifyListeners();
   }
 
@@ -1372,7 +1689,7 @@ class NextbillionMapController extends ChangeNotifier {
     }
     try {
       return await _nbMapsGlPlatform.getVisibleRegion();
-    } catch(e) {
+    } catch (e) {
       if (kDebugMode) {
         print(e);
       }
@@ -1381,16 +1698,16 @@ class NextbillionMapController extends ChangeNotifier {
   }
 
   /// Update map style using a custom style URL or JSON string.
-  /// 
+  ///
   /// This method allows you to set a custom map style using either:
   /// - A URL to a style JSON file (e.g., "https://example.com/style.json")
   /// - A JSON string containing the style definition
   /// - A local asset path (e.g., "assets/style.json")
-  /// 
+  ///
   /// Note: This method has higher priority than [setStyleType]. If both
   /// [setStyleString] and [setStyleType] are called, the style string will
   /// take precedence.
-  /// 
+  ///
   /// [styleString] - The style URL or JSON string to apply
   Future<void> setStyleString(String styleString) async {
     if (_disposed) {
@@ -1400,17 +1717,17 @@ class NextbillionMapController extends ChangeNotifier {
   }
 
   /// Switch map style using predefined style types.
-  /// 
+  ///
   /// This method allows you to quickly switch between predefined map styles:
   /// - [NBMapStyleType.bright] - Light theme with good contrast
   /// - [NBMapStyleType.night] - Dark theme for low-light conditions
   /// - [NBMapStyleType.satellite] - Satellite imagery with labels
-  /// 
+  ///
   /// Note: This method has lower priority than [setStyleString]. If both
   /// [setStyleString] and [setStyleType] are called, the style string will
   /// take precedence. It's recommended to use [setStyleType] for initial
   /// style configuration and [setStyleString] for custom styles.
-  /// 
+  ///
   /// [styleType] - The predefined style type to apply
   Future<void> setStyleType(NBMapStyleType styleType) async {
     if (_disposed) {
@@ -1461,7 +1778,7 @@ class NextbillionMapController extends ChangeNotifier {
     }
     try {
       return await _nbMapsGlPlatform.addImage(name, bytes, sdf);
-    } catch(e) {
+    } catch (e) {
       if (kDebugMode) {
         print(e);
       }
@@ -1472,28 +1789,52 @@ class NextbillionMapController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    await symbolManager?.setIconAllowOverlap(enable);
+    final manager = symbolManager ??
+        await _annotationManagerForOperation(
+          () => symbolManager,
+          AnnotationType.symbol,
+          'setSymbolIconAllowOverlap',
+        );
+    await manager?.setIconAllowOverlap(enable);
   }
 
   Future<void> setSymbolIconIgnorePlacement(bool enable) async {
     if (_disposed) {
       return;
     }
-    await symbolManager?.setIconIgnorePlacement(enable);
+    final manager = symbolManager ??
+        await _annotationManagerForOperation(
+          () => symbolManager,
+          AnnotationType.symbol,
+          'setSymbolIconIgnorePlacement',
+        );
+    await manager?.setIconIgnorePlacement(enable);
   }
 
   Future<void> setSymbolTextAllowOverlap(bool enable) async {
     if (_disposed) {
       return;
     }
-    await symbolManager?.setTextAllowOverlap(enable);
+    final manager = symbolManager ??
+        await _annotationManagerForOperation(
+          () => symbolManager,
+          AnnotationType.symbol,
+          'setSymbolTextAllowOverlap',
+        );
+    await manager?.setTextAllowOverlap(enable);
   }
 
   Future<void> setSymbolTextIgnorePlacement(bool enable) async {
     if (_disposed) {
       return;
     }
-    await symbolManager?.setTextIgnorePlacement(enable);
+    final manager = symbolManager ??
+        await _annotationManagerForOperation(
+          () => symbolManager,
+          AnnotationType.symbol,
+          'setSymbolTextIgnorePlacement',
+        );
+    await manager?.setTextIgnorePlacement(enable);
   }
 
   /// Adds an image source to the style currently displayed in the map, so that it can later be referred to by the provided id.
@@ -1505,7 +1846,7 @@ class NextbillionMapController extends ChangeNotifier {
     try {
       return await _nbMapsGlPlatform.addImageSource(
           imageSourceId, bytes, coordinates);
-    } catch(e) {
+    } catch (e) {
       return Future.error(e);
     }
   }
@@ -1641,7 +1982,6 @@ class NextbillionMapController extends ChangeNotifier {
     }
   }
 
-
   /// Returns the distance spanned by one pixel at the specified [latitude] and current zoom level.
   /// The distance between pixels decreases as the latitude approaches the poles. This relationship parallels the relationship between longitudinal coordinates at different latitudes.
   Future<double?> getMetersPerPixelAtLatitude(double latitude) async {
@@ -1768,7 +2108,7 @@ class NextbillionMapController extends ChangeNotifier {
     }
     try {
       return await _nbMapsGlPlatform.takeSnapshot(snapshotOptions);
-    } catch(e) {
+    } catch (e) {
       if (kDebugMode) {
         print(e);
       }
@@ -1786,6 +2126,7 @@ class NextbillionMapController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _completeAnnotationManagersReady();
     super.dispose();
     _nbMapsGlPlatform.dispose();
   }

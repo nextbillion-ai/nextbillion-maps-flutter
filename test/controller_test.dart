@@ -21,24 +21,36 @@ void main() {
     );
 
     // Setup mock platform callbacks
-    when(mockPlatform.onFeatureTappedPlatform).thenReturn(ArgumentCallbacks<Map<String, dynamic>>());
-    when(mockPlatform.onFeatureDraggedPlatform).thenReturn(ArgumentCallbacks<Map<String, dynamic>>());
-    when(mockPlatform.onCameraMoveStartedPlatform).thenReturn(ArgumentCallbacks<void>());
-    when(mockPlatform.onCameraMovePlatform).thenReturn(ArgumentCallbacks<CameraPosition>());
-    when(mockPlatform.onCameraIdlePlatform).thenReturn(ArgumentCallbacks<CameraPosition?>());
-    when(mockPlatform.onMapStyleLoadedPlatform).thenReturn(ArgumentCallbacks<void>());
-    when(mockPlatform.onMapClickPlatform).thenReturn(ArgumentCallbacks<Map<String, dynamic>>());
-    when(mockPlatform.onMapLongClickPlatform).thenReturn(ArgumentCallbacks<Map<String, dynamic>>());
-    when(mockPlatform.onAttributionClickPlatform).thenReturn(ArgumentCallbacks<void>());
-    when(mockPlatform.onCameraTrackingChangedPlatform).thenReturn(ArgumentCallbacks<MyLocationTrackingMode>());
-    when(mockPlatform.onCameraTrackingDismissedPlatform).thenReturn(ArgumentCallbacks<void>());
+    when(mockPlatform.onFeatureTappedPlatform)
+        .thenReturn(ArgumentCallbacks<Map<String, dynamic>>());
+    when(mockPlatform.onFeatureDraggedPlatform)
+        .thenReturn(ArgumentCallbacks<Map<String, dynamic>>());
+    when(mockPlatform.onCameraMoveStartedPlatform)
+        .thenReturn(ArgumentCallbacks<void>());
+    when(mockPlatform.onCameraMovePlatform)
+        .thenReturn(ArgumentCallbacks<CameraPosition>());
+    when(mockPlatform.onCameraIdlePlatform)
+        .thenReturn(ArgumentCallbacks<CameraPosition?>());
+    when(mockPlatform.onMapStyleLoadedPlatform)
+        .thenReturn(ArgumentCallbacks<void>());
+    when(mockPlatform.onMapClickPlatform)
+        .thenReturn(ArgumentCallbacks<Map<String, dynamic>>());
+    when(mockPlatform.onMapLongClickPlatform)
+        .thenReturn(ArgumentCallbacks<Map<String, dynamic>>());
+    when(mockPlatform.onAttributionClickPlatform)
+        .thenReturn(ArgumentCallbacks<void>());
+    when(mockPlatform.onCameraTrackingChangedPlatform)
+        .thenReturn(ArgumentCallbacks<MyLocationTrackingMode>());
+    when(mockPlatform.onCameraTrackingDismissedPlatform)
+        .thenReturn(ArgumentCallbacks<void>());
     when(mockPlatform.onMapIdlePlatform).thenReturn(ArgumentCallbacks<void>());
-    when(mockPlatform.onUserLocationUpdatedPlatform).thenReturn(ArgumentCallbacks<UserLocation>());
+    when(mockPlatform.onUserLocationUpdatedPlatform)
+        .thenReturn(ArgumentCallbacks<UserLocation>());
 
     controller = NextbillionMapController(
       nbMapsGlPlatform: mockPlatform,
       initialCameraPosition: initialCameraPosition,
-      annotationOrder: [AnnotationType.symbol],
+      annotationOrder: AnnotationType.values,
       annotationConsumeTapEvents: [AnnotationType.symbol],
     );
   });
@@ -56,6 +68,156 @@ void main() {
 
     test('isCameraMoving is initially false', () {
       expect(controller.isCameraMoving, isFalse);
+    });
+
+    test('annotation readers are safe before the style is loaded', () {
+      expect(controller.symbols, isEmpty);
+      expect(controller.lines, isEmpty);
+      expect(controller.circles, isEmpty);
+      expect(controller.fills, isEmpty);
+    });
+
+    test('annotation writes wait for manager initialization', () async {
+      var completed = 0;
+      final pendingSymbol = controller
+          .addSymbol(const SymbolOptions(geometry: LatLng(1, 2)))
+          .then((symbol) {
+        completed++;
+        return symbol;
+      });
+      final pendingLine = controller
+          .addLine(const LineOptions(
+        geometry: [LatLng(1, 2), LatLng(3, 4)],
+      ))
+          .then((line) {
+        completed++;
+        return line;
+      });
+      final pendingCircle = controller
+          .addCircle(const CircleOptions(geometry: LatLng(1, 2)))
+          .then((circle) {
+        completed++;
+        return circle;
+      });
+      final pendingFill = controller
+          .addFill(const FillOptions(
+        geometry: [
+          [LatLng(0, 0), LatLng(0, 1), LatLng(1, 1), LatLng(0, 0)],
+        ],
+      ))
+          .then((fill) {
+        completed++;
+        return fill;
+      });
+
+      await Future<void>.delayed(Duration.zero);
+
+      expect(completed, 0);
+      expect(controller.symbolManager, isNull);
+      expect(controller.lineManager, isNull);
+      expect(controller.circleManager, isNull);
+      expect(controller.fillManager, isNull);
+
+      mockPlatform.onMapStyleLoadedPlatform.call(null);
+
+      final annotations = await Future.wait<Object?>([
+        pendingSymbol,
+        pendingLine,
+        pendingCircle,
+        pendingFill,
+      ]);
+      expect(completed, 4);
+      expect(annotations, everyElement(isNotNull));
+      expect(controller.symbols, hasLength(1));
+      expect(controller.lines, hasLength(1));
+      expect(controller.circles, hasLength(1));
+      expect(controller.fills, hasLength(1));
+    });
+
+    test('style-loaded annotation writes keep their synchronous start',
+        () async {
+      mockPlatform.onMapStyleLoadedPlatform.call(null);
+
+      final pendingSymbol =
+          controller.addSymbol(const SymbolOptions(geometry: LatLng(1, 2)));
+      final pendingLine = controller.addLine(const LineOptions(
+        geometry: [LatLng(1, 2), LatLng(3, 4)],
+      ));
+      final pendingCircle =
+          controller.addCircle(const CircleOptions(geometry: LatLng(1, 2)));
+      final pendingFill = controller.addFill(const FillOptions(
+        geometry: [
+          [LatLng(0, 0), LatLng(0, 1), LatLng(1, 1), LatLng(0, 0)],
+        ],
+      ));
+
+      // Preserve the established behavior for callers that already wait for
+      // onStyleLoadedCallback: the manager is updated before the returned
+      // Future is awaited.
+      expect(controller.symbols, hasLength(1));
+      expect(controller.lines, hasLength(1));
+      expect(controller.circles, hasLength(1));
+      expect(controller.fills, hasLength(1));
+      expect(
+        await Future.wait<Object?>([
+          pendingSymbol,
+          pendingLine,
+          pendingCircle,
+          pendingFill,
+        ]),
+        everyElement(isNotNull),
+      );
+    });
+
+    test('writes for disabled annotation types return safely', () async {
+      final symbolOnlyController = NextbillionMapController(
+        nbMapsGlPlatform: mockPlatform,
+        initialCameraPosition: initialCameraPosition,
+        annotationOrder: const [AnnotationType.symbol],
+        annotationConsumeTapEvents: const [AnnotationType.symbol],
+      );
+      addTearDown(() {
+        if (!symbolOnlyController.disposed) {
+          symbolOnlyController.dispose();
+        }
+      });
+
+      expect(await symbolOnlyController.addLine(LineOptions.defaultOptions),
+          isNull);
+      expect(await symbolOnlyController.addCircle(CircleOptions.defaultOptions),
+          isNull);
+      expect(await symbolOnlyController.addFill(FillOptions.defaultOptions),
+          isNull);
+      expect(
+          await symbolOnlyController
+              .addFills(const [FillOptions.defaultOptions]),
+          isEmpty);
+
+      await symbolOnlyController.clearLines();
+      await symbolOnlyController.clearCircles();
+      await symbolOnlyController.clearFills();
+    });
+
+    test('pending annotation writes complete safely when disposed', () async {
+      final pendingSymbol =
+          controller.addSymbol(const SymbolOptions(geometry: LatLng(1, 2)));
+
+      controller.dispose();
+
+      expect(await pendingSymbol, isNull);
+    });
+
+    test('annotation readers stay empty after the style is loaded', () {
+      mockPlatform.onMapStyleLoadedPlatform.call(null);
+
+      expect(controller.symbolManager, isNotNull);
+      expect(controller.lineManager, isNotNull);
+      expect(controller.circleManager, isNotNull);
+      expect(controller.fillManager, isNotNull);
+      expect(controller.symbols, isEmpty);
+      expect(controller.lines, isEmpty);
+      expect(controller.circles, isEmpty);
+      expect(controller.fills, isEmpty);
     });
 
     test('dispose sets disposed flag to true', () {
@@ -234,8 +396,10 @@ void main() {
       expect(controller.isCameraMoving, isTrue);
     });
 
-    test('onStyleLoaded callback is called when map style is loaded', () {
-      bool callbackCalled = false;
+    test('onStyleLoaded callback runs once after managers are available', () {
+      controller.dispose();
+      var callbackCount = 0;
+      var managerWasAvailable = false;
 
       controller = NextbillionMapController(
         nbMapsGlPlatform: mockPlatform,
@@ -243,20 +407,19 @@ void main() {
         annotationOrder: [AnnotationType.symbol],
         annotationConsumeTapEvents: [AnnotationType.symbol],
         onStyleLoadedCallback: () {
-          callbackCalled = true;
+          callbackCount++;
+          managerWasAvailable = controller.symbolManager != null;
         },
       );
 
-      mockPlatform.onMapStyleLoadedPlatform.add((_) {
-        controller.onStyleLoadedCallback?.call();
-      });
-
       mockPlatform.onMapStyleLoadedPlatform.call(null);
 
-      expect(callbackCalled, isTrue);
+      expect(callbackCount, 1);
+      expect(managerWasAvailable, isTrue);
     });
 
-    test('onAttributionClick callback is called when attribution is clicked', () {
+    test('onAttributionClick callback is called when attribution is clicked',
+        () {
       bool callbackCalled = false;
 
       controller = NextbillionMapController(
@@ -278,7 +441,9 @@ void main() {
       expect(callbackCalled, isTrue);
     });
 
-    test('onCameraTrackingChanged callback is called when tracking mode changes', () {
+    test(
+        'onCameraTrackingChanged callback is called when tracking mode changes',
+        () {
       bool callbackCalled = false;
       MyLocationTrackingMode? receivedMode;
 
@@ -305,7 +470,9 @@ void main() {
       expect(receivedMode, equals(testMode));
     });
 
-    test('onCameraTrackingDismissed callback is called when tracking is dismissed', () {
+    test(
+        'onCameraTrackingDismissed callback is called when tracking is dismissed',
+        () {
       bool callbackCalled = false;
 
       controller = NextbillionMapController(
@@ -366,7 +533,7 @@ void main() {
         target: LatLng(1, 1),
         zoom: 10,
       );
-      
+
       mockPlatform.onCameraMovePlatform.call(newPosition);
 
       expect(notified, true);

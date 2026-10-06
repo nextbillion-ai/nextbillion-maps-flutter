@@ -69,11 +69,16 @@ class NBMap extends StatefulWidget {
   /// (must contain at least 1 annotation type, 4 items max)
   final List<AnnotationType> annotationConsumeTapEvents;
 
-  /// Please note: you should only add annotations (e.g. symbols or circles) after `onStyleLoadedCallback` has been called.
+  /// Called after the controller has been created.
+  ///
+  /// Prefer using this callback only to store the controller reference. Async
+  /// annotation operations invoked here wait internally for their annotation
+  /// manager, but other operations that draw on or query the style should be
+  /// started from [onStyleLoadedCallback].
   final MapCreatedCallback? onMapCreated;
 
   /// Called when the map style has been successfully loaded and the annotation managers have been enabled.
-  /// Please note: you should only add annotations (e.g. symbols or circles) after this callback has been called.
+  /// This is the preferred place for operations that draw on or query the map.
   final OnStyleLoadedCallback? onStyleLoadedCallback;
 
   /// The initial position of the map's camera.
@@ -92,34 +97,34 @@ class NBMap extends StatefulWidget {
   final CameraTargetBounds cameraTargetBounds;
 
   /// Custom style URL or JSON string for the map.
-  /// 
+  ///
   /// This property allows you to set a custom map style using either:
   /// - A URL to a style JSON file (e.g., "https://example.com/style.json")
   /// - A JSON string containing the style definition
   /// - A local asset path (e.g., "assets/style.json")
   /// - NbMapStyle constants (e.g., NbMapStyles.NBMAP_STREETS)
-  /// 
+  ///
   /// Note: This property has higher priority than [styleType]. If both
   /// [styleString] and [styleType] are set, the style string will take
   /// precedence and the styleType configuration will be ignored.
-  /// 
+  ///
   /// It's recommended to use [styleType] for initial style configuration
   /// and [styleString] for custom styles or when you need specific
   /// style URLs from predefined styles.
   final String? styleString;
 
   /// Predefined style type for the map.
-  /// 
+  ///
   /// This property allows you to quickly set a predefined map style:
   /// - [NBMapStyleType.bright] - Light theme with good contrast
-  /// - [NBMapStyleType.night] - Dark theme for low-light conditions  
+  /// - [NBMapStyleType.night] - Dark theme for low-light conditions
   /// - [NBMapStyleType.satellite] - Satellite imagery with labels
-  /// 
+  ///
   /// Note: This property has lower priority than [styleString]. If both
   /// [styleString] and [styleType] are set, the style string will take
   /// precedence. It's recommended to use [styleType] for initial
   /// style configuration as it's simpler and more performant.
-  /// 
+  ///
   /// Both [styleString] and [styleType] are optional. If neither is set,
   /// the map will use the default [NBMapStyleType.bright] style.
   final NBMapStyleType? styleType;
