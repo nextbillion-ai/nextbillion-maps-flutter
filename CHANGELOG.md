@@ -1,3 +1,8 @@
+## v3.4.2, Oct 06, 2026
+- Prevent crashes when annotation collections are read before the map style and annotation managers are initialized.
+- Defer symbol, line, circle, and fill operations invoked before style loading until their managers are ready, while preserving the existing behavior for operations invoked after style loading.
+- Safely handle disabled annotation managers and pending annotation operations when the map controller is disposed.
+
 ## v3.4.1, Jun 20, 2026
 - Upgrade iOS Maps SDK to 2.1.7 to fix `NextBillion.setApiKeyHeaderName` not work on iOS
 
