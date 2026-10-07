@@ -384,7 +384,7 @@ class NextbillionMapController extends ChangeNotifier {
   CameraPosition? get cameraPosition => _cameraPosition;
   CameraPosition? _cameraPosition;
 
-  final NbMapsGlPlatform _nbMapsGlPlatform; //ignore: unused_field
+  final NbMapsGlPlatform _nbMapsGlPlatform;
 
   /// Updates configuration options of the map user interface.
   ///

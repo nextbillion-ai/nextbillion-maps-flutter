@@ -1,5 +1,3 @@
-// ignore_for_file: unnecessary_getters_setters
-
 part of "../../nb_maps_flutter.dart";
 
 typedef OnPlatformViewCreatedCallback = void Function(int);
