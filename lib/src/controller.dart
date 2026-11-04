@@ -80,9 +80,12 @@ class NextbillionMapController extends ChangeNotifier {
     });
 
     _nbMapsGlPlatform.onFeatureDraggedPlatform.add((payload) {
+      final value = payload["eventType"];
+      final matches = DragEventType.values
+          .where((type) => type.name == value || type.index == value);
+      if (matches.isEmpty) return;
+      final enmDragEventType = matches.first;
       for (final fun in List<OnFeatureDragnCallback>.from(onFeatureDrag)) {
-        final DragEventType enmDragEventType = DragEventType.values
-            .firstWhere((element) => element.index == payload["eventType"]);
         fun(payload["id"],
             point: payload["point"] as Point<double>,
             origin: payload["origin"] as LatLng,
@@ -122,6 +125,8 @@ class NextbillionMapController extends ChangeNotifier {
         return;
       }
       try {
+        _detachAnnotationManagers();
+        _styleGeneration++;
         final interactionEnabled = annotationConsumeTapEvents.toSet();
         for (final type in _annotationTypes) {
           final enableInteraction = interactionEnabled.contains(type);
@@ -233,6 +238,14 @@ class NextbillionMapController extends ChangeNotifier {
   }
 
   bool _disposed = false;
+  int _styleGeneration = 0;
+
+  void _detachAnnotationManagers() {
+    fillManager?._detachForStyleChange();
+    lineManager?._detachForStyleChange();
+    circleManager?._detachForStyleChange();
+    symbolManager?._detachForStyleChange();
+  }
 
   bool get disposed => _disposed;
 
@@ -590,6 +603,28 @@ class NextbillionMapController extends ChangeNotifier {
       filter: filter,
       enableInteraction: enableInteraction,
     );
+  }
+
+  /// Updates an existing line layer without recreating its source or geometry.
+  /// Useful for animating [LineLayerProperties.lineTrimOffset].
+  Future<void> setLineLayerProperties(
+      String layerId, LineLayerProperties properties) async {
+    if (_disposed) return;
+    await _nbMapsGlPlatform.setLineLayerProperties(
+        layerId, properties.toJson());
+  }
+
+  /// Focuses this map on the installed regional package's coverage bounds.
+  ///
+  /// [regionId] is the catalog ID used by [RegionalOffline], an integer from
+  /// 0 through 2147483647, inclusive; it is not a legacy offline-pack ID.
+  /// Call after the map is created and regional offline management is configured.
+  /// Returns false if this controller has been disposed or usable coverage is
+  /// unavailable. This adjusts the camera; it does not download the region or
+  /// guarantee that every tile/style resource is ready to render.
+  Future<bool> focusPreviewRegion(int regionId) async {
+    if (_disposed) return false;
+    return _nbMapsGlPlatform.focusPreviewRegion(regionId);
   }
 
   /// Add a fill layer to the map with the given properties
@@ -1704,9 +1739,8 @@ class NextbillionMapController extends ChangeNotifier {
   /// - A JSON string containing the style definition
   /// - A local asset path (e.g., "assets/style.json")
   ///
-  /// Note: This method has higher priority than [setStyleType]. If both
-  /// [setStyleString] and [setStyleType] are called, the style string will
-  /// take precedence.
+  /// The most recent controller style call takes effect. For widget creation
+  /// options, a non-null [NBMap.styleString] takes priority over its styleType.
   ///
   /// [styleString] - The style URL or JSON string to apply
   Future<void> setStyleString(String styleString) async {
@@ -1723,10 +1757,9 @@ class NextbillionMapController extends ChangeNotifier {
   /// - [NBMapStyleType.night] - Dark theme for low-light conditions
   /// - [NBMapStyleType.satellite] - Satellite imagery with labels
   ///
-  /// Note: This method has lower priority than [setStyleString]. If both
-  /// [setStyleString] and [setStyleType] are called, the style string will
-  /// take precedence. It's recommended to use [setStyleType] for initial
-  /// style configuration and [setStyleString] for custom styles.
+  /// This replaces any custom style previously applied through this controller.
+  /// The tile server stays fixed for this map. Choose it with
+  /// [NextBillion.initNextBillionWithTileServer] before creating any maps.
   ///
   /// [styleType] - The predefined style type to apply
   Future<void> setStyleType(NBMapStyleType styleType) async {
@@ -1734,6 +1767,28 @@ class NextbillionMapController extends ChangeNotifier {
       return;
     }
     return await _nbMapsGlPlatform.setStyleType(styleType);
+  }
+
+  /// Selects a native tile server and applies its predefined style to this map.
+  ///
+  /// Cross-provider switching on an existing MapView is outside the supported
+  /// scope of this release. iOS Maps 2.3.2 can retain the previous provider's
+  /// network configuration. This bridge is retained for compatibility; a true
+  /// result does not guarantee a cross-provider switch will load successfully.
+  /// Choose the provider before creating maps and use [setStyleType] thereafter.
+  ///
+  /// Both choices are passed as native enums; no style URL is needed. The server
+  /// setting is process-wide, while the style reload targets this controller.
+  /// Recreating a view alone does not guarantee the native resource pool resets.
+  ///
+  /// Returns true when the native SDK accepts the request, or false if disposed.
+  /// Wait for [onStyleLoadedCallback] before adding style layers or annotations;
+  /// acceptance does not mean all map resources have loaded. Native SDK errors
+  /// are propagated, including Android 3.3.1's Orbis/Regional Offline guard.
+  Future<bool> switchTileServer(WellKnownTileServer server,
+      {NBMapStyleType styleType = NBMapStyleType.bright}) async {
+    if (_disposed) return false;
+    return _nbMapsGlPlatform.switchTileServer(server, styleType: styleType);
   }
 
   /// Adds an image to the style currently displayed in the map, so that it can later be referred to by the provided name.
@@ -2102,6 +2157,11 @@ class NextbillionMapController extends ChangeNotifier {
   ///
   /// Default will return snapshot uri in Android and iOS
   /// If you want base64 value, you must set writeToDisk option to False
+  ///
+  /// iOS SDK 2.3.3 fixes independent snapshots during regional offline fallback.
+  /// Offline snapshots still depend on cached style resources and tile coverage;
+  /// a non-null image does not guarantee all requested tiles are available.
+  /// This API renders a separate map; on-screen overlays are captured separately.
   Future<String?> takeSnapshot(SnapshotOptions snapshotOptions) async {
     if (_disposed) {
       return null;
@@ -2125,7 +2185,9 @@ class NextbillionMapController extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_disposed) return;
     _disposed = true;
+    _detachAnnotationManagers();
     _completeAnnotationManagersReady();
     super.dispose();
     _nbMapsGlPlatform.dispose();

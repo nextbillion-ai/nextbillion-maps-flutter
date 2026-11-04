@@ -192,6 +192,10 @@ class LayerPropertyConverter {
                 lineLayer.lineDashPattern = expression
             case "line-pattern":
                 lineLayer.linePattern = expression
+            case "line-trim-offset":
+                lineLayer.lineTrimOffset = expression
+            case "line-trim-color":
+                lineLayer.lineTrimColor = expression
             case "line-gradient":
                 lineLayer.lineGradient = expression
             case "line-cap":

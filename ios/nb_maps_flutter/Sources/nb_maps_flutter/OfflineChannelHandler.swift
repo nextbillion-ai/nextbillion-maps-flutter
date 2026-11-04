@@ -10,11 +10,17 @@ import Foundation
 
 class OfflineChannelHandler: NSObject, FlutterStreamHandler {
     private var sink: FlutterEventSink?
+    private let eventChannel: FlutterEventChannel
+    private var buffered: [(String, Any)] = []
+    private var finished = false
+    private let enabled: Bool
+    var onDisposed: (() -> Void)?
 
-    init(messenger: FlutterBinaryMessenger, channelName: String) {
+    init(messenger: FlutterBinaryMessenger, channelName: String, enabled: Bool = true) {
+        self.enabled = enabled
+        eventChannel = FlutterEventChannel(name: channelName, binaryMessenger: messenger)
         super.init()
-        let eventChannel = FlutterEventChannel(name: channelName, binaryMessenger: messenger)
-        eventChannel.setStreamHandler(self)
+        if enabled { eventChannel.setStreamHandler(self) }
     }
 
     // MARK: FlutterStreamHandler protocol compliance
@@ -22,18 +28,24 @@ class OfflineChannelHandler: NSObject, FlutterStreamHandler {
     func onListen(withArguments _: Any?,
                   eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         sink = events
+        let pending = buffered
+        buffered.removeAll()
+        for (kind, value) in pending {
+            events(value)
+            if kind == "success" || kind == "error" { events(FlutterEndOfEventStream) }
+        }
         return nil
     }
 
     func onCancel(withArguments _: Any?) -> FlutterError? {
-        sink = nil
+        dispose()
         return nil
     }
 
     // MARK: Util methods
 
     func onError(errorCode: String, errorMessage: String?, errorDetails: Any?) {
-        sink?(FlutterError(code: errorCode, message: errorMessage, details: errorDetails))
+        emit("error", FlutterError(code: errorCode, message: errorMessage, details: errorDetails))
     }
 
     func onSuccess() {
@@ -43,7 +55,7 @@ class OfflineChannelHandler: NSObject, FlutterStreamHandler {
             options: .prettyPrinted
         ),
             let jsonString = String(data: jsonData, encoding: .utf8) else { return }
-        sink?(jsonString)
+        emit("success", jsonString)
     }
 
     func onStart() {
@@ -53,7 +65,7 @@ class OfflineChannelHandler: NSObject, FlutterStreamHandler {
             options: .prettyPrinted
         ),
             let jsonString = String(data: jsonData, encoding: .utf8) else { return }
-        sink?(jsonString)
+        emit("start", jsonString)
     }
 
     func onProgress(progress: Double) {
@@ -63,6 +75,31 @@ class OfflineChannelHandler: NSObject, FlutterStreamHandler {
             options: .prettyPrinted
         ),
             let jsonString = String(data: jsonData, encoding: .utf8) else { return }
-        sink?(jsonString)
+        emit("progress", jsonString)
+    }
+
+    private func emit(_ kind: String, _ value: Any) {
+        guard enabled, !finished else { return }
+        if kind == "success" || kind == "error" { finished = true }
+        if let sink = sink {
+            sink(value)
+            if kind == "success" || kind == "error" { sink(FlutterEndOfEventStream) }
+        } else {
+            // The method reply creates the region before Dart subscribes.
+            // Retain start/terminal events and only the latest progress.
+            buffered.removeAll { $0.0 == kind }
+            buffered.append((kind, value))
+        }
+    }
+
+    func dispose() {
+        finished = true
+        sink?(FlutterEndOfEventStream)
+        sink = nil
+        buffered.removeAll()
+        eventChannel.setStreamHandler(nil)
+        let callback = onDisposed
+        onDisposed = nil
+        callback?()
     }
 }

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import ai.nextbillion.maps.Nextbillion;
+import ai.nextbillion.maps.regionaloffline.release.client.RegionalOffline;
 import ai.nextbillion.maps.style.NGLDefaultMapStyle;
 import ai.nextbillion.maps.style.NGLWellKnownTileServer;
 import ai.nextbillion.maps.util.DefaultStyle;
@@ -33,6 +34,7 @@ public class NextBillionMethodHandler implements MethodChannel.MethodCallHandler
 
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        try {
         switch (call.method) {
             case "nextbillion/init_nextbillion":
                 String accessToken = call.argument("accessKey");
@@ -46,6 +48,7 @@ public class NextBillionMethodHandler implements MethodChannel.MethodCallHandler
                 String serverName = call.argument("server");
                 if (serverName != null) {
                     NGLWellKnownTileServer wellKnownTileServer = NGLWellKnownTileServer.valueOf(serverName);
+                    if (!canSelectServer(wellKnownTileServer, result)) break;
                     Nextbillion.getInstance(context, token, wellKnownTileServer);
                     Log.e("Styles","wellKnownTileServer : " + wellKnownTileServer);
                 } else {
@@ -122,6 +125,7 @@ public class NextBillionMethodHandler implements MethodChannel.MethodCallHandler
                 String name = call.argument("server");
                 if (name != null) {
                     NGLWellKnownTileServer wellKnownTileServer = NGLWellKnownTileServer.valueOf(name);
+                    if (!canSelectServer(wellKnownTileServer, result)) break;
                     Nextbillion.setWellKnownTileServer(wellKnownTileServer);
                     Log.e("Styles","wellKnownTileServer : " + wellKnownTileServer);
                     result.success(true);
@@ -132,6 +136,23 @@ public class NextBillionMethodHandler implements MethodChannel.MethodCallHandler
             default:
                 result.notImplemented();
         }
+        } catch (IllegalArgumentException error) {
+            result.error("INVALID_ARGUMENT", error.getMessage(), null);
+        } catch (RuntimeException error) {
+            result.error("NEXTBILLION_ERROR", error.getMessage(), null);
+        }
+    }
 
+    // Published Android 3.3.0 and 3.3.1 throw inside its asynchronous refresh when switching an
+    // initialized Regional Offline runtime to Orbis. Fail before changing state.
+    static boolean canSelectServer(NGLWellKnownTileServer server, MethodChannel.Result result) {
+        if (server == NGLWellKnownTileServer.NGLTomTomOrbis &&
+            (RegionalOffline.isInitialized() || RegionalOfflineHandler.isConfiguring())) {
+            result.error("SDK_UPDATE_REQUIRED",
+                "Android Maps 3.3.1 cannot switch to Orbis during or after Regional Offline initialization. " +
+                "Use Orbis before configuring Regional Offline, or update the native SDK with the Orbis refresh fix.", null);
+            return false;
+        }
+        return true;
     }
 }

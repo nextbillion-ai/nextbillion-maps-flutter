@@ -1,6 +1,7 @@
 
 package ai.nextbillion.maps_flutter;
 
+import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
@@ -19,8 +20,12 @@ import io.flutter.plugin.common.MethodChannel;
  */
 public class NbMapsPlugin implements FlutterPlugin, ActivityAware {
 
-  static FlutterAssets flutterAssets;
+  private FlutterAssets flutterAssets;
+  private MethodChannel methodChannel;
+  private MethodChannel nextBillionChannel;
+  private GlobalMethodHandler globalHandler;
   protected @Nullable Lifecycle lifecycle;
+  private RegionalOfflineHandler regionalOfflineHandler;
 
   public NbMapsPlugin() {
     // no-op
@@ -31,12 +36,15 @@ public class NbMapsPlugin implements FlutterPlugin, ActivityAware {
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
     flutterAssets = binding.getFlutterAssets();
+    regionalOfflineHandler = new RegionalOfflineHandler(binding.getBinaryMessenger(),
+        (Application) binding.getApplicationContext());
 
-    MethodChannel methodChannel =
+    methodChannel =
         new MethodChannel(binding.getBinaryMessenger(), "plugins.flutter.io/nb_maps_flutter");
-    methodChannel.setMethodCallHandler(new GlobalMethodHandler(binding));
+    globalHandler = new GlobalMethodHandler(binding);
+    methodChannel.setMethodCallHandler(globalHandler);
 
-    MethodChannel nextBillionChannel =
+    nextBillionChannel =
             new MethodChannel(binding.getBinaryMessenger(), "plugins.flutter.io/nextbillion_init");
     nextBillionChannel.setMethodCallHandler(new NextBillionMethodHandler(binding));
 
@@ -52,18 +60,29 @@ public class NbMapsPlugin implements FlutterPlugin, ActivityAware {
                   public Lifecycle getLifecycle() {
                     return lifecycle;
                   }
+                  @Override
+                  public FlutterAssets getFlutterAssets() { return flutterAssets; }
                 }));
 
   }
 
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-    // no-op
+    if (regionalOfflineHandler != null) regionalOfflineHandler.dispose();
+    regionalOfflineHandler = null;
+    if (globalHandler != null) globalHandler.dispose();
+    globalHandler = null;
+    if (methodChannel != null) methodChannel.setMethodCallHandler(null);
+    if (nextBillionChannel != null) nextBillionChannel.setMethodCallHandler(null);
+    methodChannel = null;
+    nextBillionChannel = null;
+    flutterAssets = null;
   }
 
   @Override
   public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
     lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding);
+    if (regionalOfflineHandler != null) regionalOfflineHandler.onHostLifecycleChanged(lifecycle);
   }
 
   @Override
@@ -78,6 +97,7 @@ public class NbMapsPlugin implements FlutterPlugin, ActivityAware {
 
   @Override
   public void onDetachedFromActivity() {
+    if (regionalOfflineHandler != null) regionalOfflineHandler.onHostLifecycleChanged(null);
     lifecycle = null;
   }
 
@@ -154,6 +174,7 @@ public class NbMapsPlugin implements FlutterPlugin, ActivityAware {
   interface LifecycleProvider {
     @Nullable
     Lifecycle getLifecycle();
+    FlutterAssets getFlutterAssets();
   }
 
   /** Provides a static method for extracting lifecycle objects from Flutter plugin bindings. */

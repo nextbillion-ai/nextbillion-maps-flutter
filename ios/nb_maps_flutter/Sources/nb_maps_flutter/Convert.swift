@@ -1,6 +1,24 @@
 import Nbmap
 
 class Convert {
+    class func tileServer(_ value: Any?) -> NGLWellKnownTileServer? {
+        switch value as? String {
+        case "NGLTomTom": return .tomTom
+        case "NGLMapTiler": return .mapTiler
+        case "NGLTomTomOrbis": return .tomTomOrbis
+        default: return nil
+        }
+    }
+
+    class func mapStyleType(_ value: Any?) -> NGMapStyleType? {
+        switch value as? String {
+        case "bright": return .Bright
+        case "night": return .Night
+        case "satellite": return .Satellite
+        default: return nil
+        }
+    }
+
     class func interpretNextbillionMapOptions(options: Any?, delegate: NextbillionMapOptionsSink) {
         guard let options = options as? [String: Any] else { return }
         if let cameraTargetBounds = options["cameraTargetBounds"] as? [[[Double]]] {
@@ -18,18 +36,8 @@ class Convert {
         }
         if let styleString = options["styleString"] as? String {
             delegate.setStyleString(styleString: styleString)
-        } else if let typeString = options["styleType"] as? String {
-            var styleType: NGMapStyleType?
-            if typeString == "bright" {
-                styleType = .Bright
-            } else if typeString == "night" {
-                styleType = .Night
-            } else if typeString == "satellite" {
-                styleType = .Satellite
-            }
-            if let styleType = styleType {
-                delegate.setStyleType(styleType: styleType)
-            }
+        } else if let styleType = mapStyleType(options["styleType"]) {
+            delegate.setStyleType(styleType: styleType)
         }
         if let rotateGesturesEnabled = options["rotateGesturesEnabled"] as? Bool {
             delegate.setRotateGesturesEnabled(rotateGesturesEnabled: rotateGesturesEnabled)

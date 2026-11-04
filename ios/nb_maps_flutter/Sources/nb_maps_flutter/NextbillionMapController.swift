@@ -9,11 +9,12 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
     private var channel: FlutterMethodChannel?
 
     private var mapView: NGLMapView
-    private var isMapReady = false
+    private var hasLoadedStyle = false
+    private var hasDartController = false
     private var dragEnabled = true
-    private var isFirstStyleLoad = true
-    private var onStyleLoadedCalled = false
-    private var mapReadyResult: FlutterResult?
+    private var snapshotters: [UUID: NGLMapSnapshotter] = [:]
+    private var snapshotResults: [UUID: FlutterResult] = [:]
+    private var pendingResults: [UUID: FlutterResult] = [:]
     private var previousDragCoordinate: CLLocationCoordinate2D?
     private var originDragCoordinate: CLLocationCoordinate2D?
     private var dragFeature: NGLFeature?
@@ -42,6 +43,11 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
         self.registrar = registrar
 
         super.init()
+        NGLRegionalOffline.install()
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshRegionalOfflineResources),
+            name: UIApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshRegionalOfflineResources),
+            name: Notification.Name("NGLRegionalOfflineMapDidAppearNotification"), object: mapView)
 
         channel = FlutterMethodChannel(
             name: "plugins.flutter.io/nbmaps_maps_\(viewId)",
@@ -56,7 +62,7 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             target: self,
             action: #selector(handleMapTap(sender:))
         )
-        for recognizer in mapView.gestureRecognizers! where recognizer is UITapGestureRecognizer {
+        for recognizer in (mapView.gestureRecognizers ?? []) where recognizer is UITapGestureRecognizer {
             singleTap.require(toFail: recognizer)
         }
         mapView.addGestureRecognizer(singleTap)
@@ -65,7 +71,7 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             target: self,
             action: #selector(handleMapLongPress(sender:))
         )
-        for recognizer in mapView.gestureRecognizers!
+        for recognizer in (mapView.gestureRecognizers ?? [])
             where recognizer is UILongPressGestureRecognizer {
             longPress.require(toFail: recognizer)
         }
@@ -110,6 +116,20 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
 //        controller.removeStyleAnnotations(annotations.filter { idSet.contains($0.identifier) })
 //    }
 
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+        channel?.setMethodCallHandler(nil)
+        mapView.delegate = nil
+        mapView.showsUserLocation = false
+        let cancelled = FlutterError(code: "MAP_DISPOSED", message: "The map has been disposed", details: nil)
+        pendingResults.values.forEach { $0(cancelled) }
+        snapshotters.values.forEach { $0.cancel() }
+    }
+
+    @objc private func refreshRegionalOfflineResources() {
+        NGLRegionalOffline.onMapViewWillAppear()
+    }
+
     func gestureRecognizer(
         _: UIGestureRecognizer,
         shouldRecognizeSimultaneouslyWith _: UIGestureRecognizer
@@ -117,25 +137,23 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
         return true
     }
 
-    func onMethodCall(methodCall: FlutterMethodCall, result: @escaping FlutterResult) {
+    func onMethodCall(methodCall: FlutterMethodCall, result originalResult: @escaping FlutterResult) {
+        let requestId = UUID()
+        pendingResults[requestId] = originalResult
+        let result: FlutterResult = { [weak self] value in
+            guard let reply = self?.pendingResults.removeValue(forKey: requestId) else { return }
+            reply(value)
+        }
         switch methodCall.method {
         case "map#waitForMap":
-            if isMapReady {
-                result(nil)
-                // only call map#onStyleLoaded here if isMapReady has happend and isFirstStyleLoad is true
-                if isFirstStyleLoad {
-                    isFirstStyleLoad = false
-
-                    if let channel = channel {
-                        onStyleLoadedCalled = true
-                        channel.invokeMethod("map#onStyleLoaded", arguments: nil)
-                    }
-                }
-            } else {
-                mapReadyResult = result
-            }
+            // The platform view already exists. Style/network failure must not
+            // prevent Dart from obtaining a controller and changing the style.
+            let notifyStyle = hasLoadedStyle && !hasDartController
+            hasDartController = true
+            result(nil)
+            if notifyStyle { channel?.invokeMethod("map#onStyleLoaded", arguments: nil) }
         case "map#update":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
             Convert.interpretNextbillionMapOptions(options: arguments["options"], delegate: self)
             if let camera = getCamera() {
                 result(camera.toDict(mapView: mapView))
@@ -145,13 +163,15 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
         case "map#invalidateAmbientCache":
             NGLOfflineStorage.shared.invalidateAmbientCache { error in
                 if let error = error {
-                    result(error)
+                    let native = error as NSError
+                    result(FlutterError(code: "CACHE_ERROR", message: native.localizedDescription,
+                        details: ["domain": native.domain, "nativeCode": native.code]))
                 } else {
                     result(nil)
                 }
             }
         case "map#updateMyLocationTrackingMode":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
             if let myLocationTrackingMode = arguments["mode"] as? UInt,
                let trackingMode = NGLUserTrackingMode(rawValue: myLocationTrackingMode) {
                 setMyLocationTrackingMode(myLocationTrackingMode: trackingMode)
@@ -163,7 +183,7 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             }
             result(nil)
         case "map#updateContentInsets":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
 
             if let bounds = arguments["bounds"] as? [String: Any],
                let top = bounds["top"] as? CGFloat,
@@ -190,14 +210,14 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
                 result(nil)
             }
         case "map#setMapLanguage":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
             if let localIdentifier = arguments["language"] as? String, let style = mapView.style {
                 let locale = Locale(identifier: localIdentifier)
                 style.localizeLabels(into: locale)
             }
             result(nil)
         case "map#queryRenderedFeatures":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
             var styleLayerIdentifiers: Set<String>?
             if let layerIds = arguments["layerIds"] as? [String] {
                 styleLayerIdentifiers = Set<String>(layerIds)
@@ -220,7 +240,7 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
                let left = arguments["left"] as? Double,
                let right = arguments["right"] as? Double {
                 features = mapView.visibleFeatures(
-                    in: CGRect(x: left, y: top, width: right, height: bottom),
+                    in: CGRect(x: left, y: top, width: right - left, height: bottom - top),
                     styleLayerIdentifiers: styleLayerIdentifiers,
                     predicate: filterExpression
                 )
@@ -232,14 +252,14 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
                     withJSONObject: dictionary,
                     options: []
                 ),
-                    let theJSONText = String(data: theJSONData, encoding: .ascii) {
+                    let theJSONText = String(data: theJSONData, encoding: .utf8) {
                     featuresJson.append(theJSONText)
                 }
             }
             reply["features"] = featuresJson as NSObject
             result(reply)
         case "map#setTelemetryEnabled":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
             let telemetryEnabled = arguments["enabled"] as? Bool
             UserDefaults.standard.set(telemetryEnabled, forKey: "NGLNbMapsMetricsEnabled")
             result(nil)
@@ -253,9 +273,9 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             reply["ne"] = [visibleRegion.ne.latitude, visibleRegion.ne.longitude] as NSObject
             result(reply)
         case "map#toScreenLocation":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let latitude = arguments["latitude"] as? Double else { return }
-            guard let longitude = arguments["longitude"] as? Double else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let latitude = arguments["latitude"] as? Double else { invalidArguments(result); return }
+            guard let longitude = arguments["longitude"] as? Double else { invalidArguments(result); return }
             let latlng = CLLocationCoordinate2DMake(latitude, longitude)
             let returnVal = mapView.convert(latlng, toPointTo: mapView)
             var reply = [String: NSObject]()
@@ -263,16 +283,15 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             reply["y"] = returnVal.y as NSObject
             result(reply)
         case "map#toScreenLocationBatch":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let data = arguments["coordinates"] as? FlutterStandardTypedData else { return }
-            let latLngs = data.data.withUnsafeBytes {
-                Array(
-                    UnsafeBufferPointer(
-                        start: $0.baseAddress!.assumingMemoryBound(to: Double.self),
-                        count: Int(data.elementCount)
-                    )
-                )
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let data = arguments["coordinates"] as? FlutterStandardTypedData else { invalidArguments(result); return }
+            guard data.type == .float64, data.elementCount % 2 == 0 else {
+                result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected paired Float64 coordinates", details: nil))
+                return
             }
+            // Copy into aligned storage; an empty buffer need not have a base address.
+            var latLngs = [Double](repeating: 0, count: Int(data.elementCount))
+            _ = latLngs.withUnsafeMutableBytes { data.data.copyBytes(to: $0) }
             var reply: [Double] = Array(repeating: 0.0, count: latLngs.count)
             for index in stride(from: 0, to: latLngs.count, by: 2) {
                 let coordinate = CLLocationCoordinate2DMake(latLngs[index], latLngs[index + 1])
@@ -284,16 +303,16 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
                 float64: Data(bytes: &reply, count: reply.count * 8)
             ))
         case "map#getMetersPerPixelAtLatitude":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
             var reply = [String: NSObject]()
-            guard let latitude = arguments["latitude"] as? Double else { return }
+            guard let latitude = arguments["latitude"] as? Double else { invalidArguments(result); return }
             let returnVal = mapView.metersPerPoint(atLatitude: latitude)
             reply["metersperpixel"] = returnVal as NSObject
             result(reply)
         case "map#toLatLng":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let xValue = arguments["x"] as? Double else { return }
-            guard let yValue = arguments["y"] as? Double else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let xValue = arguments["x"] as? Double else { invalidArguments(result); return }
+            guard let yValue = arguments["y"] as? Double else { invalidArguments(result); return }
             let screenPoint = CGPoint(x: xValue, y: yValue)
             let coordinates: CLLocationCoordinate2D = mapView.convert(
                 screenPoint,
@@ -304,16 +323,16 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             reply["longitude"] = coordinates.longitude as NSObject
             result(reply)
         case "camera#move":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { invalidArguments(result); return }
             if let camera = Convert
                 .parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) {
                 mapView.setCamera(camera, animated: false)
             }
             result(nil)
         case "camera#animate":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let cameraUpdate = arguments["cameraUpdate"] as? [Any] else { invalidArguments(result); return }
             if let camera = Convert
                 .parseCameraUpdate(cameraUpdate: cameraUpdate, mapView: mapView) {
                 if let duration = arguments["duration"] as? TimeInterval {
@@ -327,11 +346,11 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             }
             result(nil)
         case "symbolLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
-            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
+            guard let layerId = arguments["layerId"] as? String else { invalidArguments(result); return }
+            guard let properties = arguments["properties"] as? [String: String] else { invalidArguments(result); return }
+            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { invalidArguments(result); return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let sourceLayer = arguments["sourceLayer"] as? String
             let minzoom = arguments["minzoom"] as? Double
@@ -354,12 +373,31 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             case .success: result(nil)
             case let .failure(error): result(error.flutterError)
             }
+        case "regionalOffline#focusRegion":
+            guard RegionalOfflineHandler.isConfigured, NGLRegionalOffline.isOfflineMapSupportedForCurrentTileServer() else {
+                result(FlutterError(code: "NOT_INITIALIZED", message: "Configure Regional Offline with TomTom first", details: nil)); return
+            }
+            guard let args = methodCall.arguments as? [String: Any],
+                  let id = RegionalOfflineHandler.validRegionId(args["regionId"]) else {
+                result(FlutterError(code: "INVALID_ARGUMENT", message: "Invalid regionId", details: nil)); return
+            }
+            result(NGLRegionalOffline.focusPreviewRegion(with: mapView, regionId: id))
+        case "lineLayer#setProperties":
+            guard let args = methodCall.arguments as? [String: Any], let layerId = args["layerId"] as? String,
+                  let properties = args["properties"] as? [String: String] else {
+                result(FlutterError(code: "INVALID_ARGUMENT", message: "layerId and properties are required", details: nil)); return
+            }
+            guard let layer = mapView.style?.layer(withIdentifier: layerId) as? NGLLineStyleLayer else {
+                result(FlutterError(code: "INVALID_LAYER", message: "The line layer does not exist", details: layerId)); return
+            }
+            LayerPropertyConverter.addLineProperties(lineLayer: layer, properties: properties)
+            result(nil)
         case "lineLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
-            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
+            guard let layerId = arguments["layerId"] as? String else { invalidArguments(result); return }
+            guard let properties = arguments["properties"] as? [String: String] else { invalidArguments(result); return }
+            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { invalidArguments(result); return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let sourceLayer = arguments["sourceLayer"] as? String
             let minzoom = arguments["minzoom"] as? Double
@@ -383,11 +421,11 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             case let .failure(error): result(error.flutterError)
             }
         case "fillLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
-            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
+            guard let layerId = arguments["layerId"] as? String else { invalidArguments(result); return }
+            guard let properties = arguments["properties"] as? [String: String] else { invalidArguments(result); return }
+            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { invalidArguments(result); return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let sourceLayer = arguments["sourceLayer"] as? String
             let minzoom = arguments["minzoom"] as? Double
@@ -411,11 +449,11 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             case let .failure(error): result(error.flutterError)
             }
         case "fillExtrusionLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
-            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
+            guard let layerId = arguments["layerId"] as? String else { invalidArguments(result); return }
+            guard let properties = arguments["properties"] as? [String: String] else { invalidArguments(result); return }
+            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { invalidArguments(result); return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let sourceLayer = arguments["sourceLayer"] as? String
             let minzoom = arguments["minzoom"] as? Double
@@ -439,11 +477,11 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             case let .failure(error): result(error.flutterError)
             }
         case "circleLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
-            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
+            guard let layerId = arguments["layerId"] as? String else { invalidArguments(result); return }
+            guard let properties = arguments["properties"] as? [String: String] else { invalidArguments(result); return }
+            guard let enableInteraction = arguments["enableInteraction"] as? Bool else { invalidArguments(result); return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let sourceLayer = arguments["sourceLayer"] as? String
             let minzoom = arguments["minzoom"] as? Double
@@ -467,10 +505,10 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             case let .failure(error): result(error.flutterError)
             }
         case "hillshadeLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
+            guard let layerId = arguments["layerId"] as? String else { invalidArguments(result); return }
+            guard let properties = arguments["properties"] as? [String: String] else { invalidArguments(result); return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
@@ -486,10 +524,10 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             )
             result(nil)
         case "heatmapLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
+            guard let layerId = arguments["layerId"] as? String else { invalidArguments(result); return }
+            guard let properties = arguments["properties"] as? [String: String] else { invalidArguments(result); return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
@@ -505,10 +543,10 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             )
             result(nil)
         case "rasterLayer#add":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: String] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
+            guard let layerId = arguments["layerId"] as? String else { invalidArguments(result); return }
+            guard let properties = arguments["properties"] as? [String: String] else { invalidArguments(result); return }
             let belowLayerId = arguments["belowLayerId"] as? String
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
@@ -522,37 +560,40 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             )
             result(nil)
         case "style#setStyleString":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let styleString = arguments["styleString"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let styleString = arguments["styleString"] as? String else { invalidArguments(result); return }
             setStyleString(styleString: styleString)
             result(nil)
             
         case "style#setStyleType":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let typeString = arguments["styleType"] as? String else { return }
-            
-            var styleType: NGMapStyleType?
-            if typeString == "bright" {
-                styleType = .Bright
-            } else if typeString == "night" {
-                styleType = .Night
-            } else if typeString == "satellite" {
-                styleType = .Satellite
-            }
-            if let styleType = styleType {
-                setStyleType(styleType: styleType)
-            }
-            
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let styleType = Convert.mapStyleType(arguments["styleType"])
+            else { invalidArguments(result); return }
+            setStyleType(styleType: styleType)
             result(nil)
-            
+
+        case "map#switchTileServer":
+            // Compatibility bridge only: existing-MapView provider changes are
+            // outside this release's scope. iOS 2.3.2 may retain the old loader.
+            // Supported flow: select the provider before map creation, then use
+            // style#setStyleType to change themes within that provider.
+            // Validate both enums before changing process-wide configuration.
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let server = Convert.tileServer(arguments["server"]),
+                  let styleType = Convert.mapStyleType(arguments["styleType"])
+            else { invalidArguments(result); return }
+            NGLAccountManager.use(server)
+            setStyleType(styleType: styleType)
+            result(true)
+
         case "style#addImage":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let name = arguments["name"] as? String else { return }
-            // guard let length = arguments["length"] as? NSNumber else { return }
-            guard let bytes = arguments["bytes"] as? FlutterStandardTypedData else { return }
-            guard let sdf = arguments["sdf"] as? Bool else { return }
-            guard let data = bytes.data as? Data else { return }
-            guard let image = UIImage(data: data, scale: UIScreen.main.scale) else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let name = arguments["name"] as? String else { invalidArguments(result); return }
+            // guard let length = arguments["length"] as? NSNumber else { invalidArguments(result); return }
+            guard let bytes = arguments["bytes"] as? FlutterStandardTypedData else { invalidArguments(result); return }
+            guard let sdf = arguments["sdf"] as? Bool else { invalidArguments(result); return }
+            let data = bytes.data
+            guard let image = UIImage(data: data, scale: UIScreen.main.scale) else { invalidArguments(result); return }
             if sdf {
                 mapView.style?.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
             } else {
@@ -560,13 +601,14 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             }
             result(nil)
         case "style#addImageSource":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let imageSourceId = arguments["imageSourceId"] as? String else { return }
-            guard let bytes = arguments["bytes"] as? FlutterStandardTypedData else { return }
-            guard let data = bytes.data as? Data else { return }
-            guard let image = UIImage(data: data) else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let imageSourceId = arguments["imageSourceId"] as? String else { invalidArguments(result); return }
+            guard let bytes = arguments["bytes"] as? FlutterStandardTypedData else { invalidArguments(result); return }
+            let data = bytes.data
+            guard let image = UIImage(data: data) else { invalidArguments(result); return }
 
-            guard let coordinates = arguments["coordinates"] as? [[Double]] else { return }
+            guard let coordinates = arguments["coordinates"] as? [[Double]],
+                  coordinates.count == 4, coordinates.allSatisfy({ $0.count == 2 }) else { invalidArguments(result); return }
             let quad = NGLCoordinateQuad(
                 topLeft: CLLocationCoordinate2D(
                     latitude: coordinates[0][0],
@@ -605,42 +647,43 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
 
             result(nil)
         case "style#updateImageSource":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let imageSourceId = arguments["imageSourceId"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let imageSourceId = arguments["imageSourceId"] as? String else { invalidArguments(result); return }
             guard let imageSource = mapView.style?
-                .source(withIdentifier: imageSourceId) as? NGLImageSource else { return }
+                .source(withIdentifier: imageSourceId) as? NGLImageSource else { invalidArguments(result); return }
             let bytes = arguments["bytes"] as? FlutterStandardTypedData
             if bytes != nil {
-                guard let data = bytes!.data as? Data else { return }
-                guard let image = UIImage(data: data) else { return }
+                let data = bytes!.data
+                guard let image = UIImage(data: data) else { invalidArguments(result); return }
                 imageSource.image = image
             }
             let coordinates = arguments["coordinates"] as? [[Double]]
-            if coordinates != nil {
+            if let coordinates = coordinates {
+                guard coordinates.count == 4, coordinates.allSatisfy({ $0.count == 2 }) else { invalidArguments(result); return }
                 let quad = NGLCoordinateQuad(
                     topLeft: CLLocationCoordinate2D(
-                        latitude: coordinates![0][0],
-                        longitude: coordinates![0][1]
+                        latitude: coordinates[0][0],
+                        longitude: coordinates[0][1]
                     ),
                     bottomLeft: CLLocationCoordinate2D(
-                        latitude: coordinates![3][0],
-                        longitude: coordinates![3][1]
+                        latitude: coordinates[3][0],
+                        longitude: coordinates[3][1]
                     ),
                     bottomRight: CLLocationCoordinate2D(
-                        latitude: coordinates![2][0],
-                        longitude: coordinates![2][1]
+                        latitude: coordinates[2][0],
+                        longitude: coordinates[2][1]
                     ),
                     topRight: CLLocationCoordinate2D(
-                        latitude: coordinates![1][0],
-                        longitude: coordinates![1][1]
+                        latitude: coordinates[1][0],
+                        longitude: coordinates[1][1]
                     )
                 )
                 imageSource.coordinates = quad
             }
             result(nil)
         case "style#removeSource":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
             guard let source = mapView.style?.source(withIdentifier: sourceId) else {
                 result(nil)
                 return
@@ -648,9 +691,9 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             mapView.style?.removeSource(source)
             result(nil)
         case "style#addLayer":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let imageLayerId = arguments["imageLayerId"] as? String else { return }
-            guard let imageSourceId = arguments["imageSourceId"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let imageLayerId = arguments["imageLayerId"] as? String else { invalidArguments(result); return }
+            guard let imageSourceId = arguments["imageSourceId"] as? String else { invalidArguments(result); return }
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
 
@@ -686,10 +729,10 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             mapView.style?.addLayer(layer)
             result(nil)
         case "style#addLayerBelow":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let imageLayerId = arguments["imageLayerId"] as? String else { return }
-            guard let imageSourceId = arguments["imageSourceId"] as? String else { return }
-            guard let belowLayerId = arguments["belowLayerId"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let imageLayerId = arguments["imageLayerId"] as? String else { invalidArguments(result); return }
+            guard let imageSourceId = arguments["imageSourceId"] as? String else { invalidArguments(result); return }
+            guard let belowLayerId = arguments["belowLayerId"] as? String else { invalidArguments(result); return }
             let minzoom = arguments["minzoom"] as? Double
             let maxzoom = arguments["maxzoom"] as? Double
 
@@ -734,14 +777,14 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             mapView.style?.insertLayer(layer, below: belowLayer)
             result(nil)
         case "style#removeLayer":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let layerId = arguments["layerId"] as? String else { invalidArguments(result); return }
             removeLayer(layerId: layerId)
             result(nil)
         case "style#setFilter":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let filter = arguments["filter"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let layerId = arguments["layerId"] as? String else { invalidArguments(result); return }
+            guard let filter = arguments["filter"] as? String else { invalidArguments(result); return }
             guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
                 result(nil)
                 return
@@ -751,9 +794,9 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             case let .failure(error): result(error.flutterError)
             }
         case "style#setVisibility":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let layerId = arguments["layerId"] as? String else { return }
-            guard let isVisible = arguments["isVisible"] as? Bool else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let layerId = arguments["layerId"] as? String else { invalidArguments(result); return }
+            guard let isVisible = arguments["isVisible"] as? Bool else { invalidArguments(result); return }
             guard let layer = mapView.style?.layer(withIdentifier: layerId) else {
                 result(nil)
                 return
@@ -761,21 +804,21 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             layer.isVisible = isVisible
             result(nil)
         case "source#addGeoJson":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let geojson = arguments["geojson"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
+            guard let geojson = arguments["geojson"] as? String else { invalidArguments(result); return }
             addSourceGeojson(sourceId: sourceId, geojson: geojson)
             result(nil)
         case "style#addSource":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let properties = arguments["properties"] as? [String: Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
+            guard let properties = arguments["properties"] as? [String: Any] else { invalidArguments(result); return }
             addSource(sourceId: sourceId, properties: properties)
             result(nil)
         case "style#findBelowLayer":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let belowAt = arguments["belowAt"] as? [String] else { return }
-            guard let styleLayers = mapView.style?.layers else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let belowAt = arguments["belowAt"] as? [String] else { invalidArguments(result); return }
+            guard let styleLayers = mapView.style?.layers else { invalidArguments(result); return }
             for (index, layer) in styleLayers.enumerated().reversed() {
                 if !(layer is NGLSymbolStyleLayer) &&
                     !(layer is NGLFillExtrusionStyleLayer) &&
@@ -790,19 +833,19 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             }
             result(nil)
         case "source#setGeoJson":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let geojson = arguments["geojson"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
+            guard let geojson = arguments["geojson"] as? String else { invalidArguments(result); return }
             setSource(sourceId: sourceId, geojson: geojson)
             result(nil)
         case "source#setFeature":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
-            guard let sourceId = arguments["sourceId"] as? String else { return }
-            guard let geojson = arguments["geojsonFeature"] as? String else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            guard let sourceId = arguments["sourceId"] as? String else { invalidArguments(result); return }
+            guard let geojson = arguments["geojsonFeature"] as? String else { invalidArguments(result); return }
             setFeature(sourceId: sourceId, geojsonFeature: geojson)
             result(nil)
         case "snapshot#takeSnapshot":
-            guard let arguments = methodCall.arguments as? [String: Any] else { return }
+            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
             let camera = NGLMapCamera()
 
             guard let pitch = arguments["pitch"] as? NSNumber else {
@@ -821,7 +864,8 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
 
             camera.centerCoordinate = mapView.centerCoordinate
             if arguments["centerCoordinate"] != nil {
-                guard let centerCoordinate = arguments["centerCoordinate"] as? [NSNumber] else {
+                guard let centerCoordinate = arguments["centerCoordinate"] as? [NSNumber],
+                      centerCoordinate.count == 2 else {
                     result(FlutterError(
                         code: "invalidArgument",
                         message: "centerCoordinate is not a number list",
@@ -846,6 +890,11 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
                 return
             }
 
+            guard width.doubleValue.isFinite, height.doubleValue.isFinite,
+                  width.doubleValue > 0, height.doubleValue > 0 else {
+                result(FlutterError(code: "INVALID_ARGUMENT", message: "Snapshot dimensions must be positive and finite", details: nil))
+                return
+            }
             let size = CGSize(width: width.doubleValue, height: height.doubleValue)
 
             var styleURL: URL = mapView.styleURL
@@ -857,7 +906,11 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
                     )
                     return
                 }
-                styleURL = URL(string: styleUri)!
+                guard let url = URL(string: styleUri) else {
+                    result(FlutterError(code: "INVALID_ARGUMENT", message: "Invalid snapshot style URI", details: nil))
+                    return
+                }
+                styleURL = url
             }
 
             let snapshotOptions: NGLMapSnapshotOptions = .init(
@@ -877,7 +930,8 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             }
 
             if arguments["bounds"] != nil {
-                guard let bounds = arguments["bounds"] as? [[NSNumber]] else {
+                guard let bounds = arguments["bounds"] as? [[NSNumber]],
+                      bounds.count == 2, bounds.allSatisfy({ $0.count == 2 }) else {
                     result(FlutterError(code: "invalidArgument",
                                         message: "bounds is not a number list", details: nil))
                     return
@@ -894,9 +948,14 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
                 )
             }
 
-            let snapshotter: NGLMapSnapshotter? = NGLMapSnapshotter(options: snapshotOptions)
-
-            snapshotter?.start { snapshot, error in
+            let snapshotId = UUID()
+            let snapshotter = NGLMapSnapshotter(options: snapshotOptions)
+            snapshotters[snapshotId] = snapshotter
+            snapshotResults[snapshotId] = result
+            snapshotter.start { [weak self] snapshot, error in
+                guard let self = self,
+                      let result = self.snapshotResults.removeValue(forKey: snapshotId) else { return }
+                self.snapshotters.removeValue(forKey: snapshotId)
                 if error != nil {
                     result(FlutterError(
                         code: "canCreateSnapshot",
@@ -913,11 +972,17 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
                     let value = writeToDisk.boolValue ? RNMBImageUtils
                         .createTempFile(image) : RNMBImageUtils.createBase64(image)
                     result(value?.absoluteString)
+                } else {
+                    result(FlutterError(code: "NO_RESULT", message: "Snapshot returned no image", details: nil))
                 }
             }
         default:
             result(FlutterMethodNotImplemented)
         }
+    }
+
+    private func invalidArguments(_ result: FlutterResult) {
+        result(FlutterError(code: "INVALID_ARGUMENT", message: "Invalid or missing map arguments", details: nil))
     }
 
     private func removeLayer(layerId: String) {
@@ -1051,7 +1116,7 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             mapView.allowsScrolling = false
             let eventType = "start"
             invokeFeatureDrag(point, coordinate, eventType)
-            for gestureRecognizer in mapView.gestureRecognizers! {
+            for gestureRecognizer in (mapView.gestureRecognizers ?? []) {
                 if gestureRecognizer is UIPanGestureRecognizer {
                     gestureRecognizer.addTarget(self, action: #selector(handleMapPan))
                     break
@@ -1115,59 +1180,25 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
      * the application specifies an onAttributionClick handler.
      */
     @objc func showAttribution() {
-        channel?.invokeMethod("map#onAttributionClick", arguments: [])
+        channel?.invokeMethod("map#onAttributionClick", arguments: nil)
     }
 
     /*
      *  NGLMapViewDelegate
      */
     func mapView(_: NGLMapView, didFinishLoading _: NGLStyle) {
-//        isMapReady = true
-//        updateMyLocationEnabled()
-//
-//        if let initialTilt = initialTilt {
-//            let camera = mapView.camera
-//            camera.pitch = initialTilt
-//            mapView.setCamera(camera, animated: false)
-//        }
-//
-//        addedShapesByLayer.removeAll()
-//        interactiveFeatureLayerIds.removeAll()
-//
-//        mapReadyResult?(nil)
-//
-//        // On first launch we only call map#onStyleLoaded if map#waitForMap has already been called
-//        if !isFirstStyleLoad || mapReadyResult != nil {
-//            isFirstStyleLoad = false
-//
-//            if let channel = channel {
-//                channel.invokeMethod("map#onStyleLoaded", arguments: nil)
-//            }
-//        }
-    }
-
-    func mapViewDidFinishLoadingMap(_ mapView: NGLMapView) {
-        isMapReady = true
+        hasLoadedStyle = true
         updateMyLocationEnabled()
-
-        if let initialTilt = initialTilt {
+        if let tilt = initialTilt {
             let camera = mapView.camera
-            camera.pitch = initialTilt
+            camera.pitch = tilt
             mapView.setCamera(camera, animated: false)
+            initialTilt = nil
         }
-
         addedShapesByLayer.removeAll()
         interactiveFeatureLayerIds.removeAll()
-
-        mapReadyResult?(nil)
-
-        // On first launch we only call map#onStyleLoaded if map#waitForMap has already been called
-        if !isFirstStyleLoad || mapReadyResult != nil {
-            isFirstStyleLoad = false
-
-            if let channel = channel {
-                channel.invokeMethod("map#onStyleLoaded", arguments: nil)
-            }
+        if hasDartController {
+            channel?.invokeMethod("map#onStyleLoaded", arguments: nil)
         }
     }
 
@@ -1215,7 +1246,7 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
         if let channel = channel {
             channel.invokeMethod("map#onCameraTrackingChanged", arguments: ["mode": mode.rawValue])
             if mode == .none {
-                channel.invokeMethod("map#onCameraTrackingDismissed", arguments: [])
+                channel.invokeMethod("map#onCameraTrackingDismissed", arguments: nil)
             }
         }
     }
@@ -1594,13 +1625,13 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
 
     func mapViewDidBecomeIdle(_: NGLMapView) {
         if let channel = channel {
-            channel.invokeMethod("map#onIdle", arguments: [])
+            channel.invokeMethod("map#onIdle", arguments: nil)
         }
     }
 
     func mapView(_: NGLMapView, regionWillChangeAnimated _: Bool) {
         if let channel = channel {
-            channel.invokeMethod("camera#onMoveStarted", arguments: [])
+            channel.invokeMethod("camera#onMoveStarted", arguments: nil)
         }
     }
 
@@ -1735,11 +1766,15 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
         } else if styleString.hasPrefix("/") {
             // Absolute path
             mapView.styleURL = URL(fileURLWithPath: styleString, isDirectory: false)
+        } else if let fileURL = URL(string: styleString), fileURL.isFileURL {
+            // Dart File.uri produces file:// URLs, not Flutter asset keys.
+            mapView.styleURL = fileURL
         } else if
             !styleString.hasPrefix("http://"),
             !styleString.hasPrefix("https://"),
             !styleString.hasPrefix("nbmaps://"),
             !styleString.hasPrefix("tomtom://"),
+            !styleString.hasPrefix("orbis://"),
             !styleString.hasPrefix("maptiler:/")
         {
             // We are assuming that the style will be loaded from an asset here.
@@ -1749,10 +1784,12 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
         } else {
             mapView.styleURL = URL(string: styleString)
         }
+        NGLRegionalOfflineStyleCatalog.registerMapStyle(forMapView: mapView, styleURL: mapView.styleURL)
     }
     
     func setStyleType(styleType: NGMapStyleType) {
         mapView.setStyleWith(styleType)
+        NGLRegionalOfflineStyleCatalog.registerMapStyle(forMapView: mapView, styleURL: mapView.styleURL)
     }
 
     func setRotateGesturesEnabled(rotateGesturesEnabled: Bool) {

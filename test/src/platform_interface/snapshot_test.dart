@@ -1,5 +1,7 @@
-import 'package:nb_maps_flutter/nb_maps_flutter.dart';
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 
 class MockPlatformWrapper extends PlatformWrapper {
   @override
@@ -7,6 +9,24 @@ class MockPlatformWrapper extends PlatformWrapper {
 }
 
 void main() {
+  test(
+      'invalid snapshot dimensions and nonfinite camera values fail before native allocation',
+      () {
+    for (final options in [
+      SnapshotOptions(width: 0, height: 10),
+      SnapshotOptions(width: -1, height: 10),
+      SnapshotOptions(width: double.nan, height: 10),
+      SnapshotOptions(width: 10, height: double.infinity),
+      SnapshotOptions(width: 10, height: 10, pitch: double.nan),
+      SnapshotOptions(width: 10, height: 10, heading: double.infinity),
+      SnapshotOptions(width: 10, height: 10, zoomLevel: double.nan),
+      SnapshotOptions(
+          width: 0.5, height: 10, platformWrapper: MockPlatformWrapper()),
+    ]) {
+      expect(options.toJson, throwsArgumentError);
+    }
+  });
+
   test('SnapshotOptions toJson should convert to map correctly', () {
     // Arrange
     const double width = 500.0;
@@ -142,8 +162,8 @@ void main() {
     expect(result['height'], equals(height));
 
     //{type: Feature, properties: {}, geometry: {type: Point, coordinates: [-122.4194, 37.7749]}}
-    expect(result['centerCoordinate'], equals(feature.toString()));
-    expect(result['bounds'], equals(featureCollection.toString()));
+    expect(jsonDecode(result['centerCoordinate'] as String), equals(feature));
+    expect(jsonDecode(result['bounds'] as String), equals(featureCollection));
     expect(result['zoomLevel'], equals(zoomLevel));
     expect(result['pitch'], equals(pitch));
     expect(result['heading'], equals(heading));

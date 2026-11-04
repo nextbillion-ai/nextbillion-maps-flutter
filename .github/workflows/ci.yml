@@ -30,6 +30,26 @@ jobs:
         run: |
           flutter test --coverage          
 
+      - name: Run example regression tests
+        working-directory: example
+        run: flutter test --no-pub
+
+      - name: Setup Java 17 for Android
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build Android Release with R8
+        working-directory: example
+        # Resolve again after tests so Release excludes the dev-only
+        # integration_test plugin from GeneratedPluginRegistrant.
+        run: flutter build apk --release --target-platform android-arm64
+
+      - name: Run Android bridge unit tests
+        working-directory: example/android
+        run: ./gradlew :nb_maps_flutter:testDebugUnitTest
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:

@@ -267,6 +267,7 @@ class _NBMapState extends State<NBMap> {
   final Completer<NextbillionMapController> _controller =
       Completer<NextbillionMapController>();
 
+  NextbillionMapController? _mapController;
   late NextBillionMapOptions _nextbillionMapOptions;
   final NbMapsGlPlatform _nbmapsGlPlatform = NbMapsGlPlatform.createInstance();
 
@@ -293,12 +294,13 @@ class _NBMapState extends State<NBMap> {
   }
 
   @override
-  Future<void> dispose() async {
-    super.dispose();
-    if (_controller.isCompleted) {
-      final controller = await _controller.future;
-      controller.dispose();
+  void dispose() {
+    if (_mapController != null) {
+      _mapController!.dispose();
+    } else {
+      _nbmapsGlPlatform.dispose();
     }
+    super.dispose();
   }
 
   @override
@@ -317,16 +319,17 @@ class _NBMapState extends State<NBMap> {
       return;
     }
     final NextbillionMapController controller = await _controller.future;
-    controller._updateMapOptions(updates);
+    if (mounted) controller._updateMapOptions(updates);
   }
 
   Future<void> onPlatformViewCreated(int id) async {
+    if (!mounted) return;
     final NextbillionMapController controller = NextbillionMapController(
       nbMapsGlPlatform: _nbmapsGlPlatform,
       initialCameraPosition: widget.initialCameraPosition,
       onStyleLoadedCallback: () {
         _controller.future.then((_) {
-          if (widget.onStyleLoadedCallback != null) {
+          if (mounted && widget.onStyleLoadedCallback != null) {
             widget.onStyleLoadedCallback?.call();
           }
         });
@@ -342,14 +345,19 @@ class _NBMapState extends State<NBMap> {
       annotationOrder: widget.annotationOrder,
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
     );
+    _mapController = controller;
     try {
       await _nbmapsGlPlatform.initPlatform(id);
     } catch (e) {
       if (kDebugMode) {
         print('Error initializing map platform: $e');
       }
+      controller.dispose();
+      _controller.complete(controller);
+      return;
     }
     _controller.complete(controller);
+    if (!mounted) return;
     if (widget.onMapCreated != null) {
       widget.onMapCreated?.call(controller);
     }

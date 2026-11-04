@@ -200,7 +200,7 @@ class AddImageTestBodyState extends State<AddImageTestBody> {
         symbolOptionsList.add(
           SymbolOptions(
             geometry: coordinate,
-            textField: 'Overlap ${i + 1}', // 简单文本
+            textField: 'Overlap ${i + 1}', // Simple text label.
             iconImage: 'custom-icon',
           ),
         );

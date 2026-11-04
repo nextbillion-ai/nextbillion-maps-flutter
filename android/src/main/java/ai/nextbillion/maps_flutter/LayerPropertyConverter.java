@@ -301,6 +301,12 @@ class LayerPropertyConverter {
         case "line-pattern":
           properties.add(PropertyFactory.linePattern(expression));
           break;
+        case "line-trim-offset":
+          properties.add(PropertyFactory.lineTrimOffset(expression));
+          break;
+        case "line-trim-color":
+          properties.add(PropertyFactory.lineTrimColor(expression));
+          break;
         case "line-gradient":
           properties.add(PropertyFactory.lineGradient(expression));
           break;

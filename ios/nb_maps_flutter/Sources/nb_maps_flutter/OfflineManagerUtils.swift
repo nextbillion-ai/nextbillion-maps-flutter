@@ -16,21 +16,22 @@ class OfflineManagerUtils {
         definition: OfflineRegionDefinition,
         metadata: [String: Any],
         result: @escaping FlutterResult,
-        registrar _: FlutterPluginRegistrar,
+        ownerId: UUID,
         channelHandler: OfflineChannelHandler
     ) {
         // Prepare downloader
         let downloader = OfflinePackDownloader(
             result: result,
+            ownerId: ownerId,
             channelHandler: channelHandler,
             regionDefintion: definition,
             metadata: metadata
         )
 
         // Download region
-        let id = downloader.download()
-        // retain downloader by its generated id
-        activeDownloaders[id] = downloader
+        // Retain before starting: a rejected pack can complete immediately.
+        activeDownloaders[downloader.id] = downloader
+        _ = downloader.download()
     }
 
     static func regionsList(result: @escaping FlutterResult) {
@@ -59,7 +60,10 @@ class OfflineManagerUtils {
 
     static func deleteRegion(result: @escaping FlutterResult, id: Int) {
         let offlineStorage = NGLOfflineStorage.shared
-        guard let pacs = offlineStorage.packs else { return }
+        guard let pacs = offlineStorage.packs else {
+            result(FlutterError(code: "DeleteRegionError", message: "Offline packs are not loaded", details: nil))
+            return
+        }
         let packToRemove = pacs.first(where: { pack -> Bool in
             let contextJsonObject = try? JSONSerialization.jsonObject(with: pack.context)
             let contextJsonDict = contextJsonObject as? [String: Any]
@@ -72,6 +76,7 @@ class OfflineManagerUtils {
         if let packToRemoveUnwrapped = packToRemove {
             // deletion is only safe if the download is suspended
             packToRemoveUnwrapped.suspend()
+            activeDownloaders[id]?.dispose()
             OfflineManagerUtils.releaseDownloader(id: id)
 
             offlineStorage.removePack(packToRemoveUnwrapped) { error in
@@ -91,6 +96,14 @@ class OfflineManagerUtils {
                 message: "There is no region with given id to delete",
                 details: nil
             ))
+        }
+    }
+
+    static func releaseDownloaders(ownerId: UUID) {
+        let owned = activeDownloaders.values.filter { $0.ownerId == ownerId }
+        for downloader in owned {
+            downloader.dispose()
+            activeDownloaders.removeValue(forKey: downloader.id)
         }
     }
 

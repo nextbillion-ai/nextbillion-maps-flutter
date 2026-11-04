@@ -10,9 +10,11 @@ import Foundation
 import Nbmap
 
 class OfflinePackDownloader {
+    let id = UUID().hashValue
     // MARK: Properties
 
-    private let result: FlutterResult
+    let ownerId: UUID
+    private var result: FlutterResult?
     private let channelHandler: OfflineChannelHandler
     private let regionDefinition: OfflineRegionDefinition
     private let metadata: [String: Any]
@@ -23,16 +25,19 @@ class OfflinePackDownloader {
     /// This variable is set to true when this downloader has finished downloading and called the result method. It is used to prevent
     /// the result method being called multiple times
     private var isCompleted = false
+    private var didReply = false
 
     // MARK: Initializers
 
     init(
         result: @escaping FlutterResult,
+        ownerId: UUID,
         channelHandler: OfflineChannelHandler,
         regionDefintion: OfflineRegionDefinition,
         metadata: [String: Any]
     ) {
         self.result = result
+        self.ownerId = ownerId
         self.channelHandler = channelHandler
         regionDefinition = regionDefintion
         self.metadata = metadata
@@ -51,16 +56,19 @@ class OfflinePackDownloader {
         let storage = NGLOfflineStorage.shared
         // While the Android SDK generates a region ID in createOfflineRegion, the iOS
         // SDK does not have this feature. Therefore, we generate a region ID here.
-        let id = UUID().hashValue
         let regionData = OfflineRegion(id: id, metadata: metadata, definition: regionDefinition)
         let tilePyramidRegion = regionDefinition.toNGLTilePyramidOfflineRegion()
         storage
             .addPack(for: tilePyramidRegion,
                      withContext: regionData.prepareContext()) { [weak self] pack, error in
+            guard let self = self, !self.isCompleted else {
+                if let pack = pack, pack.state != .invalid { pack.suspend() }
+                return
+            }
             if let pack = pack {
-                self?.onPackCreated(pack: pack)
+                self.onPackCreated(pack: pack)
             } else {
-                self?.onPackCreationError(error: error)
+                self.onPackCreationError(error: error)
             }
         }
         return id
@@ -73,32 +81,56 @@ class OfflinePackDownloader {
            let regionData = try? JSONSerialization.data(withJSONObject: region.toDictionary()) {
             // Start downloading
             self.pack = pack
-            pack.resume()
             // Provide region with generated
-            result(String(data: regionData, encoding: .utf8))
+            replyOnce(String(data: regionData, encoding: .utf8))
             channelHandler.onStart()
+            pack.resume()
         } else {
             onPackCreationError(error: OfflinePackError.invalidPackData)
         }
     }
 
     private func onPackCreationError(error: Error?) {
-        // Reset downloading state
-        channelHandler.onError(
-            errorCode: "nbmapsInvalidRegionDefinition",
-            errorMessage: error?.localizedDescription,
-            errorDetails: nil
-        )
-        result(FlutterError(
-            code: "nbmapsInvalidRegionDefinition",
-            message: error?.localizedDescription,
-            details: nil
-        ))
+        isCompleted = true
+        let failure = error.map(RegionalOfflineHandler.flutterError)
+        replyOnce(FlutterError(code: failure?.code == "UNSUPPORTED_TILE_SERVER"
+            ? "UNSUPPORTED_TILE_SERVER" : "nbmapsInvalidRegionDefinition",
+            message: error?.localizedDescription, details: failure?.details))
+        channelHandler.dispose()
+        OfflineManagerUtils.releaseDownloader(id: id)
+    }
+
+    private func replyOnce(_ value: Any?) {
+        guard !didReply else { return }
+        didReply = true
+        let reply = result
+        result = nil
+        reply?(value)
+    }
+
+    func dispose() {
+        isCompleted = true
+        result = nil
+        NotificationCenter.default.removeObserver(self)
+        if let pack = pack, pack.state != .invalid { pack.suspend() }
+        pack = nil
+        channelHandler.dispose()
+    }
+
+    @objc private func tileServerChanged() {
+        guard pack != nil, !isCompleted,
+              !NGLRegionalOffline.isOfflineMapSupportedForCurrentTileServer() else { return }
+        isCompleted = true
+        channelHandler.onError(errorCode: "UNSUPPORTED_TILE_SERVER",
+            errorMessage: "The offline download was paused because the active tile server is not TomTom.",
+            errorDetails: nil)
+        OfflineManagerUtils.releaseDownloader(id: id)
     }
 
     // MARK: Progress obseration
 
     @objc private func onPackDownloadProgress(notification: NSNotification) {
+        guard !isCompleted else { return }
         // Verify if correct pack is checked
         guard let pack = notification.object as? NGLOfflinePack,
               verifyPack(pack: pack) else { return }
@@ -117,7 +149,6 @@ class OfflinePackDownloader {
             guard !isCompleted else { return }
             isCompleted = true
             channelHandler.onSuccess()
-            result(nil)
             if let region = OfflineRegion.fromOfflinePack(pack) {
                 OfflineManagerUtils.releaseDownloader(id: region.id)
             }
@@ -133,48 +164,41 @@ class OfflinePackDownloader {
         let error = notification.userInfo?[NGLOfflinePackUserInfoKey.error] as? NSError
         print("Pack download error: \(String(describing: error?.localizedDescription))")
         // set download state to inactive
+        guard !isCompleted else { return }
         isCompleted = true
+        let failure = error.map(RegionalOfflineHandler.flutterError)
         channelHandler.onError(
-            errorCode: "Downloading error",
+            errorCode: failure?.code == "UNSUPPORTED_TILE_SERVER" ? "UNSUPPORTED_TILE_SERVER" : "Downloading error",
             errorMessage: error?.localizedDescription,
-            errorDetails: nil
+            errorDetails: failure?.details
         )
-        result(FlutterError(
-            code: "Downloading error",
-            message: error?.localizedDescription,
-            details: nil
-        ))
-        if let region = OfflineRegion.fromOfflinePack(pack) {
-            OfflineManagerUtils.deleteRegion(result: result, id: region.id)
-        }
+        pack.suspend()
+        OfflineManagerUtils.releaseDownloader(id: id)
     }
 
     @objc private func onMaximumAllowedNbMapsTiles(notification: NSNotification) {
         guard let pack = notification.object as? NGLOfflinePack,
               verifyPack(pack: pack) else { return }
         let maximumCount = (notification.userInfo?[NGLOfflinePackUserInfoKey.maximumCount]
-            as AnyObject).uint64Value ?? 0
+            as? NSNumber)?.uint64Value ?? 0
         print("NbMaps tile count limit exceeded: \(maximumCount)")
         // set download state to inactive
+        guard !isCompleted else { return }
         isCompleted = true
         channelHandler.onError(
             errorCode: "nbmapsTileCountLimitExceeded",
             errorMessage: "NbMaps tile count limit exceeded: \(maximumCount)",
             errorDetails: nil
         )
-        result(FlutterError(
-            code: "nbmapsTileCountLimitExceeded",
-            message: "NbMaps tile count limit exceeded: \(maximumCount)",
-            details: nil
-        ))
-        if let region = OfflineRegion.fromOfflinePack(pack) {
-            OfflineManagerUtils.deleteRegion(result: result, id: region.id)
-        }
+        pack.suspend()
+        OfflineManagerUtils.releaseDownloader(id: id)
     }
 
     // MARK: Util methods
 
     private func setupNotifications() {
+        NotificationCenter.default.addObserver(self, selector: #selector(tileServerChanged),
+            name: Notification.Name("NGLTileServerOptionsDidChangeNotification"), object: nil)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(onPackDownloadProgress(notification:)),
@@ -204,7 +228,8 @@ class OfflinePackDownloader {
             return false
         }
         // We can tell whether 2 packs are the same by comparing metadata we assigned earlier
-        return pack.state != .invalid && pack.context == currentlyManagedPack.context
+        return pack.state != .invalid && currentlyManagedPack.state != .invalid
+            && pack === currentlyManagedPack
     }
 
     private func calculateDownloadingProgress(

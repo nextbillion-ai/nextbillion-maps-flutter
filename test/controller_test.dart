@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -416,6 +417,62 @@ void main() {
 
       expect(callbackCount, 1);
       expect(managerWasAvailable, isTrue);
+    });
+
+    test(
+        'reloading styles releases old managers and keeps callback counts bounded',
+        () async {
+      mockPlatform.onMapStyleLoadedPlatform.call(null);
+      final old = controller.symbolManager!;
+      await old.add(Symbol('old', const SymbolOptions(geometry: LatLng(1, 2))));
+      for (var i = 0; i < 25; i++) {
+        mockPlatform.onMapStyleLoadedPlatform.call(null);
+        expect(controller.onFeatureTapped.length, 4);
+        expect(controller.onFeatureDrag.length, 4);
+      }
+      expect(old.annotations, isEmpty);
+      clearInteractions(mockPlatform);
+      await old
+          .add(Symbol('stale', const SymbolOptions(geometry: LatLng(2, 3))));
+      verifyNever(mockPlatform.setGeoJsonSource(any, any));
+      controller.dispose();
+      expect(controller.onFeatureTapped, isEmpty);
+      expect(controller.onFeatureDrag, isEmpty);
+    });
+
+    test(
+        'a pending old-style write cannot update another bucket in the new style',
+        () async {
+      mockPlatform.onMapStyleLoadedPlatform.call(null);
+      final old = controller.lineManager!;
+      final firstWrite = Completer<void>();
+      var writes = 0;
+      when(mockPlatform.setGeoJsonSource(any, any)).thenAnswer((_) {
+        writes++;
+        return writes == 1 ? firstWrite.future : Future<void>.value();
+      });
+      final pending = old.add(Line(
+          'old', const LineOptions(geometry: [LatLng(0, 0), LatLng(1, 1)])));
+      expect(writes, 1);
+      mockPlatform.onMapStyleLoadedPlatform.call(null);
+      firstWrite.complete();
+      await pending;
+      expect(writes, 1);
+      expect(old.annotations, isEmpty);
+    });
+
+    test(
+        'disposing a manager across a style change does not remove new-style sources',
+        () async {
+      mockPlatform.onMapStyleLoadedPlatform.call(null);
+      final old = controller.lineManager!;
+      when(mockPlatform.removeLayer(any)).thenAnswer((_) async {
+        mockPlatform.onMapStyleLoadedPlatform.call(null);
+      });
+      await old.dispose();
+      verifyNever(mockPlatform.removeSource(any));
+      expect(controller.onFeatureTapped.length, 4);
+      expect(controller.onFeatureDrag.length, 4);
     });
 
     test('onAttributionClick callback is called when attribution is clicked',
