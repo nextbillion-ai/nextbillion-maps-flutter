@@ -154,6 +154,12 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
             if notifyStyle { channel?.invokeMethod("map#onStyleLoaded", arguments: nil) }
         case "map#update":
             guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
+            if let options = arguments["options"] as? [String: Any],
+               let styleString = options["styleString"] as? String,
+               let error = inlineStyleJSONError(styleString) {
+                result(error)
+                return
+            }
             Convert.interpretNextbillionMapOptions(options: arguments["options"], delegate: self)
             if let camera = getCamera() {
                 result(camera.toDict(mapView: mapView))
@@ -562,6 +568,10 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
         case "style#setStyleString":
             guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
             guard let styleString = arguments["styleString"] as? String else { invalidArguments(result); return }
+            if let error = inlineStyleJSONError(styleString) {
+                result(error)
+                return
+            }
             setStyleString(styleString: styleString)
             result(nil)
             
@@ -1754,6 +1764,14 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
     func setMinMaxZoomPreference(min: Double, max: Double) {
         mapView.minimumZoomLevel = min
         mapView.maximumZoomLevel = max
+    }
+
+    private func inlineStyleJSONError(_ styleString: String) -> FlutterError? {
+        let value = styleString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard value.hasPrefix("{") || value.hasPrefix("[") else { return nil }
+        return FlutterError(code: "UNSUPPORTED_STYLE_JSON",
+                            message: "Inline JSON styles are not supported on iOS. Save the JSON to a local file and pass its file:// URL, or use a style URL.",
+                            details: nil)
     }
 
     func setStyleString(styleString: String) {

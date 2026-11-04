@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,17 @@ import 'package:integration_test/integration_test.dart';
 import 'package:nb_maps_flutter/nb_maps_flutter.dart';
 import 'package:nb_maps_flutter_example/main.dart' show MapsDemo;
 import 'package:nb_maps_flutter_example/offline_navigation.dart';
+
+class _RecordingMapPlatform extends MethodChannelNbMapsGl {
+  _RecordingMapPlatform(this.onCreated);
+  final void Function(int) onCreated;
+
+  @override
+  Future<void> initPlatform(int id) {
+    onCreated(id);
+    return super.initPlatform(id);
+  }
+}
 
 /// Run TEST_PROVIDER=tomtom/maptiler/orbis separately, each in a fresh process.
 /// Existing-MapView cross-provider switching is excluded from this release.
@@ -59,6 +71,13 @@ void main() {
     }
 
     final key = GlobalKey<OfflineNavigationState>();
+    final originalFactory = NbMapsGlPlatform.createInstance;
+    int? nativeMapId;
+    final temporary = await Directory.systemTemp.createTemp('nbmaps_style_');
+    if (Platform.isIOS) {
+      NbMapsGlPlatform.createInstance =
+          () => _RecordingMapPlatform((id) => nativeMapId = id);
+    }
     try {
       // Provider selection happens once, before any MapView is constructed.
       await NextBillion.initNextBillionWithTileServer(
@@ -137,6 +156,30 @@ void main() {
           final encoded =
               snapshot!.contains(',') ? snapshot.split(',').last : snapshot;
           expect(base64Decode(encoded).length, greaterThan(500));
+          final bytes = base64Decode(encoded);
+          final codec = await ui.instantiateImageCodec(bytes);
+          final image = (await codec.getNextFrame()).image;
+          final rgba =
+              (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!
+                  .buffer
+                  .asUint8List();
+          final colors = <int>{};
+          for (var y = image.height ~/ 8;
+              y < image.height * 7 ~/ 8;
+              y += image.height ~/ 32) {
+            for (var x = image.width ~/ 8;
+                x < image.width * 7 ~/ 8;
+                x += image.width ~/ 32) {
+              final p = (y * image.width + x) * 4;
+              colors.add((rgba[p] ~/ 16) * 256 +
+                  (rgba[p + 1] ~/ 16) * 16 +
+                  rgba[p + 2] ~/ 16);
+            }
+          }
+          expect(colors.length, greaterThan(8),
+              reason: 'Snapshot needs map content');
+          image.dispose();
+          codec.dispose();
           images['$imageName-native'] = encoded;
           snapshotPassed = true;
         } catch (error) {
@@ -177,6 +220,41 @@ void main() {
         'evidence':
             'Online snapshots for four fixed-provider styles only; physical offline snapshots require the separate offline test',
       });
+      if (Platform.isIOS) {
+        final loadsBefore = state.styleLoads;
+        final unsupported = isA<PlatformException>()
+            .having((e) => e.code, 'code', 'UNSUPPORTED_STYLE_JSON');
+        const json = ' \n {"version":8,"sources":{},"layers":[]}';
+        await expectLater(
+            originalMap.setStyleString(json), throwsA(unsupported));
+        final native =
+            MethodChannel('plugins.flutter.io/nbmaps_maps_$nativeMapId');
+        await expectLater(
+            native.invokeMethod<void>(
+                'style#setStyleString', {'styleString': json}),
+            throwsA(unsupported));
+        await expectLater(
+            native.invokeMethod<void>('map#update', {
+              'options': {'styleString': json, 'compassEnabled': false}
+            }),
+            throwsA(unsupported));
+        expect(state.styleLoads, loadsBefore);
+        final styleFile = File('${temporary.path}/background.json');
+        await styleFile.writeAsString('{"version":8,"sources":{},"layers":'
+            '[{"id":"background","type":"background","paint":'
+            '{"background-color":"#556677"}}]}');
+        await originalMap.setStyleString(styleFile.uri.toString());
+        await waitFor(() => state.styleLoads > loadsBefore && state.routeReady);
+        record({
+          'id': 'IOS-STYLE-JSON-CONTRACT',
+          'status': 'pass',
+          'publicControllerRejectedJson': true,
+          'rawNativeStyleRejectedJson': true,
+          'rawNativeOptionsRejectedJson': true,
+          'previousStylePreserved': true,
+          'fileUrlStyleLoaded': true,
+        });
+      }
       if (server == WellKnownTileServer.nbTomtom) {
         await state.configureOffline();
         expect(state.configured, isTrue);
@@ -228,6 +306,8 @@ void main() {
     } finally {
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 1));
+      NbMapsGlPlatform.createInstance = originalFactory;
+      await temporary.delete(recursive: true);
     }
   }, timeout: const Timeout(Duration(minutes: 8)));
 }

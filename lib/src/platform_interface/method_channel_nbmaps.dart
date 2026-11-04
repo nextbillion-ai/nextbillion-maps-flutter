@@ -281,6 +281,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   @override
   Future<CameraPosition?> updateMapOptions(
       Map<String, dynamic> optionsUpdate) async {
+    _validateStyleString(optionsUpdate['styleString'] as String?);
     try {
       final dynamic result = await _channel.invokeMapMethod(
         'map#update',
@@ -1049,6 +1050,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
 
   @override
   Future<void> setStyleString(String styleString) async {
+    _validateStyleString(styleString);
     try {
       final uri = await _channel
           .invokeMethod('style#setStyleString', {"styleString": styleString});

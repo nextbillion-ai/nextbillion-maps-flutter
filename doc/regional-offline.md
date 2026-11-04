@@ -48,6 +48,11 @@ TomTom, MapTiler and TomTom Orbis support online maps. Predefined style URIs
 (`tomtom://`, `maptiler://`, `orbis://`) can be passed to `styleString`. Use
 `NextBillion.predefinedStyles()` to obtain URLs for the active server.
 
+On iOS, `styleString` accepts style URLs and local file/asset paths, but not
+inline JSON. Unsupported JSON is rejected with `UNSUPPORTED_STYLE_JSON`; write
+it to a local file and pass its `file://` URL instead. Android also accepts inline
+JSON styles.
+
 Regional Offline currently requires **TomTom**. MapTiler's reserved data-source
 ID does not imply offline support. Country coverage comes from the returned
 catalog rather than a fixed list in Dart.

@@ -24,7 +24,8 @@ let package = Package(
             dependencies: [
                 .product(name: "FlutterFramework", package: "FlutterFramework"),
                 .product(name: "Nbmap", package: "maps-native-distribution")
-            ]
+            ],
+            resources: [.process("PrivacyInfo.xcprivacy")]
         )
     ]
 )

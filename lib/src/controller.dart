@@ -1732,21 +1732,25 @@ class NextbillionMapController extends ChangeNotifier {
     }
   }
 
-  /// Update map style using a custom style URL or JSON string.
+  /// Updates the map style using a URL, local file/asset, or Android inline JSON.
   ///
   /// This method allows you to set a custom map style using either:
   /// - A URL to a style JSON file (e.g., "https://example.com/style.json")
-  /// - A JSON string containing the style definition
+  /// - A JSON string containing the style definition (Android only)
   /// - A local asset path (e.g., "assets/style.json")
   ///
   /// The most recent controller style call takes effect. For widget creation
   /// options, a non-null [NBMap.styleString] takes priority over its styleType.
   ///
-  /// [styleString] - The style URL or JSON string to apply
+  /// On iOS, inline JSON fails with [PlatformException] code
+  /// `UNSUPPORTED_STYLE_JSON`. Save the JSON to a local file and pass its
+  /// `file://` URL instead. [styleString] is the style location or Android JSON
+  /// to apply; failure leaves the current style unchanged.
   Future<void> setStyleString(String styleString) async {
     if (_disposed) {
       return;
     }
+    _validateStyleString(styleString);
     return await _nbMapsGlPlatform.setStyleString(styleString);
   }
 

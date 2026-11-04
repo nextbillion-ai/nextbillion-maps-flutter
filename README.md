@@ -4,7 +4,7 @@
 ## Native SDK upgrade
 
 Version 4.0.0 uses iOS Maps 2.3.3 and Android Maps 3.3.1. See the
-[integration guide](docs/regional-offline.md) for Orbis, Regional Offline,
+[integration guide](doc/regional-offline.md) for Orbis, Regional Offline,
 route trimming, lifecycle handling, and the Android 3.3.1 Orbis transition limitation.
 See the [changelog](CHANGELOG.md) for release changes.
 
@@ -99,6 +99,21 @@ NBMap(
   ),
 )
 ```
+
+## Run the example
+
+From the repository root, run:
+
+```sh
+cd example
+flutter pub get
+flutter run --dart-define=ACCESS_KEY=YOUR_ACCESS_KEY
+```
+
+The example reads `ACCESS_KEY` at build time and has no default key. Pass the
+same define to `flutter build` or `flutter drive` when using those commands.
+Choose the map service on the home screen before opening a map. Regional Offline
+requires TomTom.
 
 ## Regional Offline maps
 
@@ -296,7 +311,7 @@ routes. See the [API entry point](lib/src/regional_offline.dart),
 [data models](lib/src/regional_offline_models.dart),
 [download example](example/lib/regional_offline.dart),
 [playback example](example/lib/offline_navigation.dart), and
-[detailed integration guide](docs/regional-offline.md).
+[detailed integration guide](doc/regional-offline.md).
 
 The legacy `downloadOfflineRegion()` API downloads a bounds/zoom/style-based
 offline pack. Its pack IDs and database import APIs are separate from these CDN
@@ -495,6 +510,14 @@ Android Maps 3.3.1 still rejects Orbis selection during or after Regional Offlin
 setup with `SDK_UPDATE_REQUIRED`; this protective check remains in place.
 In the example, choose the service on the home screen before opening a map.
 The **Map Style Switch** page displays that fixed service and changes styles only.
+
+### Custom style input on iOS
+
+`NBMap.styleString` and `controller.setStyleString()` accept style URLs, local
+file URLs, and Flutter asset paths. Inline JSON strings are supported on Android.
+On iOS, inline JSON is rejected with `PlatformException` code
+`UNSUPPORTED_STYLE_JSON`, including initial widget options and later updates.
+Write custom JSON to a local file and pass its `file://` URL on iOS.
 
 ## Camera
 Defines a camera move, supports absolute moves as well as moving relatively to a specified position.

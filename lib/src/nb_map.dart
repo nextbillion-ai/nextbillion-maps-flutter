@@ -4,6 +4,20 @@ enum AnnotationType { fill, line, circle, symbol }
 
 typedef MapCreatedCallback = void Function(NextbillionMapController controller);
 
+// The iOS SDK loads styles from URLs; rejecting JSON before creating/updating
+// the platform view avoids reporting success while keeping the previous style.
+void _validateStyleString(String? styleString) {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
+  final value = styleString?.trimLeft();
+  if (value != null && (value.startsWith('{') || value.startsWith('['))) {
+    throw PlatformException(
+      code: 'UNSUPPORTED_STYLE_JSON',
+      message: 'Inline JSON styles are not supported on iOS. Save the JSON to '
+          'a local file and pass its file:// URL, or use a style URL.',
+    );
+  }
+}
+
 class NBMap extends StatefulWidget {
   const NBMap({
     super.key,
@@ -96,13 +110,17 @@ class NBMap extends StatefulWidget {
   /// Geographical bounding box for the camera target.
   final CameraTargetBounds cameraTargetBounds;
 
-  /// Custom style URL or JSON string for the map.
+  /// Custom style URL, local file/asset, or Android inline JSON for the map.
   ///
   /// This property allows you to set a custom map style using either:
   /// - A URL to a style JSON file (e.g., "https://example.com/style.json")
-  /// - A JSON string containing the style definition
+  /// - A JSON string containing the style definition (Android only)
   /// - A local asset path (e.g., "assets/style.json")
   /// - NbMapStyle constants (e.g., NbMapStyles.NBMAP_STREETS)
+  ///
+  /// On iOS, inline JSON is rejected with a [PlatformException] whose code is
+  /// `UNSUPPORTED_STYLE_JSON` when building/updating map options. Save the JSON
+  /// to a local file and pass its `file://` URL instead.
   ///
   /// Note: This property has higher priority than [styleType]. If both
   /// [styleString] and [styleType] are set, the style string will take
@@ -462,6 +480,7 @@ class NextBillionMapOptions {
   };
 
   Map<String, dynamic> toMap() {
+    _validateStyleString(styleString);
     final Map<String, dynamic> optionsMap = <String, dynamic>{};
 
     void addIfNonNull(String fieldName, dynamic value) {

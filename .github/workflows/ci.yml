@@ -58,3 +58,38 @@ jobs:
           name: codecov-report
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.0"
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS Simulator with Swift Package Manager
+        working-directory: example
+        run: flutter build ios --simulator --debug --no-codesign
+
+      - name: Verify plugin privacy manifest is bundled
+        working-directory: example
+        run: |
+          python3 - <<'PY'
+          import plistlib
+          from pathlib import Path
+          app = Path('build/ios/iphonesimulator/Runner.app')
+          manifests = [p for p in app.rglob('PrivacyInfo.xcprivacy')
+                       if p.parent.name == 'nb_maps_flutter_nb_maps_flutter.bundle']
+          assert len(manifests) == 1, manifests
+          data = plistlib.loads(manifests[0].read_bytes())
+          assert any(item['NSPrivacyAccessedAPIType'] == 'NSPrivacyAccessedAPICategoryUserDefaults'
+                     and 'CA92.1' in item['NSPrivacyAccessedAPITypeReasons']
+                     for item in data['NSPrivacyAccessedAPITypes'])
+          print('Plugin privacy manifest is bundled with its UserDefaults reason.')
+          PY
