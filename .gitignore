@@ -127,3 +127,8 @@ app.*.symbols
 **/externalNativeBuild/
 **/build/.cxx/
 
+
+# Physical-device test artifacts and local review reports.
+example/test_results/
+docs/*.zh-CN.md
+docs/device-test-matrix.csv

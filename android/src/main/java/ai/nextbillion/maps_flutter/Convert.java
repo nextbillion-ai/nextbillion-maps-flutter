@@ -221,7 +221,7 @@ class Convert {
     }
     final Object styleString = data.get("styleString");
     if (styleString != null) {
-      sink.setStyleString(toString(styleString));
+      sink.applyStyleConfiguration(toString(styleString));
     }
 
     final Object styleType = data.get("styleType");

@@ -1,3 +1,34 @@
+## v4.0.0, Nov 04, 2026
+- **Breaking:** Remove `NextbillionMapController.setStyleString()` and its platform-interface and native-channel APIs. Use `setStyleType()` for predefined styles and `NBMap.styleString` for custom style configuration.
+- Bundle the plugin's own iOS privacy manifest through SPM for its UserDefaults preference access.
+- Reject unsupported inline JSON `NBMap.styleString` configuration on iOS with UNSUPPORTED_STYLE_JSON; document local-file and style-URL alternatives.
+- Add an iOS Simulator SPM build and bundled privacy-manifest check to CI; resolve native binary dependencies before Flutter to avoid cold-cache SwiftPM download races.
+- Restore iOS idle, camera-move-start, attribution and tracking-dismissed callbacks by accepting legacy empty-array event payloads and emitting null for payload-free events.
+- Load file:// style URLs as local files on both platforms instead of resolving them as Flutter assets.
+- Preserve non-ASCII feature properties in iOS rendered-feature queries with UTF-8 and correct nonzero-origin rectangle bounds.
+- Fix Android virtual-display MapView retention by keeping getView stable through Flutter teardown; verify Java/Dart object release after 100 full page lifecycles.
+- Ship narrow consumer R8 rules for the native SDK's optional Google task callbacks, so Release hosts without Play Services Location build successfully.
+- Reject boolean/fractional regional IDs consistently and strengthen physical-offline probes and incomplete-test failure reporting.
+- Select the native service before map creation and use setStyleType for styles within that service. Document existing-MapView cross-service switching as outside this release's scope; retain the compatibility bridge and show only style controls inside the example map page.
+- Pin iOS Maps 2.3.3 through Swift Package Manager for the native offline-snapshot fix; upgrade Android Maps to 3.3.1 and compileSdk to 34.
+- Add TomTom Orbis selection and support native style URIs on both platforms.
+- Add typed Regional Offline catalog, detail, installed-region, download-control, progress and Preview APIs with scoped page lifecycle handling.
+- Add lineTrimOffset, lineTrimColor and incremental line-layer property updates.
+- Synchronize Flutter style callbacks after native reloads and fix legacy iOS offline result/event handling.
+- Surface the Android 3.3.1 Orbis refresh limitation as SDK_UPDATE_REQUIRED before changing an initialized regional-offline runtime.
+- Add a Regional Offline example and an integration guide.
+- Add an offline map and local route playback test page and physical-device integration tests.
+- Apply country filtering in Flutter when static CDN catalogs ignore the native request's country parameter; keep catalog results immutable.
+- Fix disposal during initialization, native drag parsing, legacy download observer cleanup, snapshot cancellation and FileSource release, invalid coordinate inputs, and SDK-managed offline database import.
+- Fix annotation-manager retention across style reloads, iOS controller creation with slow/failed styles, active legacy download deletion, and iOS cache-error encoding.
+- Import offline-pack databases through native SDK APIs using isolated writable copies; preserve input files, complete after import, and discard late engine replies.
+- Expand regression coverage for regional downloads, lifecycle handling, and snapshots.
+- Keep SDK default database storage without an external destination setting; move offline initialization and local storage queries off the map thread, coalesce iOS setup, and guard Orbis switches while Android setup is pending.
+- Start example offline setup after the first frame and add three map-loading regressions to CI for delayed/failed setup and pending Preview/catalog data.
+- Enable project-level SPM in the plugin repository as well as the example so dependency setup works after Podspec removal.
+- **Breaking:** Require Flutter 3.41+ for the generated FlutterFramework SPM dependency (full builds validated with Flutter 3.44); older Flutter releases fail dependency resolution early.
+- **Breaking (iOS):** From 4.0.0 onward, support only Swift Package Manager. Remove the plugin Podspec, native SDK fallback Podspec and example CocoaPods integration; host apps must enable SPM.
+
 ## v3.4.2, Oct 06, 2026
 - Prevent crashes when annotation collections are read before the map style and annotation managers are initialized.
 - Defer symbol, line, circle, and fill operations invoked before style loading until their managers are ready, while preserving the existing behavior for operations invoked after style loading.

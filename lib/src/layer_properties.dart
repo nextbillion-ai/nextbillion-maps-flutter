@@ -1400,6 +1400,14 @@ class LineLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios, macos
   final dynamic lineGradient;
 
+  /// Normalized trimmed interval [start, end], with 0 <= start <= end <= 1.
+  /// Use a literal array expression, e.g. ['literal', [0.0, 0.4]].
+  /// Requires a GeoJSON source with lineMetrics and a lineGradient.
+  final dynamic lineTrimOffset;
+
+  /// Color of the trimmed interval; transparent by default.
+  final dynamic lineTrimColor;
+
   // Layout Properties
   /// The display of line endings.
   ///
@@ -1498,6 +1506,8 @@ class LineLayerProperties implements LayerProperties {
     this.lineDasharray,
     this.linePattern,
     this.lineGradient,
+    this.lineTrimOffset,
+    this.lineTrimColor,
     this.lineCap,
     this.lineJoin,
     this.lineMiterLimit,
@@ -1519,6 +1529,8 @@ class LineLayerProperties implements LayerProperties {
       lineDasharray: changes.lineDasharray ?? lineDasharray,
       linePattern: changes.linePattern ?? linePattern,
       lineGradient: changes.lineGradient ?? lineGradient,
+      lineTrimOffset: changes.lineTrimOffset ?? lineTrimOffset,
+      lineTrimColor: changes.lineTrimColor ?? lineTrimColor,
       lineCap: changes.lineCap ?? lineCap,
       lineJoin: changes.lineJoin ?? lineJoin,
       lineMiterLimit: changes.lineMiterLimit ?? lineMiterLimit,
@@ -1549,6 +1561,29 @@ class LineLayerProperties implements LayerProperties {
     addIfPresent('line-dasharray', lineDasharray);
     addIfPresent('line-pattern', linePattern);
     addIfPresent('line-gradient', lineGradient);
+    if (lineTrimOffset != null) {
+      final dynamic offset = lineTrimOffset;
+      final isLiteral =
+          offset is List && offset.isNotEmpty && offset[0] == 'literal';
+      final dynamic interval =
+          isLiteral && offset.length == 2 ? offset[1] : offset;
+      if (isLiteral ||
+          interval is List && (interval.isEmpty || interval.first is num)) {
+        if (interval is! List ||
+            interval.length != 2 ||
+            interval.any((dynamic value) => value is! num || !value.isFinite) ||
+            (interval[0] as num) < 0 ||
+            (interval[1] as num) > 1 ||
+            (interval[0] as num) > (interval[1] as num)) {
+          throw ArgumentError.value(
+              offset, 'lineTrimOffset', 'Expected 0 <= start <= end <= 1');
+        }
+        addIfPresent('line-trim-offset', ['literal', interval]);
+      } else {
+        addIfPresent('line-trim-offset', offset);
+      }
+    }
+    addIfPresent('line-trim-color', lineTrimColor);
     addIfPresent('line-cap', lineCap);
     addIfPresent('line-join', lineJoin);
     addIfPresent('line-miter-limit', lineMiterLimit);
@@ -1571,6 +1606,8 @@ class LineLayerProperties implements LayerProperties {
       lineDasharray: json['line-dasharray'],
       linePattern: json['line-pattern'],
       lineGradient: json['line-gradient'],
+      lineTrimOffset: json['line-trim-offset'],
+      lineTrimColor: json['line-trim-color'],
       lineCap: json['line-cap'],
       lineJoin: json['line-join'],
       lineMiterLimit: json['line-miter-limit'],

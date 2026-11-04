@@ -3,7 +3,7 @@ import Nbmap
 protocol NextbillionMapOptionsSink {
     func setCameraTargetBounds(bounds: NGLCoordinateBounds?)
     func setCompassEnabled(compassEnabled: Bool)
-    func setStyleString(styleString: String)
+    func applyStyleConfiguration(styleString: String)
     func setStyleType(styleType: NGMapStyleType)
     func setMinMaxZoomPreference(min: Double, max: Double)
     func setRotateGesturesEnabled(rotateGesturesEnabled: Bool)

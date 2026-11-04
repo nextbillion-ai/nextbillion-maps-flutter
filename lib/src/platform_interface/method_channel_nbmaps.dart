@@ -2,11 +2,15 @@ part of "../../nb_maps_flutter.dart";
 
 class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   late MethodChannel _channel;
+  bool _channelInitialized = false;
   static bool useHybridComposition = false;
 
   @visibleForTesting
   Future<dynamic> handleMethodCall(MethodCall call) async {
-    final arguments = call.arguments as Map?;
+    // Payload-free callbacks in older iOS builds use [] instead of null.
+    // Do not cast before dispatch: that dropped idle/move-start/attribution
+    // events even though the native delegate had delivered them successfully.
+    final arguments = call.arguments is Map ? call.arguments as Map : null;
     switch (call.method) {
       case 'infoWindow#onTap':
         final String? symbolId = arguments?['symbol'] as String?;
@@ -44,7 +48,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
 
           final double deltaLat = (arguments?['deltaLat'] as num?)?.toDouble() ?? 0.0;
           final double deltaLng = (arguments?['deltaLng'] as num?)?.toDouble() ?? 0.0;
-          final String eventType = (arguments?['eventType'] as String?) ?? '';
+          final Object? eventType = arguments?['eventType'];
 
           onFeatureDraggedPlatform({
             'id': id,
@@ -196,6 +200,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   @override
   Future<void> initPlatform(int id) async {
     _channel = MethodChannel('plugins.flutter.io/nbmaps_maps_$id');
+    _channelInitialized = true;
     _channel.setMethodCallHandler(handleMethodCall);
     await _channel.invokeMethod('map#waitForMap');
   }
@@ -203,6 +208,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   @visibleForTesting
   void setTestingMethodChanenl(MethodChannel channel) {
     _channel = channel;
+    _channelInitialized = true;
     _channel.setMethodCallHandler(handleMethodCall);
   }
 
@@ -275,6 +281,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   @override
   Future<CameraPosition?> updateMapOptions(
       Map<String, dynamic> optionsUpdate) async {
+    _validateStyleString(optionsUpdate['styleString'] as String?);
     try {
       final dynamic result = await _channel.invokeMapMethod(
         'map#update',
@@ -853,6 +860,22 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   }
 
   @override
+  Future<void> setLineLayerProperties(
+      String layerId, Map<String, dynamic> properties) async {
+    await _channel.invokeMethod<void>('lineLayer#setProperties', {
+      'layerId': layerId,
+      'properties':
+          properties.map((key, value) => MapEntry(key, jsonEncode(value))),
+    });
+  }
+
+  @override
+  Future<bool> focusPreviewRegion(int regionId) async =>
+      await _channel.invokeMethod<bool>(
+          'regionalOffline#focusRegion', {'regionId': regionId}) ??
+      false;
+
+  @override
   Future<void> addCircleLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
       {String? belowLayerId,
@@ -924,7 +947,7 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   @override
   void dispose() {
     super.dispose();
-    _channel.setMethodCallHandler(null);
+    if (_channelInitialized) _channel.setMethodCallHandler(null);
   }
 
   @override
@@ -1026,17 +1049,6 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   }
 
   @override
-  Future<void> setStyleString(String styleString) async {
-    try {
-      final uri = await _channel
-          .invokeMethod('style#setStyleString', {"styleString": styleString});
-      return uri;
-    } on PlatformException catch (e) {
-      return Future.error(e);
-    }
-  }
-
-  @override
   Future<void> setStyleType(NBMapStyleType styleType) async {
     try {
       final uri = await _channel
@@ -1045,5 +1057,15 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
     } on PlatformException catch (e) {
       return Future.error(e);
     }
+  }
+
+  @override
+  Future<bool> switchTileServer(WellKnownTileServer server,
+      {NBMapStyleType styleType = NBMapStyleType.bright}) async {
+    return await _channel.invokeMethod<bool>('map#switchTileServer', {
+          'server': server.value,
+          'styleType': styleType.value,
+        }) ??
+        false;
   }
 }

@@ -43,6 +43,7 @@ import ai.nextbillion.kits.geojson.Feature;
 import ai.nextbillion.kits.geojson.FeatureCollection;
 import ai.nextbillion.kits.geojson.LineString;
 import ai.nextbillion.kits.geojson.Point;
+import ai.nextbillion.maps.Nextbillion;
 import ai.nextbillion.maps.camera.CameraPosition;
 import ai.nextbillion.maps.camera.CameraUpdate;
 import ai.nextbillion.maps.camera.CameraUpdateFactory;
@@ -51,6 +52,7 @@ import ai.nextbillion.maps.core.NextbillionMap;
 import ai.nextbillion.maps.core.NextbillionMapOptions;
 import ai.nextbillion.maps.core.OnMapReadyCallback;
 import ai.nextbillion.maps.core.Style;
+import ai.nextbillion.maps.regionaloffline.release.client.RegionalOffline;
 import ai.nextbillion.maps.geometry.LatLng;
 import ai.nextbillion.maps.geometry.LatLngBounds;
 import ai.nextbillion.maps.geometry.LatLngQuad;
@@ -68,6 +70,7 @@ import ai.nextbillion.maps.location.modes.RenderMode;
 import ai.nextbillion.maps.offline.OfflineManager;
 import ai.nextbillion.maps.snapshotter.MapSnapshotter;
 import ai.nextbillion.maps.storage.FileSource;
+import ai.nextbillion.maps.style.NGLWellKnownTileServer;
 import ai.nextbillion.maps.style.expressions.Expression;
 import ai.nextbillion.maps.style.layers.CircleLayer;
 import ai.nextbillion.maps.style.layers.FillExtrusionLayer;
@@ -119,6 +122,9 @@ final class NextbillionMapController
     private final int id;
     private final MethodChannel methodChannel;
     private final NbMapsPlugin.LifecycleProvider lifecycleProvider;
+    private final io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterAssets flutterAssets;
+    private Lifecycle observedLifecycle;
+    private final Map<String, MethodChannel.Result> snapshotResults = new HashMap<>();
     private final float density;
     private final Context context;
     private String styleStringInitial;
@@ -126,7 +132,8 @@ final class NextbillionMapController
     private final Set<String> interactiveFeatureLayerIds;
     private final Map<String, FeatureCollection> addedFeaturesByLayer;
     private final Map<String, MapSnapshotter> mSnapshotterMap;
-    private MapView mapView;
+    private final Set<String> activeSnapshotSources = new HashSet<>();
+    private final MapView mapView;
     private NextbillionMap nextbillionMap;
     private boolean trackCameraPosition = false;
     private boolean myLocationEnabled = false;
@@ -135,6 +142,8 @@ final class NextbillionMapController
     private boolean disposed = false;
     private boolean dragEnabled = true;
     private MethodChannel.Result mapReadyResult;
+    private final Set<PendingResult> pendingResults = new HashSet<>();
+
     private LocationComponent locationComponent = null;
     private LocationEngine locationEngine = null;
     private LocationEngineCallback<LocationEngineResult> locationEngineCallback = null;
@@ -145,11 +154,17 @@ final class NextbillionMapController
     private LatLng dragOrigin;
     private LatLng dragPrevious;
     private LatLngBounds bounds = null;
+    private final MapView.OnDidFinishLoadingStyleListener styleLoadedListener = () -> {
+        if (!disposed && nextbillionMap != null) nextbillionMap.getStyle(this.onStyleLoadedCallback);
+    };
     Style.OnStyleLoaded onStyleLoadedCallback =
             new Style.OnStyleLoaded() {
                 @Override
                 public void onStyleLoaded(@NonNull Style style) {
+                    if (disposed || NextbillionMapController.this.style == style) return;
                     NextbillionMapController.this.style = style;
+                    addedFeaturesByLayer.clear();
+                    interactiveFeatureLayerIds.clear();
 
                     updateMyLocationEnabled();
 
@@ -157,8 +172,7 @@ final class NextbillionMapController
                         nextbillionMap.setLatLngBoundsForCameraTarget(bounds);
                     }
 
-                    nextbillionMap.addOnMapClickListener(NextbillionMapController.this);
-                    nextbillionMap.addOnMapLongClickListener(NextbillionMapController.this);
+
 //          localizationPlugin = new LocalizationPlugin(mapView, nextbillionMap, style);
 
                     methodChannel.invokeMethod("map#onStyleLoaded", null);
@@ -184,6 +198,7 @@ final class NextbillionMapController
         this.addedFeaturesByLayer = new HashMap<String, FeatureCollection>();
         this.density = context.getResources().getDisplayMetrics().density;
         this.lifecycleProvider = lifecycleProvider;
+        this.flutterAssets = lifecycleProvider.getFlutterAssets();
         if (dragEnabled) {
             this.androidGesturesManager = new AndroidGesturesManager(this.mapView.getContext(), false);
         }
@@ -194,12 +209,17 @@ final class NextbillionMapController
 
     @Override
     public View getView() {
+        // Flutter's virtual-display cleanup reads this AFTER dispose() to
+        // remove contextToEmbeddedView. Returning null leaks the destroyed view
+        // and its PresentationContext until the entire engine is detached.
         return mapView;
     }
 
     void init() {
-        lifecycleProvider.getLifecycle().addObserver(this);
-        mapView.getMapAsync(this);
+        observedLifecycle = lifecycleProvider.getLifecycle();
+        if (observedLifecycle != null) observedLifecycle.addObserver(this);
+        else mapView.onCreate(null);
+        if (!disposed) mapView.getMapAsync(this);
     }
 
     private void moveCamera(CameraUpdate cameraUpdate) {
@@ -216,6 +236,7 @@ final class NextbillionMapController
 
     @Override
     public void onMapReady(NextbillionMap nextbillionMap) {
+        if (disposed) return;
         this.nextbillionMap = nextbillionMap;
         if (mapReadyResult != null) {
             mapReadyResult.success(null);
@@ -249,6 +270,9 @@ final class NextbillionMapController
                 });
 
         mapView.addOnDidBecomeIdleListener(this);
+        mapView.addOnDidFinishLoadingStyleListener(styleLoadedListener);
+        nextbillionMap.addOnMapClickListener(this);
+        nextbillionMap.addOnMapLongClickListener(this);
 
         initializeMapStyle();
     }
@@ -278,13 +302,22 @@ final class NextbillionMapController
             nextbillionMap.setStyle(
                     new Style.Builder().fromUri("file://" + styleUrl), onStyleLoadedCallback);
         } else if (!styleUrl.startsWith("http://")
-                && !styleUrl.startsWith("https://")) {
+                && !styleUrl.startsWith("https://")
+                && !styleUrl.startsWith("file://")
+                && !styleUrl.startsWith("tomtom://")
+                && !styleUrl.startsWith("maptiler://")
+                && !styleUrl.startsWith("orbis://")
+                && !styleUrl.startsWith("nbmaps://")) {
             // We are assuming that the style will be loaded from an asset here.
-            String key = NbMapsPlugin.flutterAssets.getAssetFilePathByName(styleUrl);
+            String key = flutterAssets.getAssetFilePathByName(styleUrl);
             nextbillionMap.setStyle(new Style.Builder().fromUri("asset://" + key), onStyleLoadedCallback);
         } else {
             nextbillionMap.setStyle(styleUrl,onStyleLoadedCallback);
         }
+    }
+
+    private static boolean isValidStyleType(String styleType) {
+        return "bright".equals(styleType) || "night".equals(styleType) || "satellite".equals(styleType);
     }
 
     private void updateStyleWithType(String styleType) {
@@ -310,7 +343,7 @@ final class NextbillionMapController
 
 
     @Override
-    public void setStyleString(String styleString) {
+    public void applyStyleConfiguration(String styleString) {
         styleStringInitial = styleString;
         clearLocationComponentLayer();
         updateStyleWithUrl(styleString);
@@ -402,9 +435,7 @@ final class NextbillionMapController
     }
 
     private void onUserLocationUpdate(Location location) {
-        if (location == null) {
-            return;
-        }
+        if (disposed || location == null) return;
 
         final Map<String, Object> userLocation = new HashMap<>(6);
         userLocation.put("position", new double[]{location.getLatitude(), location.getLongitude()});
@@ -827,8 +858,14 @@ final class NextbillionMapController
     }
 
     @Override
-    public void onMethodCall(MethodCall call, MethodChannel.Result result) {
+    public void onMethodCall(MethodCall call, MethodChannel.Result engineReply) {
+        final MethodChannel.Result result = new PendingResult(engineReply, pendingResults);
+        if (disposed) {
+            result.error("MAP_DISPOSED", "The map has been disposed", null);
+            return;
+        }
 
+        try {
         switch (call.method) {
             case "map#waitForMap":
                 if (nextbillionMap != null) {
@@ -1078,6 +1115,33 @@ final class NextbillionMapController
                 result.success(null);
                 break;
             }
+            case "regionalOffline#focusRegion": {
+                if (!RegionalOffline.isInitialized() || !RegionalOffline.isSupported()) {
+                    result.error("NOT_INITIALIZED", "Configure Regional Offline with TomTom first", null);
+                    break;
+                }
+                Object rawRegionId = call.argument("regionId");
+                Number regionId = rawRegionId instanceof Number ? (Number) rawRegionId : null;
+                if (regionId == null || regionId.longValue() < 0 || regionId.longValue() > Integer.MAX_VALUE
+                        || regionId.doubleValue() != (double) regionId.longValue()) {
+                    result.error("INVALID_ARGUMENT", "Invalid regionId", null);
+                    break;
+                }
+                result.success(RegionalOffline.focusPreviewRegion(nextbillionMap, regionId.intValue()));
+                break;
+            }
+            case "lineLayer#setProperties": {
+                String layerId = call.argument("layerId");
+                ai.nextbillion.maps.style.layers.Layer layer = nextbillionMap.getStyle() == null
+                    ? null : nextbillionMap.getStyle().getLayer(layerId);
+                if (!(layer instanceof LineLayer)) {
+                    result.error("INVALID_LAYER", "The line layer does not exist", layerId);
+                    break;
+                }
+                layer.setProperties(LayerPropertyConverter.interpretLineLayerProperties(call.argument("properties")));
+                result.success(null);
+                break;
+            }
             case "lineLayer#add": {
                 final String sourceId = call.argument("sourceId");
                 final String layerId = call.argument("layerId");
@@ -1288,31 +1352,53 @@ final class NextbillionMapController
                                     result.error("", "", null); // ???
                                 }
                             });
+                } else {
+                    result.error("LOCATION_UNAVAILABLE", "Location is not enabled or available", null);
                 }
-                break;
-            }
-            case "style#setStyleString": {
-                if (style == null) {
-                    result.error(
-                            "STYLE IS NULL",
-                            "The style is null. Has onStyleLoaded() already been invoked?",
-                            null);
-                }
-                String styleString = call.argument("styleString");
-                setStyleString(styleString);
-                result.success(null);
                 break;
             }
             case "style#setStyleType": {
-                if (style == null) {
-                    result.error(
-                            "STYLE IS NULL",
-                            "The style is null. Has onStyleLoaded() already been invoked?",
-                            null);
+                if (nextbillionMap == null) {
+                    result.error("MAP_NOT_READY", "Wait for onMapCreated before changing styles", null);
+                    break;
                 }
                 String styleType = call.argument("styleType");
+                if (!isValidStyleType(styleType)) {
+                    result.error("INVALID_ARGUMENT", "Unknown styleType", null);
+                    break;
+                }
                 setStyleType(styleType);
                 result.success(null);
+                break;
+            }
+
+            case "map#switchTileServer": {
+                // Compatibility bridge. Cross-provider changes on the same
+                // MapView are outside the current cross-platform release scope.
+                // Select the provider before creating maps; switch themes with
+                // style#setStyleType. Keep the Orbis safety guard below.
+                if (nextbillionMap == null) {
+                    result.error("MAP_NOT_READY", "Wait for onMapCreated before switching tile servers", null);
+                    break;
+                }
+                String serverName = call.argument("server");
+                String styleType = call.argument("styleType");
+                // Validate both enums before mutating the process-wide server.
+                if (serverName == null || !isValidStyleType(styleType)) {
+                    result.error("INVALID_ARGUMENT", "Expected server and styleType enums", null);
+                    break;
+                }
+                NGLWellKnownTileServer server;
+                try {
+                    server = NGLWellKnownTileServer.valueOf(serverName);
+                } catch (IllegalArgumentException error) {
+                    result.error("INVALID_ARGUMENT", "Unknown tile server", null);
+                    break;
+                }
+                if (!NextBillionMethodHandler.canSelectServer(server, result)) break;
+                Nextbillion.setWellKnownTileServer(server);
+                setStyleType(styleType);
+                result.success(true);
                 break;
             }
 
@@ -1537,7 +1623,6 @@ final class NextbillionMapController
                 break;
             }
             case "snapshot#takeSnapshot": {
-                FileSource.getInstance(context).activate();
                 MapSnapshotter.Options snapShotOptions =
                         new MapSnapshotter.Options(
                                 (int) call.argument("width"), (int) call.argument("height"));
@@ -1554,6 +1639,7 @@ final class NextbillionMapController
                                 "STYLE IS NULL",
                                 "The style is null. Has onStyleLoaded() already been invoked?",
                                 null);
+                        return;
                     }
                     styleBuilder.fromUri(style.getUri());
                 }
@@ -1578,9 +1664,15 @@ final class NextbillionMapController
                 final MapSnapshotter snapshotter = new MapSnapshotter(context, snapShotOptions);
                 final String snapshotterID = UUID.randomUUID().toString();
                 mSnapshotterMap.put(snapshotterID, snapshotter);
+                snapshotResults.put(snapshotterID, result);
 
+                FileSource.getInstance(context).activate();
+                activeSnapshotSources.add(snapshotterID);
+                try {
                 snapshotter.start(
                         snapshot -> {
+                            if (snapshotResults.remove(snapshotterID) == null) return;
+                            releaseSnapshotter(snapshotterID);
                             Bitmap bitmap = snapshot.getBitmap();
 
                             String result1;
@@ -1599,20 +1691,34 @@ final class NextbillionMapController
                             }
 
                             result.success(result1);
-                            mSnapshotterMap.remove(snapshotterID);
                         },
                         new MapSnapshotter.ErrorHandler() {
                             @Override
                             public void onError(String error) {
+                                if (snapshotResults.remove(snapshotterID) == null) return;
                                 result.error("SNAPSHOT_ERROR", error, null);
-                                mSnapshotterMap.remove(snapshotterID);
+                                releaseSnapshotter(snapshotterID);
                             }
                         });
+                } catch (RuntimeException error) {
+                    snapshotResults.remove(snapshotterID);
+                    releaseSnapshotter(snapshotterID);
+                    snapshotter.cancel();
+                    throw error;
+                }
                 break;
             }
             default:
                 result.notImplemented();
         }
+        } catch (RuntimeException error) {
+            result.error("MAP_ERROR", error.getMessage(), error.getClass().getSimpleName());
+        }
+    }
+
+    private void releaseSnapshotter(String id) {
+        mSnapshotterMap.remove(id);
+        if (activeSnapshotSources.remove(id)) FileSource.getInstance(context).deactivate();
     }
 
     private boolean checkContainLayer(String layerID, List<String> belowAt) {
@@ -1628,6 +1734,7 @@ final class NextbillionMapController
 
     @Override
     public void onCameraMoveStarted(int reason) {
+        if (disposed) return;
         final Map<String, Object> arguments = new HashMap<>(2);
         boolean isGesture = reason == NextbillionMap.OnCameraMoveStartedListener.REASON_API_GESTURE;
         arguments.put("isGesture", isGesture);
@@ -1636,7 +1743,7 @@ final class NextbillionMapController
 
     @Override
     public void onCameraMove() {
-        if (!trackCameraPosition) {
+        if (disposed || !trackCameraPosition) {
             return;
         }
         final Map<String, Object> arguments = new HashMap<>(2);
@@ -1646,6 +1753,7 @@ final class NextbillionMapController
 
     @Override
     public void onCameraIdle() {
+        if (disposed) return;
         final Map<String, Object> arguments = new HashMap<>(2);
         if (trackCameraPosition) {
             arguments.put("position", Convert.toJson(nextbillionMap.getCameraPosition()));
@@ -1655,6 +1763,7 @@ final class NextbillionMapController
 
     @Override
     public void onCameraTrackingChanged(int currentMode) {
+        if (disposed) return;
         final Map<String, Object> arguments = new HashMap<>(2);
         arguments.put("mode", currentMode);
         methodChannel.invokeMethod("map#onCameraTrackingChanged", arguments);
@@ -1662,17 +1771,20 @@ final class NextbillionMapController
 
     @Override
     public void onCameraTrackingDismissed() {
+        if (disposed) return;
         this.myLocationTrackingMode = 0;
         methodChannel.invokeMethod("map#onCameraTrackingDismissed", new HashMap<>());
     }
 
     @Override
     public void onDidBecomeIdle() {
+        if (disposed) return;
         methodChannel.invokeMethod("map#onIdle", new HashMap<>());
     }
 
     @Override
     public boolean onMapClick(@NonNull LatLng point) {
+        if (disposed) return false;
         PointF pointf = nextbillionMap.getProjection().toScreenLocation(point);
         RectF rectF = new RectF(pointf.x - 10, pointf.y - 10, pointf.x + 10, pointf.y + 10);
         Feature feature = firstFeatureOnLayers(rectF);
@@ -1692,6 +1804,7 @@ final class NextbillionMapController
 
     @Override
     public boolean onMapLongClick(@NonNull LatLng point) {
+        if (disposed) return false;
         PointF pointf = nextbillionMap.getProjection().toScreenLocation(point);
         final Map<String, Object> arguments = new HashMap<>(5);
         arguments.put("x", pointf.x);
@@ -1708,12 +1821,31 @@ final class NextbillionMapController
             return;
         }
         disposed = true;
+        for (PendingResult pending : new ArrayList<>(pendingResults))
+            pending.error("MAP_DISPOSED", "The map has been disposed", null);
         methodChannel.setMethodCallHandler(null);
-        destroyMapViewIfNecessary();
-        Lifecycle lifecycle = lifecycleProvider.getLifecycle();
-        if (lifecycle != null) {
-            lifecycle.removeObserver(this);
+        if (mapReadyResult != null) {
+            mapReadyResult.error("MAP_DISPOSED", "The map was disposed before initialization", null);
+            mapReadyResult = null;
         }
+        Map<String, MethodChannel.Result> pendingSnapshots = new HashMap<>(snapshotResults);
+        snapshotResults.clear();
+        for (MapSnapshotter snapshotter : mSnapshotterMap.values()) snapshotter.cancel();
+        for (String id : new HashSet<>(activeSnapshotSources)) releaseSnapshotter(id);
+        mSnapshotterMap.clear();
+        for (MethodChannel.Result pending : pendingSnapshots.values())
+            pending.error("MAP_DISPOSED", "The map was disposed during snapshot creation", null);
+        if (observedLifecycle != null) {
+            observedLifecycle.removeObserver(this);
+            observedLifecycle = null;
+        }
+        destroyMapViewIfNecessary();
+        nextbillionMap = null;
+        style = null;
+        locationComponent = null;
+        locationEngine = null;
+        addedFeaturesByLayer.clear();
+        interactiveFeatureLayerIds.clear();
     }
 
     private void moveCamera(CameraUpdate cameraUpdate, MethodChannel.Result result) {
@@ -1769,18 +1901,17 @@ final class NextbillionMapController
     }
 
     private void destroyMapViewIfNecessary() {
-        if (mapView == null) {
-            return;
-        }
-
         if (locationComponent != null) {
             locationComponent.setLocationComponentEnabled(false);
         }
         stopListeningForLocationUpdates();
 
+        mapView.setOnTouchListener(null);
+        mapView.removeOnDidFinishLoadingStyleListener(styleLoadedListener);
         mapView.onStop();
         mapView.onDestroy();
-        mapView = null;
+        // Keep getView() stable for Flutter's remaining teardown. dispose()
+        // already guards SDK destruction, and the engine releases this owner.
     }
 
     @Override
@@ -1815,6 +1946,7 @@ final class NextbillionMapController
         if (disposed) {
             return;
         }
+        stopListeningForLocationUpdates();
         mapView.onPause();
     }
 
@@ -1828,11 +1960,7 @@ final class NextbillionMapController
 
     @Override
     public void onDestroy(@NonNull LifecycleOwner owner) {
-        owner.getLifecycle().removeObserver(this);
-        if (disposed) {
-            return;
-        }
-        destroyMapViewIfNecessary();
+        dispose();
     }
 
     // nextbillionMapOptionsSink methods
@@ -2095,7 +2223,7 @@ final class NextbillionMapController
             String assetPath;
             if (i == 1) {
                 // If density is 1.0x then simply take the default asset path
-                assetPath = NbMapsPlugin.flutterAssets.getAssetFilePathByName(imageId);
+                assetPath = flutterAssets.getAssetFilePathByName(imageId);
             } else {
                 // Build a resolution aware asset path as follows:
                 // <directory asset>/<ratio>/<image name>
@@ -2108,7 +2236,7 @@ final class NextbillionMapController
                 stringBuilder.append(((float) i) + "x");
                 stringBuilder.append("/");
                 stringBuilder.append(imagePathList.get(imagePathList.size() - 1));
-                assetPath = NbMapsPlugin.flutterAssets.getAssetFilePathByName(stringBuilder.toString());
+                assetPath = flutterAssets.getAssetFilePathByName(stringBuilder.toString());
             }
             // Build up a list of resolution aware asset paths.
             assetPathList.add(assetPath);

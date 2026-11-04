@@ -20,6 +20,13 @@ class NextBillion {
         "nextbillion/init_nextbillion", config);
   }
 
+  /// Initializes the account with [accessKey] and selects the tile [server].
+  ///
+  /// Await this before constructing any map views in this process. Use
+  /// [WellKnownTileServer.nbTomtom] when integrating [RegionalOffline]. Keep
+  /// the provider fixed while maps are active; use the controller's
+  /// `setStyleType` for themes. This call does not configure offline management
+  /// or download map data; call [RegionalOffline.configure] separately.
   static Future<void> initNextBillionWithTileServer(String accessKey,WellKnownTileServer server) async {
     final Map<String, dynamic> config = {"accessKey": accessKey,"server": server.value};
     return await _nextBillionChannel.invokeMethod(
@@ -46,7 +53,8 @@ class NextBillion {
         "nextbillion/set_base_uri", config);
   }
 
-  static Future<void> setApiKeyHeaderName(String apiKeyHeaderName) async {
+  /// Pass null to restore query-parameter authentication.
+  static Future<void> setApiKeyHeaderName(String? apiKeyHeaderName) async {
     final Map<String, dynamic> config = {"apiKeyHeaderName": apiKeyHeaderName};
     return await _nextBillionChannel.invokeMethod(
         "nextbillion/set_key_header_name", config);
@@ -118,16 +126,15 @@ class NextBillion {
     }
   }
 
-  /// Switch to a different well-known tile server.
-  /// 
-  /// This method allows you to switch between different tile server providers
-  /// (TomTom or MapTiler) at runtime. After switching, you may need to call
-  /// [predefinedStyles] again to get the updated list of available styles
-  /// for the new tile server.
-  /// 
-  /// [server] - The tile server to switch to
-  /// 
-  /// Returns true if the switch was successful, false otherwise.
+  /// Selects the process-wide native tile server using its enum.
+  ///
+  /// This changes global configuration without reloading existing map styles.
+  /// Configure the provider before creating maps. Cross-provider changes on an
+  /// existing MapView are outside this release's supported scope, including the
+  /// compatibility bridge [NextbillionMapController.switchTileServer]. In iOS
+  /// Maps 2.3.2 a new view may also reuse resources from the previous provider;
+  /// use a fresh process when testing different providers.
+  /// Returns true when accepted, not when map resources finish loading.
   static Future<bool?> switchWellKnownTileServer(WellKnownTileServer server) async {
     final Map<String, dynamic> config = {"server": server.value};
     return await _nextBillionChannel.invokeMethod("nextbillion/switch_tile_server",config);

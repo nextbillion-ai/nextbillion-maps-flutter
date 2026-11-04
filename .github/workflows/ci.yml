@@ -30,6 +30,26 @@ jobs:
         run: |
           flutter test --coverage          
 
+      - name: Run example regression tests
+        working-directory: example
+        run: flutter test --no-pub
+
+      - name: Setup Java 17 for Android
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build Android Release with R8
+        working-directory: example
+        # Resolve again after tests so Release excludes the dev-only
+        # integration_test plugin from GeneratedPluginRegistrant.
+        run: flutter build apk --release --target-platform android-arm64
+
+      - name: Run Android bridge unit tests
+        working-directory: example/android
+        run: ./gradlew :nb_maps_flutter:testDebugUnitTest
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
@@ -38,3 +58,43 @@ jobs:
           name: codecov-report
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.0"
+
+      - name: Resolve native Maps binary before Flutter
+        # Flutter pub get can start a background xcodebuild resolver. Prime the
+        # binary cache synchronously before any Flutter dependency generation.
+        run: python3 .github/scripts/prepare_ios_spm.py
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS Simulator with Swift Package Manager
+        working-directory: example
+        run: flutter build ios --simulator --debug --no-codesign --no-pub
+
+      - name: Verify plugin privacy manifest is bundled
+        working-directory: example
+        run: |
+          python3 - <<'PY'
+          import plistlib
+          from pathlib import Path
+          app = Path('build/ios/iphonesimulator/Runner.app')
+          manifests = [p for p in app.rglob('PrivacyInfo.xcprivacy')
+                       if p.parent.name == 'nb_maps_flutter_nb_maps_flutter.bundle']
+          assert len(manifests) == 1, manifests
+          data = plistlib.loads(manifests[0].read_bytes())
+          assert any(item['NSPrivacyAccessedAPIType'] == 'NSPrivacyAccessedAPICategoryUserDefaults'
+                     and 'CA92.1' in item['NSPrivacyAccessedAPITypeReasons']
+                     for item in data['NSPrivacyAccessedAPITypes'])
+          print('Plugin privacy manifest is bundled with its UserDefaults reason.')
+          PY

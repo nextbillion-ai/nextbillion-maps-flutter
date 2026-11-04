@@ -23,6 +23,8 @@ import 'line.dart';
 import 'local_style.dart';
 import 'map_style_switch.dart';
 import 'offline_regions.dart';
+import 'offline_navigation.dart';
+import 'regional_offline.dart';
 import 'page.dart';
 import 'place_batch.dart';
 import 'place_circle.dart';
@@ -44,6 +46,8 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const PlaceFillPage(),
   const ScrollingMapPage(),
   const OfflineRegionsPage(),
+  const RegionalOfflinePage(),
+  const OfflineNavigationPage(),
   const AnnotationOrderPage(),
   const CustomMarkerPage(),
   const BatchAddPage(),
@@ -112,15 +116,23 @@ class _MapsDemoState extends State<MapsDemo> {
   }
 
   Future<void> _pushPage(BuildContext context, ExamplePage page) async {
-    await _ensureLocationPermission();
+    if (page is! OfflineNavigationPage && page is! MapStyleSwitchPage) {
+      await _ensureLocationPermission();
+    }
 
     if (!mounted) return; // Check if the widget is still mounted
+
+    final destination = page is MapStyleSwitchPage
+        ? MapStyleSwitchPage(
+            initialTileServer: currentTileServer,
+          )
+        : page;
 
     // ignore: use_build_context_synchronously
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => Scaffold(
         appBar: AppBar(title: Text(page.title)),
-        body: page,
+        body: destination,
       ),
     ));
   }
@@ -149,20 +161,29 @@ class _MapsDemoState extends State<MapsDemo> {
   }
 
   Future<void> _switchTileServer() async {
+    // Choose on the home screen before opening a map. The style example keeps
+    // that provider fixed; same-MapView provider switching is out of scope.
     if (isSwitchingTileServer) return;
 
+    final newTileServer = await showModalBottomSheet<WellKnownTileServer>(
+      context: context,
+      builder: (context) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min,
+        children: WellKnownTileServer.values.map((server) => ListTile(
+          title: Text(_getTileServerName(server)), selected: server == currentTileServer,
+          onTap: () => Navigator.pop(context, server),
+        )).toList(),
+      )),
+    );
+    if (!mounted || newTileServer == null || newTileServer == currentTileServer) return;
     setState(() {
       isSwitchingTileServer = true;
     });
 
     try {
-      // Switch to the other tile server
-      final newTileServer = currentTileServer == WellKnownTileServer.nbTomtom
-          ? WellKnownTileServer.nbMapTiler
-          : WellKnownTileServer.nbTomtom;
 
       final success = await NextBillion.switchWellKnownTileServer(newTileServer) ?? false;
       
+      if (!mounted) return;
       if (success) {
         setState(() {
           currentTileServer = newTileServer;
@@ -181,15 +202,16 @@ class _MapsDemoState extends State<MapsDemo> {
         ));
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Error switching tile server: $e'),
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 2),
       ));
     } finally {
-      setState(() {
-        isSwitchingTileServer = false;
-      });
+      if (mounted) {
+        setState(() { isSwitchingTileServer = false; });
+      }
     }
   }
 
@@ -199,6 +221,8 @@ class _MapsDemoState extends State<MapsDemo> {
         return 'TomTom';
       case WellKnownTileServer.nbMapTiler:
         return 'MapTiler';
+      case WellKnownTileServer.nbTomtomOrbis:
+        return 'TomTom Orbis';
     }
   }
 

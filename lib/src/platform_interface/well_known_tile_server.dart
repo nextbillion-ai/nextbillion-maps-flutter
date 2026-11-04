@@ -2,7 +2,8 @@ part of "../../nb_maps_flutter.dart";
 
 enum WellKnownTileServer {
   nbTomtom,
-  nbMapTiler
+  nbMapTiler,
+  nbTomtomOrbis,
 }
 
 extension WellKnownTileServerExt on WellKnownTileServer {
@@ -12,6 +13,8 @@ extension WellKnownTileServerExt on WellKnownTileServer {
         return 'NGLTomTom';
       case WellKnownTileServer.nbMapTiler:
         return 'NGLMapTiler';
+      case WellKnownTileServer.nbTomtomOrbis:
+        return 'NGLTomTomOrbis';
     }
   }
 
@@ -21,6 +24,8 @@ extension WellKnownTileServerExt on WellKnownTileServer {
         return WellKnownTileServer.nbTomtom;
       case 'NGLMapTiler':
         return WellKnownTileServer.nbMapTiler;
+      case 'NGLTomTomOrbis':
+        return WellKnownTileServer.nbTomtomOrbis;
       default:
         return null;
     }

@@ -74,9 +74,10 @@ abstract class NbMapsGlPlatform {
 
   Future<LatLngBounds?> getVisibleRegion();
 
-  Future<void> setStyleString(String styleString);
-
   Future<void> setStyleType(NBMapStyleType type);
+
+  Future<bool> switchTileServer(WellKnownTileServer server,
+      {NBMapStyleType styleType = NBMapStyleType.bright});
 
   Future<void> addImage(String name, Uint8List bytes, [bool sdf = false]);
 
@@ -133,6 +134,11 @@ abstract class NbMapsGlPlatform {
       double? maxzoom,
       dynamic filter,
       required bool enableInteraction});
+
+  Future<void> setLineLayerProperties(
+      String layerId, Map<String, dynamic> properties);
+
+  Future<bool> focusPreviewRegion(int regionId);
 
   Future<void> addCircleLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,

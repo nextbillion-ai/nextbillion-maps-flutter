@@ -18,6 +18,8 @@ part 'src/layer_expressions.dart';
 part 'src/layer_properties.dart';
 part 'src/nb_map.dart';
 part 'src/offline_region.dart';
+part 'src/regional_offline.dart';
+part 'src/regional_offline_models.dart';
 part 'src/platform_interface/annotation.dart';
 part 'src/platform_interface/callbacks.dart';
 part 'src/platform_interface/camera.dart';

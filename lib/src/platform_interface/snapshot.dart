@@ -86,6 +86,17 @@ class SnapshotOptions {
         _platformWrapper = platformWrapper ?? PlatformWrapperImpl();
 
   Map<String, dynamic> toJson() {
+    if (!width.isFinite ||
+        !height.isFinite ||
+        width <= 0 ||
+        height <= 0 ||
+        (_platformWrapper.isAndroid && (width < 1 || height < 1)) ||
+        (pitch != null && !pitch!.isFinite) ||
+        (heading != null && !heading!.isFinite) ||
+        (zoomLevel != null && !zoomLevel!.isFinite)) {
+      throw ArgumentError(
+          'Snapshot dimensions and camera values must be finite and dimensions positive');
+    }
     final Map<String, dynamic> json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
@@ -94,8 +105,9 @@ class SnapshotOptions {
       }
     }
 
-    addIfPresent('width', Platform.isAndroid ? width.toInt() : width);
-    addIfPresent('height', Platform.isAndroid ? height.toInt() : height);
+    addIfPresent('width', _platformWrapper.isAndroid ? width.toInt() : width);
+    addIfPresent(
+        'height', _platformWrapper.isAndroid ? height.toInt() : height);
 
     if (bounds != null) {
       if (_platformWrapper.isAndroid) {
@@ -126,7 +138,7 @@ class SnapshotOptions {
             }
           ]
         };
-        addIfPresent("bounds", featureCollection.toString());
+        addIfPresent("bounds", jsonEncode(featureCollection));
       } else {
         final list = [
           [
@@ -154,7 +166,7 @@ class SnapshotOptions {
             ]
           }
         };
-        addIfPresent('centerCoordinate', feature.toString());
+        addIfPresent('centerCoordinate', jsonEncode(feature));
       } else {
         final list = [
           centerCoordinate!.latitude,

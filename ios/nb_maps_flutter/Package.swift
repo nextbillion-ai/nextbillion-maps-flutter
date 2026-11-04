@@ -15,7 +15,7 @@ let package = Package(
         .package(name: "FlutterFramework", path: "../FlutterFramework"),
         .package(
             url: "https://github.com/nextbillion-ai/maps-native-distribution",
-            from: "2.1.7"
+            exact: "2.3.3"
         )
     ],
     targets: [
@@ -24,7 +24,8 @@ let package = Package(
             dependencies: [
                 .product(name: "FlutterFramework", package: "FlutterFramework"),
                 .product(name: "Nbmap", package: "maps-native-distribution")
-            ]
+            ],
+            resources: [.process("PrivacyInfo.xcprivacy")]
         )
     ]
 )

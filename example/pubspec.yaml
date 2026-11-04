@@ -5,7 +5,7 @@ version: 1.0.0+1
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
-  flutter: ">=3.24.0"
+  flutter: ">=3.41.0"
 
 dependencies:
   flutter:
@@ -19,6 +19,9 @@ dependencies:
 
 
 dev_dependencies:
+  integration_test:
+    sdk: flutter
+  vm_service: ^15.0.2
   flutter_test:
     sdk: flutter
 
@@ -28,6 +31,9 @@ flutter:
   uses-material-design: true
 
   assets:
+    - integration_test/fixtures/offline-import-android.db
+    - integration_test/fixtures/offline-import-ios.db
+    - integration_test/fixtures/offline-import-v5.db
     - assets/fill/cat_silhouette_pattern.png
     - assets/fill-extrusion/indoor_3d_map.json
     - assets/symbols/custom-icon.png

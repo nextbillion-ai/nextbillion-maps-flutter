@@ -26,7 +26,11 @@ class OfflineRegionDefinition {
               let mapStyleUrlString = jsonDict["mapStyleUrl"] as? String,
               let mapStyleUrl = URL(string: mapStyleUrlString),
               let minZoom = jsonDict["minZoom"] as? Double,
-              let maxZoom = jsonDict["maxZoom"] as? Double
+              let maxZoom = jsonDict["maxZoom"] as? Double,
+              bounds.count == 2, bounds.allSatisfy({ $0.count == 2 && $0.allSatisfy({ $0.isFinite }) }),
+              bounds.allSatisfy({ (-90...90).contains($0[0]) && (-180...180).contains($0[1]) }),
+              bounds[0][0] <= bounds[1][0], minZoom.isFinite, maxZoom.isFinite,
+              minZoom >= 0, maxZoom >= minZoom
         else { return nil }
         return OfflineRegionDefinition(
             bounds: bounds,

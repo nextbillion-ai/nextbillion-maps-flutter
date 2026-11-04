@@ -4,7 +4,21 @@ import Nbmap
 import UIKit
 
 public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
+    private let ownerId = UUID()
+    private var channels: [FlutterMethodChannel] = []
+    private var regionalOffline: RegionalOfflineHandler?
+    private var downloadChannels: [UUID: OfflineChannelHandler] = [:]
+    private var pendingResults: [UUID: FlutterResult] = [:]
+    private var closed = false
+
     public static func register(with registrar: FlutterPluginRegistrar) {
+        let plugin = SwiftNbMapsFlutterPlugin()
+        registrar.publish(plugin)
+        plugin.registerChannels(with: registrar)
+    }
+
+    private func registerChannels(with registrar: FlutterPluginRegistrar) {
+        regionalOffline = RegionalOfflineHandler.registerHandler(with: registrar)
         let instance = NbMapFactory(withRegistrar: registrar)
         registrar.register(instance, withId: "plugins.flutter.io/nb_maps_flutter")
 
@@ -18,6 +32,7 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
             binaryMessenger: registrar.messenger()
         )
 
+        channels = [channel, nextBillionChannel]
         nextBillionChannel.setMethodCallHandler { call, result in
             switch call.method {
             case "nextbillion/init_nextbillion":
@@ -37,17 +52,14 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
                 result(nil)
             case "nextbillion/init_nextbillion_tile_server":
                 if let args = call.arguments as? [String: Any] {
+                    guard let server = Convert.tileServer(args["server"]) else {
+                        result(FlutterError(code: "INVALID_ARGUMENT", message: "Unknown tile server", details: nil))
+                        return
+                    }
                     if let token = args["accessKey"] as? String? {
                         NGLAccountManager.accessToken = token
                     }
-                    
-                    if let server = args["server"] as? String? {
-                        if server == "NGLTomTom" {
-                            NGLAccountManager.use(.tomTom)
-                        } else if server == "NGLMapTiler" {
-                            NGLAccountManager.use(.mapTiler)
-                        }
-                    }
+                    NGLAccountManager.use(server)
                     
                     let libraryBundle = Bundle(for: SwiftNbMapsFlutterPlugin.self)
                    
@@ -59,9 +71,7 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
                 }
                 result(nil)
             case "nextbillion/get_access_key":
-                if let token = NGLAccountManager.accessToken {
-                    result(token)
-                }
+                result(NGLAccountManager.accessToken)
             case "nextbillion/set_access_key":
                 if let args = call.arguments as? [String: Any] {
                     if let token = args["accessKey"] as? String? {
@@ -73,17 +83,18 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
                 result(NGLAccountManager.apiBaseURL()?.absoluteString)
             case "nextbillion/set_base_uri":
                 if let args = call.arguments as? [String: Any] {
-                    if let baseUri = args["baseUri"] as? String? {
-                        NGLAccountManager.setAPIBaseURL(URL(string: baseUri!)!)
+                    guard let baseUri = args["baseUri"] as? String,
+                          let url = URL(string: baseUri),
+                          ["http", "https"].contains(url.scheme ?? ""), url.host != nil else {
+                        result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected an HTTP(S) baseUri", details: nil))
+                        return
                     }
+                    NGLAccountManager.setAPIBaseURL(url)
                 }
                 result(nil)
             case "nextbillion/set_key_header_name":
-                if let args = call.arguments as? [String: Any] {
-                    if let apiKeyHeaderName = args["apiKeyHeaderName"] as? String? {
-                        NGLAccountManager.apiKeyHeaderName = apiKeyHeaderName
-                    }
-                }
+                let args = call.arguments as? [String: Any]
+                NGLAccountManager.apiKeyHeaderName = args?["apiKeyHeaderName"] as? String
                 result(nil)
             case "nextbillion/get_key_header_name":
                 result(NGLAccountManager.apiKeyHeaderName)
@@ -114,27 +125,24 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
                 result(serializableStyles)
 
             case "nextbillion/switch_tile_server":
-                if let args = call.arguments as? [String: Any] {
-                   if let server = args["server"] as? String? {
-                       if server == "NGLTomTom" {
-                           NGLAccountManager.use(.tomTom)
-                           result(true)
-                       } else if server == "NGLMapTiler" {
-                           NGLAccountManager.use(.mapTiler)
-                           result(true)
-                       } else {
-                           result(false)
-                       }
-                   } else {
-                       result(false)
-                   }
+                // Process-wide configuration; select before constructing maps.
+                // Existing MapView cross-provider switching is out of scope.
+                guard let args = call.arguments as? [String: Any],
+                      let server = Convert.tileServer(args["server"]) else {
+                    result(false)
+                    return
                 }
+                NGLAccountManager.use(server)
+                result(true)
             default:
                 result(FlutterMethodNotImplemented)
             }
         }
 
-        channel.setMethodCallHandler { methodCall, result in
+        let ownerId = self.ownerId
+        channel.setMethodCallHandler { [weak self] methodCall, originalResult in
+            guard let self = self, !self.closed else { return }
+            let result = self.guardedResult(originalResult)
             switch methodCall.method {
             case "setHttpHeaders":
                 guard let arguments = methodCall.arguments as? [String: Any],
@@ -145,7 +153,6 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
                         message: "could not decode arguments",
                         details: nil
                     ))
-                    result(nil)
                     return
                 }
                 let sessionConfig = URLSessionConfiguration.default
@@ -153,10 +160,16 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
                 NGLNetworkConfiguration.sharedManager.sessionConfiguration = sessionConfig
                 result(nil)
             case "installOfflineMapTiles":
-                guard let arguments = methodCall.arguments as? [String: String] else { return }
-                let tilesdb = arguments["tilesdb"]
-                installOfflineMapTiles(registrar: registrar, tilesdb: tilesdb!)
-                result(nil)
+                guard let arguments = methodCall.arguments as? [String: String],
+                      let tilesdb = arguments["tilesdb"], !tilesdb.isEmpty else {
+                    result(FlutterError(code: "INVALID_ARGUMENT", message: "tilesdb is required", details: nil))
+                    return
+                }
+                do {
+                    try self.installOfflineMapTiles(registrar: registrar, tilesdb: tilesdb, result: result)
+                } catch {
+                    result(FlutterError(code: "INSTALL_OFFLINE_TILES", message: error.localizedDescription, details: nil))
+                }
             case "downloadOfflineRegion":
                 // Get download region arguments from caller
                 guard let args = methodCall.arguments as? [String: Any],
@@ -168,19 +181,25 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
                     print(
                         "downloadOfflineRegion unexpected arguments: \(String(describing: methodCall.arguments))"
                     )
-                    result(nil)
+                    result(FlutterError(code: "INVALID_ARGUMENT", message: "Invalid offline region arguments", details: nil))
                     return
                 }
                 // Prepare channel
                 let channelHandler = OfflineChannelHandler(
                     messenger: registrar.messenger(),
-                    channelName: channelName
+                    channelName: channelName,
+                    enabled: args["observe"] as? Bool ?? true
                 )
+                if args["observe"] as? Bool != false {
+                    let id = UUID()
+                    self.downloadChannels[id] = channelHandler
+                    channelHandler.onDisposed = { [weak self] in self?.downloadChannels.removeValue(forKey: id) }
+                }
                 OfflineManagerUtils.downloadRegion(
                     definition: defintion,
                     metadata: metadata,
                     result: result,
-                    registrar: registrar,
+                    ownerId: ownerId,
                     channelHandler: channelHandler
                 )
             case "setOfflineTileCountLimit":
@@ -212,44 +231,62 @@ public class SwiftNbMapsFlutterPlugin: NSObject, FlutterPlugin {
         }
     }
 
-    private static func getTilesUrl() -> URL {
-        guard var cachesUrl = FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        ).first,
-            let bundleId = Bundle.main
-            .object(forInfoDictionaryKey: kCFBundleIdentifierKey as String) as? String
-        else {
-            fatalError("Could not get map tiles directory")
-        }
-        cachesUrl.appendPathComponent(bundleId)
-        cachesUrl.appendPathComponent(".nbmaps")
-        cachesUrl.appendPathComponent("cache.db")
-        return cachesUrl
+    public func detachFromEngine(for registrar: FlutterPluginRegistrar) {
+        closed = true
+        pendingResults.removeAll()
+        regionalOffline?.dispose()
+        regionalOffline = nil
+        OfflineManagerUtils.releaseDownloaders(ownerId: ownerId)
+        let pendingChannels = Array(downloadChannels.values)
+        pendingChannels.forEach { $0.dispose() }
+        downloadChannels.removeAll()
+        channels.forEach { $0.setMethodCallHandler(nil) }
+        channels.removeAll()
     }
 
-    private static func installOfflineMapTiles(registrar: FlutterPluginRegistrar, tilesdb: String) {
-        var tilesUrl = getTilesUrl()
-        let bundlePath = getTilesDbPath(registrar: registrar, tilesdb: tilesdb)
-        NSLog(
-            "Cached tiles not found, copying from bundle... \(String(describing: bundlePath)) ==> \(tilesUrl)"
-        )
-        do {
-            let parentDir = tilesUrl.deletingLastPathComponent()
-            try FileManager.default.createDirectory(
-                at: parentDir,
-                withIntermediateDirectories: true,
-                attributes: nil
-            )
-            if FileManager.default.fileExists(atPath: tilesUrl.path) {
-                try FileManager.default.removeItem(atPath: tilesUrl.path)
+    private func guardedResult(_ original: @escaping FlutterResult) -> FlutterResult {
+        let id = UUID()
+        pendingResults[id] = original
+        return { [weak self] value in
+            let deliver = { [weak self] in
+                guard let self = self, !self.closed,
+                      let reply = self.pendingResults.removeValue(forKey: id) else { return }
+                reply(value)
             }
-            try FileManager.default.copyItem(atPath: bundlePath!, toPath: tilesUrl.path)
-            var resourceValues = URLResourceValues()
-            resourceValues.isExcludedFromBackup = true
-            try tilesUrl.setResourceValues(resourceValues)
-        } catch {
-            NSLog("Error copying bundled tiles: \(error)")
+            if Thread.isMainThread { deliver() }
+            else { DispatchQueue.main.async(execute: deliver) }
+        }
+    }
+
+    private func installOfflineMapTiles(registrar: FlutterPluginRegistrar, tilesdb: String,
+                                        result: @escaping FlutterResult) throws {
+        guard let path = Self.getTilesDbPath(registrar: registrar, tilesdb: tilesdb),
+              FileManager.default.fileExists(atPath: path) else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("nbmap_import_" + UUID().uuidString)
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            do {
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                let database = directory.appendingPathComponent("cache.db")
+                try FileManager.default.copyItem(atPath: path, toPath: database.path)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self, !self.closed else {
+                        try? FileManager.default.removeItem(at: directory)
+                        return
+                    }
+                    // The SDK owns the default active path and validates merge
+                    // compatibility (2.3.2 accepts v6, not v5 input databases).
+                    NGLOfflineStorage.shared.addContents(of: database) { _, _, error in
+                        try? FileManager.default.removeItem(at: directory)
+                        result(error.map { FlutterError(code: "INSTALL_OFFLINE_TILES",
+                            message: $0.localizedDescription, details: nil) })
+                    }
+                }
+            } catch {
+                try? FileManager.default.removeItem(at: directory)
+                result(FlutterError(code: "INSTALL_OFFLINE_TILES", message: error.localizedDescription, details: nil))
+            }
         }
     }
 

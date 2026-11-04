@@ -8,6 +8,7 @@ import ai.nextbillion.maps.exceptions.NbmapConfigurationException;
 abstract class NbMapUtils {
 
     static void getNextbillion(Context context, String accessToken) {
+        if ((accessToken == null || accessToken.isEmpty()) && Nextbillion.hasInstance()) return;
         if (accessToken == null || accessToken.isEmpty()) {
             throw new NbmapConfigurationException("\nUsing MapView requires calling Nextbillion.initNextbillion(String accessKey) before inflating or creating NBMap Widget. The accessKey parameter is required when using a NBMap Widget.");
         }
@@ -45,10 +46,7 @@ abstract class NbMapUtils {
     }
 
     static void setApiKeyHeaderName(String apiKeyHeaderName) {
-        if (apiKeyHeaderName == null || apiKeyHeaderName.isEmpty()) {
-            throw new NbmapConfigurationException("\n Api Key Header Name should not be empty");
-        }
-        Nextbillion.setApiKeyHeaderName(apiKeyHeaderName);
+        Nextbillion.setApiKeyHeaderName(apiKeyHeaderName == null ? null : apiKeyHeaderName.trim());
     }
 
     static String getApiKeyHeaderName() {

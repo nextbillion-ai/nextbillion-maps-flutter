@@ -4,6 +4,20 @@ enum AnnotationType { fill, line, circle, symbol }
 
 typedef MapCreatedCallback = void Function(NextbillionMapController controller);
 
+// The iOS SDK loads styles from URLs; rejecting JSON before creating/updating
+// the platform view avoids reporting success while keeping the previous style.
+void _validateStyleString(String? styleString) {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
+  final value = styleString?.trimLeft();
+  if (value != null && (value.startsWith('{') || value.startsWith('['))) {
+    throw PlatformException(
+      code: 'UNSUPPORTED_STYLE_JSON',
+      message: 'Inline JSON styles are not supported on iOS. Save the JSON to '
+          'a local file and pass its file:// URL, or use a style URL.',
+    );
+  }
+}
+
 class NBMap extends StatefulWidget {
   const NBMap({
     super.key,
@@ -96,13 +110,20 @@ class NBMap extends StatefulWidget {
   /// Geographical bounding box for the camera target.
   final CameraTargetBounds cameraTargetBounds;
 
-  /// Custom style URL or JSON string for the map.
+  /// Custom style URL, local file/asset, or Android inline JSON for the map.
   ///
   /// This property allows you to set a custom map style using either:
   /// - A URL to a style JSON file (e.g., "https://example.com/style.json")
-  /// - A JSON string containing the style definition
+  /// - A JSON string containing the style definition (Android only)
   /// - A local asset path (e.g., "assets/style.json")
   /// - NbMapStyle constants (e.g., NbMapStyles.NBMAP_STREETS)
+  ///
+  /// On iOS, inline JSON is rejected with a [PlatformException] whose code is
+  /// `UNSUPPORTED_STYLE_JSON` when building/updating map options. Save the JSON
+  /// to a local file and pass its `file://` URL instead.
+  ///
+  /// Rebuild [NBMap] with a new value to update a custom style configuration.
+  /// Use [NextbillionMapController.setStyleType] to switch predefined themes.
   ///
   /// Note: This property has higher priority than [styleType]. If both
   /// [styleString] and [styleType] are set, the style string will take
@@ -267,6 +288,7 @@ class _NBMapState extends State<NBMap> {
   final Completer<NextbillionMapController> _controller =
       Completer<NextbillionMapController>();
 
+  NextbillionMapController? _mapController;
   late NextBillionMapOptions _nextbillionMapOptions;
   final NbMapsGlPlatform _nbmapsGlPlatform = NbMapsGlPlatform.createInstance();
 
@@ -293,12 +315,13 @@ class _NBMapState extends State<NBMap> {
   }
 
   @override
-  Future<void> dispose() async {
-    super.dispose();
-    if (_controller.isCompleted) {
-      final controller = await _controller.future;
-      controller.dispose();
+  void dispose() {
+    if (_mapController != null) {
+      _mapController!.dispose();
+    } else {
+      _nbmapsGlPlatform.dispose();
     }
+    super.dispose();
   }
 
   @override
@@ -317,16 +340,17 @@ class _NBMapState extends State<NBMap> {
       return;
     }
     final NextbillionMapController controller = await _controller.future;
-    controller._updateMapOptions(updates);
+    if (mounted) controller._updateMapOptions(updates);
   }
 
   Future<void> onPlatformViewCreated(int id) async {
+    if (!mounted) return;
     final NextbillionMapController controller = NextbillionMapController(
       nbMapsGlPlatform: _nbmapsGlPlatform,
       initialCameraPosition: widget.initialCameraPosition,
       onStyleLoadedCallback: () {
         _controller.future.then((_) {
-          if (widget.onStyleLoadedCallback != null) {
+          if (mounted && widget.onStyleLoadedCallback != null) {
             widget.onStyleLoadedCallback?.call();
           }
         });
@@ -342,14 +366,19 @@ class _NBMapState extends State<NBMap> {
       annotationOrder: widget.annotationOrder,
       annotationConsumeTapEvents: widget.annotationConsumeTapEvents,
     );
+    _mapController = controller;
     try {
       await _nbmapsGlPlatform.initPlatform(id);
     } catch (e) {
       if (kDebugMode) {
         print('Error initializing map platform: $e');
       }
+      controller.dispose();
+      _controller.complete(controller);
+      return;
     }
     _controller.complete(controller);
+    if (!mounted) return;
     if (widget.onMapCreated != null) {
       widget.onMapCreated?.call(controller);
     }
@@ -454,6 +483,7 @@ class NextBillionMapOptions {
   };
 
   Map<String, dynamic> toMap() {
+    _validateStyleString(styleString);
     final Map<String, dynamic> optionsMap = <String, dynamic>{};
 
     void addIfNonNull(String fieldName, dynamic value) {

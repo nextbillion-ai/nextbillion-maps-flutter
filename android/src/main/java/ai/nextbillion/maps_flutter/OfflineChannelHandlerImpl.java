@@ -10,46 +10,70 @@ import java.util.Map;
 public class OfflineChannelHandlerImpl implements EventChannel.StreamHandler {
   private EventChannel.EventSink sink;
   private final Gson gson = new Gson();
+  private final Map<String, PendingEvent> pending = new java.util.LinkedHashMap<>();
+  private final EventChannel eventChannel;
+  private boolean finished;
+  private final boolean enabled;
+  private Runnable onDisposed;
 
-  OfflineChannelHandlerImpl(BinaryMessenger messenger, String channelName) {
-    EventChannel eventChannel = new EventChannel(messenger, channelName);
-    eventChannel.setStreamHandler(this);
+  OfflineChannelHandlerImpl(BinaryMessenger messenger, String channelName, boolean enabled,
+      Runnable onDisposed) {
+    this.enabled = enabled;
+    this.onDisposed = onDisposed;
+    eventChannel = new EventChannel(messenger, channelName);
+    if (enabled) eventChannel.setStreamHandler(this);
   }
 
   @Override
   public void onListen(Object arguments, EventChannel.EventSink events) {
     sink = events;
+    for (PendingEvent event : pending.values()) event.send(events);
+    pending.clear();
   }
 
   @Override
-  public void onCancel(Object arguments) {
+  public void onCancel(Object arguments) { dispose(); }
+
+  void dispose() {
+    finished = true;
+    if (sink != null) sink.endOfStream();
     sink = null;
+    pending.clear();
+    eventChannel.setStreamHandler(null);
+    Runnable callback = onDisposed;
+    onDisposed = null;
+    if (callback != null) callback.run();
   }
 
   void onError(String errorCode, @Nullable String errorMessage, @Nullable Object errorDetails) {
-    if (sink == null) return;
-    sink.error(errorCode, errorMessage, errorDetails);
+    emit("error", target -> { target.error(errorCode, errorMessage, errorDetails); target.endOfStream(); });
   }
 
   void onSuccess() {
-    if (sink == null) return;
     Map<String, Object> body = new HashMap<>();
     body.put("status", "success");
-    sink.success(gson.toJson(body));
+    emit("success", target -> { target.success(gson.toJson(body)); target.endOfStream(); });
   }
 
   void onStart() {
-    if (sink == null) return;
     Map<String, Object> body = new HashMap<>();
     body.put("status", "start");
-    sink.success(gson.toJson(body));
+    emit((String) body.get("status"), target -> target.success(gson.toJson(body)));
   }
 
   void onProgress(double progress) {
-    if (sink == null) return;
     Map<String, Object> body = new HashMap<>();
     body.put("status", "progress");
     body.put("progress", progress);
-    sink.success(gson.toJson(body));
+    emit((String) body.get("status"), target -> target.success(gson.toJson(body)));
   }
+  private interface PendingEvent { void send(EventChannel.EventSink target); }
+
+  private void emit(String kind, PendingEvent event) {
+    if (!enabled || finished) return;
+    if ("success".equals(kind) || "error".equals(kind)) finished = true;
+    if (sink != null) event.send(sink);
+    else pending.put(kind, event);
+  }
+
 }

@@ -4,6 +4,23 @@ abstract class AnnotationManager<T extends Annotation> {
   final NextbillionMapController controller;
   final _idToAnnotation = <String, T>{};
   final _idToLayerIndex = <String, int>{};
+  bool _disposed = false;
+  final int _styleGeneration;
+
+  bool get _active =>
+      !_disposed &&
+      !controller.disposed &&
+      _styleGeneration == controller._styleGeneration;
+
+  // The native style was replaced; detach without touching the new style's IDs.
+  void _detachForStyleChange() {
+    if (_disposed) return;
+    _disposed = true;
+    controller.onFeatureTapped.remove(_onFeatureTapped);
+    controller.onFeatureDrag.remove(_onDrag);
+    _idToAnnotation.clear();
+    _idToLayerIndex.clear();
+  }
 
   /// Called if a annotation is tapped
   final void Function(T)? onTap;
@@ -39,7 +56,8 @@ abstract class AnnotationManager<T extends Annotation> {
     this.onTap,
     this.selectLayer,
     required this.enableInteraction,
-  }) : randomPostFix = "nbmap-annotation" {
+  })  : randomPostFix = "nbmap-annotation",
+        _styleGeneration = controller._styleGeneration {
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
       controller.addGeoJsonSource(layerId, buildFeatureCollection([]),
@@ -57,12 +75,14 @@ abstract class AnnotationManager<T extends Annotation> {
   /// changed
   Future<void> _rebuildLayers() async {
     for (var i = 0; i < allLayerProperties.length; i++) {
+      if (!_active) return;
       final layerId = _makeLayerId(i);
       await controller.addLayer(layerId, layerId, allLayerProperties[i]);
     }
   }
 
   void _onFeatureTapped(dynamic id, Point<double> point, LatLng coordinates) {
+    if (!_active) return;
     final annotation = _idToAnnotation[id];
     if (annotation != null) {
       onTap!(annotation);
@@ -72,6 +92,7 @@ abstract class AnnotationManager<T extends Annotation> {
   String _makeLayerId(int layerIndex) => "$id-$layerIndex";
 
   Future<void> _setAll() async {
+    if (!_active) return;
     if (selectLayer != null) {
       final featureBuckets = [for (final _ in allLayerProperties) <T>[]];
 
@@ -82,6 +103,7 @@ abstract class AnnotationManager<T extends Annotation> {
       }
 
       for (var i = 0; i < featureBuckets.length; i++) {
+        if (!_active) return;
         await controller.setGeoJsonSource(
             _makeLayerId(i),
             buildFeatureCollection(
@@ -98,6 +120,7 @@ abstract class AnnotationManager<T extends Annotation> {
   /// Adds a multiple annotations to the map. This much faster than calling add
   /// multiple times
   Future<void> addAll(Iterable<T> annotations) async {
+    if (!_active) return;
     for (final a in annotations) {
       _idToAnnotation[a.id] = a;
     }
@@ -106,12 +129,14 @@ abstract class AnnotationManager<T extends Annotation> {
 
   /// add a single annotation to the map
   Future<void> add(T annotation) async {
+    if (!_active) return;
     _idToAnnotation[annotation.id] = annotation;
     await _setAll();
   }
 
   /// Removes multiple annotations from the map
   Future<void> removeAll(Iterable<T> annotations) async {
+    if (!_active) return;
     for (final a in annotations) {
       _idToAnnotation.remove(a.id);
     }
@@ -120,12 +145,14 @@ abstract class AnnotationManager<T extends Annotation> {
 
   /// Remove a single annotation form the map
   Future<void> remove(T annotation) async {
+    if (!_active) return;
     _idToAnnotation.remove(annotation.id);
     await _setAll();
   }
 
   /// Removes all annotations from the map
   Future<void> clear() async {
+    if (!_active) return;
     _idToAnnotation.clear();
 
     await _setAll();
@@ -134,10 +161,18 @@ abstract class AnnotationManager<T extends Annotation> {
   /// Fully dipose of all the the resouces managed by the annotation manager.
   /// The manager cannot be used after this has been called
   Future<void> dispose() async {
-    _idToAnnotation.clear();
-    await _setAll();
+    if (_disposed) return;
+    _detachForStyleChange();
     for (var i = 0; i < allLayerProperties.length; i++) {
+      if (controller.disposed ||
+          _styleGeneration != controller._styleGeneration) {
+        return;
+      }
       await controller.removeLayer(_makeLayerId(i));
+      if (controller.disposed ||
+          _styleGeneration != controller._styleGeneration) {
+        return;
+      }
       await controller.removeSource(_makeLayerId(i));
     }
   }
@@ -148,6 +183,7 @@ abstract class AnnotationManager<T extends Annotation> {
       required LatLng current,
       required LatLng delta,
       required DragEventType eventType}) {
+    if (!_active) return;
     final annotation = byId(id as String? ?? "");
     if (annotation != null) {
       annotation.translate(delta);
@@ -158,6 +194,7 @@ abstract class AnnotationManager<T extends Annotation> {
   /// Set an existing anntotation to the map. Use this to do a fast update for a
   /// single annotation
   Future<void> set(T anntotation) async {
+    if (!_active) return;
     assert(_idToAnnotation.containsKey(anntotation.id),
         "you can only set existing annotations");
     _idToAnnotation[anntotation.id] = anntotation;
@@ -175,8 +212,7 @@ abstract class AnnotationManager<T extends Annotation> {
 }
 
 class LineManager extends AnnotationManager<Line> {
-  LineManager(super.controller,
-      {super.onTap, super.enableInteraction = true})
+  LineManager(super.controller, {super.onTap, super.enableInteraction = true})
       : super(
           managerType: "line",
           selectLayer: (Line line) => line.options.linePattern == null ? 0 : 1,
@@ -194,8 +230,8 @@ class LineManager extends AnnotationManager<Line> {
   @override
   List<LayerProperties> get allLayerProperties => [
         _baseProperties,
-        _baseProperties.copyWith(
-            const LineLayerProperties(linePattern: [Expressions.get, 'linePattern'])),
+        _baseProperties.copyWith(const LineLayerProperties(
+            linePattern: [Expressions.get, 'linePattern'])),
       ];
 }
 
@@ -313,8 +349,8 @@ class SymbolManager extends AnnotationManager<Symbol> {
                   [
                     Expressions.literal,
                     [
-                      "Noto-Regular",           // TomTom样式主要字体
-                      "Noto Sans Regular",      // 通用Noto字体
+                      "Noto-Regular", // TomTom样式主要字体
+                      "Noto Sans Regular", // 通用Noto字体
                       "Open Sans Regular",
                       "Arial Unicode MS Regular",
                       "Arial",
