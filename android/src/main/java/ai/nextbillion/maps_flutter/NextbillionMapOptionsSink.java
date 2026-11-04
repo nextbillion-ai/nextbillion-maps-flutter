@@ -11,8 +11,8 @@ interface NextbillionMapOptionsSink {
 
   void setCompassEnabled(boolean compassEnabled);
 
-  // TODO: styleString is not actually a part of options. consider moving
-  void setStyleString(String styleString);
+  // Applies the widget's custom style configuration.
+  void applyStyleConfiguration(String styleString);
 
   void setStyleType(String styleType);
   void setMinMaxZoomPreference(Float min, Float max);

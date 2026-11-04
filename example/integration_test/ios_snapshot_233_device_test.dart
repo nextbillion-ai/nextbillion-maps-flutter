@@ -318,7 +318,11 @@ void main() {
       state.following = false;
       state.setPlaying(false);
       final beforeSparse = state.styleLoads;
-      await state.map!.setStyleString(style.uri.toString());
+      await tester.pumpWidget(MaterialApp(
+          home: OfflineNavigationView(
+              key: key,
+              initialTrack: PlaybackTrack.presets[2],
+              styleString: style.uri.toString())));
       await waitFor(() => state.styleLoads > beforeSparse && state.routeReady);
       await state.map!
           .moveCamera(CameraUpdate.newLatLngZoom(const LatLng(-10, -100), 7));

@@ -1049,18 +1049,6 @@ class MethodChannelNbMapsGl extends NbMapsGlPlatform {
   }
 
   @override
-  Future<void> setStyleString(String styleString) async {
-    _validateStyleString(styleString);
-    try {
-      final uri = await _channel
-          .invokeMethod('style#setStyleString', {"styleString": styleString});
-      return uri;
-    } on PlatformException catch (e) {
-      return Future.error(e);
-    }
-  }
-
-  @override
   Future<void> setStyleType(NBMapStyleType styleType) async {
     try {
       final uri = await _channel

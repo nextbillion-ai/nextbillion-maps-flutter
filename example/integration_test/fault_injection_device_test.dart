@@ -71,18 +71,21 @@ void main() {
       return file.uri.toString();
     }
 
+    Future<void> configureMap(String styleLocation) =>
+        tester.pumpWidget(MaterialApp(
+            home: NBMap(
+                initialCameraPosition:
+                    const CameraPosition(target: LatLng(0, 0), zoom: 0),
+                styleString: styleLocation,
+                annotationOrder: const [],
+                onMapCreated: (value) => map = value,
+                onStyleLoadedCallback: () => styles++,
+                onMapIdle: () => idles++)));
+
     try {
       await NextBillion.initNextBillionWithTileServer(
           MapsDemo.accessKey, WellKnownTileServer.nbTomtom);
-      await tester.pumpWidget(MaterialApp(
-          home: NBMap(
-              initialCameraPosition:
-                  const CameraPosition(target: LatLng(0, 0), zoom: 0),
-              styleString: await localStyle(0, style),
-              annotationOrder: const [],
-              onMapCreated: (value) => map = value,
-              onStyleLoadedCallback: () => styles++,
-              onMapIdle: () => idles++)));
+      await configureMap(await localStyle(0, style));
       await waitFor(() => map != null && styles > 0 && idles > 0);
       await RegionalOffline.configure(mapsBaseUrl: base);
       final installedBefore = (await RegionalOffline.listInstalledRegions())
@@ -105,7 +108,7 @@ void main() {
         final pending = RegionalOffline.fetchRegionList()
             .timeout(const Duration(seconds: 20))
             .then<Object>((value) => value, onError: (Object error) => error);
-        await map!.setStyleString(await localStyle(
+        await configureMap(await localStyle(
             before,
             style.replaceFirst(
                 '#556677', before.isEven ? '#445566' : '#667788')));
@@ -154,7 +157,7 @@ void main() {
       await waitFor(() => stalled.isNotEmpty);
       final styleBeforeStall = styles;
       final idleBeforeStall = idles;
-      await map!.setStyleString(await localStyle(styles, style));
+      await configureMap(await localStyle(styles, style));
       await waitFor(() => styles > styleBeforeStall && idles > idleBeforeStall);
       expect(metadataFinished, isFalse);
       for (final request in stalled) {

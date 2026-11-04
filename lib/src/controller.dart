@@ -1732,28 +1732,6 @@ class NextbillionMapController extends ChangeNotifier {
     }
   }
 
-  /// Updates the map style using a URL, local file/asset, or Android inline JSON.
-  ///
-  /// This method allows you to set a custom map style using either:
-  /// - A URL to a style JSON file (e.g., "https://example.com/style.json")
-  /// - A JSON string containing the style definition (Android only)
-  /// - A local asset path (e.g., "assets/style.json")
-  ///
-  /// The most recent controller style call takes effect. For widget creation
-  /// options, a non-null [NBMap.styleString] takes priority over its styleType.
-  ///
-  /// On iOS, inline JSON fails with [PlatformException] code
-  /// `UNSUPPORTED_STYLE_JSON`. Save the JSON to a local file and pass its
-  /// `file://` URL instead. [styleString] is the style location or Android JSON
-  /// to apply; failure leaves the current style unchanged.
-  Future<void> setStyleString(String styleString) async {
-    if (_disposed) {
-      return;
-    }
-    _validateStyleString(styleString);
-    return await _nbMapsGlPlatform.setStyleString(styleString);
-  }
-
   /// Switch map style using predefined style types.
   ///
   /// This method allows you to quickly switch between predefined map styles:
@@ -1761,7 +1739,7 @@ class NextbillionMapController extends ChangeNotifier {
   /// - [NBMapStyleType.night] - Dark theme for low-light conditions
   /// - [NBMapStyleType.satellite] - Satellite imagery with labels
   ///
-  /// This replaces any custom style previously applied through this controller.
+  /// This replaces the current custom style configured through [NBMap.styleString].
   /// The tile server stays fixed for this map. Choose it with
   /// [NextBillion.initNextBillionWithTileServer] before creating any maps.
   ///

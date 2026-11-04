@@ -1,6 +1,7 @@
 ## v4.0.0, Nov 04, 2026
+- **Breaking:** Remove `NextbillionMapController.setStyleString()` and its platform-interface and native-channel APIs. Use `setStyleType()` for predefined styles and `NBMap.styleString` for custom style configuration.
 - Bundle the plugin's own iOS privacy manifest through SPM for its UserDefaults preference access.
-- Reject unsupported inline JSON styles on iOS with UNSUPPORTED_STYLE_JSON; document local-file and style-URL alternatives.
+- Reject unsupported inline JSON `NBMap.styleString` configuration on iOS with UNSUPPORTED_STYLE_JSON; document local-file and style-URL alternatives.
 - Add an iOS Simulator SPM build and bundled privacy-manifest check to CI.
 - Restore iOS idle, camera-move-start, attribution and tracking-dismissed callbacks by accepting legacy empty-array event payloads and emitting null for payload-free events.
 - Load file:// style URLs as local files on both platforms instead of resolving them as Flutter assets.

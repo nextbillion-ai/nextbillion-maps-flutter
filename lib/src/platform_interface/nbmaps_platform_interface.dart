@@ -74,8 +74,6 @@ abstract class NbMapsGlPlatform {
 
   Future<LatLngBounds?> getVisibleRegion();
 
-  Future<void> setStyleString(String styleString);
-
   Future<void> setStyleType(NBMapStyleType type);
 
   Future<bool> switchTileServer(WellKnownTileServer server,

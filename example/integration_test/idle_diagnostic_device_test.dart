@@ -39,7 +39,7 @@ void main() {
             const CameraPosition(target: LatLng(-33.8685, 151.2070), zoom: 13),
         myLocationEnabled: false,
         annotationOrder: const [],
-        // iOS accepts style URLs but not inline JSON through setStyleString.
+        // iOS custom style configuration accepts URLs rather than inline JSON.
         styleString: local ? background.uri.toString() : null,
         styleType: NBMapStyleType.bright,
         onMapCreated: (value) => controller = value,

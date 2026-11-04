@@ -422,16 +422,6 @@ class MockNbMapsGlPlatform extends _i1.Mock implements _i2.NbMapsGlPlatform {
       ) as _i5.Future<_i2.LatLngBounds?>);
 
   @override
-  _i5.Future<void> setStyleString(String? styleString) => (super.noSuchMethod(
-        Invocation.method(
-          #setStyleString,
-          [styleString],
-        ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
-
-  @override
   _i5.Future<void> addImage(
     String? name,
     _i9.Uint8List? bytes, [

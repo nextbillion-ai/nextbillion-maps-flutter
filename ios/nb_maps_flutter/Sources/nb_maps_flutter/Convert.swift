@@ -35,7 +35,7 @@ class Convert {
             )
         }
         if let styleString = options["styleString"] as? String {
-            delegate.setStyleString(styleString: styleString)
+            delegate.applyStyleConfiguration(styleString: styleString)
         } else if let styleType = mapStyleType(options["styleType"]) {
             delegate.setStyleType(styleType: styleType)
         }

@@ -122,6 +122,9 @@ class NBMap extends StatefulWidget {
   /// `UNSUPPORTED_STYLE_JSON` when building/updating map options. Save the JSON
   /// to a local file and pass its `file://` URL instead.
   ///
+  /// Rebuild [NBMap] with a new value to update a custom style configuration.
+  /// Use [NextbillionMapController.setStyleType] to switch predefined themes.
+  ///
   /// Note: This property has higher priority than [styleType]. If both
   /// [styleString] and [styleType] are set, the style string will take
   /// precedence and the styleType configuration will be ignored.

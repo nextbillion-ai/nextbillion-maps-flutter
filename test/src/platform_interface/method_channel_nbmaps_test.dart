@@ -945,21 +945,6 @@ void main() {
     expect(result, equals(belowLayerId));
   });
 
-  test('test setStyleString', () async {
-    const styleString = 'styleString';
-
-    when(channel.invokeMethod<void>('style#setStyleString', any))
-        .thenAnswer((_) async {});
-
-    await nbMapsGlChannel.setStyleString(styleString);
-
-    const args = <String, dynamic>{
-      'styleString': styleString,
-    };
-
-    verify(channel.invokeMethod('style#setStyleString', args)).called(1);
-  });
-
   test('handleMethodCall infoWindow#onTap', () {
     const arguments = <String, dynamic>{
       'symbol': 'symbolId',

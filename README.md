@@ -513,8 +513,10 @@ The **Map Style Switch** page displays that fixed service and changes styles onl
 
 ### Custom style input on iOS
 
-`NBMap.styleString` and `controller.setStyleString()` accept style URLs, local
-file URLs, and Flutter asset paths. Inline JSON strings are supported on Android.
+`NBMap.styleString` accepts style URLs, local file URLs, and Flutter asset paths.
+Rebuild `NBMap` with a new value to update custom style configuration. The
+`NextbillionMapController.setStyleString()` method was removed in 4.0.0; use
+`controller.setStyleType()` for predefined themes. Inline JSON strings are supported on Android.
 On iOS, inline JSON is rejected with `PlatformException` code
 `UNSUPPORTED_STYLE_JSON`, including initial widget options and later updates.
 Write custom JSON to a local file and pass its `file://` URL on iOS.

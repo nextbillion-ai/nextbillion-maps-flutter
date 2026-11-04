@@ -225,14 +225,13 @@ void main() {
         final unsupported = isA<PlatformException>()
             .having((e) => e.code, 'code', 'UNSUPPORTED_STYLE_JSON');
         const json = ' \n {"version":8,"sources":{},"layers":[]}';
-        await expectLater(
-            originalMap.setStyleString(json), throwsA(unsupported));
         final native =
             MethodChannel('plugins.flutter.io/nbmaps_maps_$nativeMapId');
+        // The removed controller channel must remain unimplemented.
         await expectLater(
             native.invokeMethod<void>(
                 'style#setStyleString', {'styleString': json}),
-            throwsA(unsupported));
+            throwsA(isA<MissingPluginException>()));
         await expectLater(
             native.invokeMethod<void>('map#update', {
               'options': {'styleString': json, 'compassEnabled': false}
@@ -243,16 +242,22 @@ void main() {
         await styleFile.writeAsString('{"version":8,"sources":{},"layers":'
             '[{"id":"background","type":"background","paint":'
             '{"background-color":"#556677"}}]}');
-        await originalMap.setStyleString(styleFile.uri.toString());
+        await tester.pumpWidget(MaterialApp(
+            home: OfflineNavigationView(
+                key: key,
+                autoInitialize: false,
+                initialTrack: PlaybackTrack.presets[2],
+                styleString: styleFile.uri.toString())));
         await waitFor(() => state.styleLoads > loadsBefore && state.routeReady);
+        expect(identical(originalMap, state.map), isTrue);
         record({
-          'id': 'IOS-STYLE-JSON-CONTRACT',
+          'id': 'IOS-STYLE-CONFIGURATION',
           'status': 'pass',
-          'publicControllerRejectedJson': true,
-          'rawNativeStyleRejectedJson': true,
+          'removedStyleChannelNotImplemented': true,
           'rawNativeOptionsRejectedJson': true,
           'previousStylePreserved': true,
-          'fileUrlStyleLoaded': true,
+          'widgetFileUrlStyleLoaded': true,
+          'sameControllerAfterWidgetUpdate': true,
         });
       }
       if (server == WellKnownTileServer.nbTomtom) {

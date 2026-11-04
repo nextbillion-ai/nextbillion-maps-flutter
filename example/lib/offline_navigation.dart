@@ -65,11 +65,13 @@ class OfflineNavigationView extends StatefulWidget {
   final bool autoInitialize;
   final bool showAppBar;
   final PlaybackTrack? initialTrack;
+  final String? styleString;
   const OfflineNavigationView(
       {super.key,
       this.autoInitialize = true,
       this.showAppBar = true,
-      this.initialTrack});
+      this.initialTrack,
+      this.styleString});
 
   @override
   State<OfflineNavigationView> createState() => OfflineNavigationState();
@@ -480,6 +482,7 @@ class OfflineNavigationState extends State<OfflineNavigationView> {
       initialCameraPosition:
           CameraPosition(target: track.points.first, zoom: 13),
       styleType: NBMapStyleType.bright,
+      styleString: widget.styleString,
       trackCameraPosition: true,
       onMapCreated: (value) {
         if (!mounted || generation != mapMount) return;

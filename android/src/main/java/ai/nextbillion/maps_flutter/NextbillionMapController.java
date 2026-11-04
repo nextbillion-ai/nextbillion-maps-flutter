@@ -343,7 +343,7 @@ final class NextbillionMapController
 
 
     @Override
-    public void setStyleString(String styleString) {
+    public void applyStyleConfiguration(String styleString) {
         styleStringInitial = styleString;
         clearLocationComponentLayer();
         updateStyleWithUrl(styleString);
@@ -1355,19 +1355,6 @@ final class NextbillionMapController
                 } else {
                     result.error("LOCATION_UNAVAILABLE", "Location is not enabled or available", null);
                 }
-                break;
-            }
-            case "style#setStyleString": {
-                if (style == null) {
-                    result.error(
-                            "STYLE IS NULL",
-                            "The style is null. Has onStyleLoaded() already been invoked?",
-                            null);
-                    break;
-                }
-                String styleString = call.argument("styleString");
-                setStyleString(styleString);
-                result.success(null);
                 break;
             }
             case "style#setStyleType": {

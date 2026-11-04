@@ -68,7 +68,7 @@ class NbMapBuilder implements NextbillionMapOptionsSink {
     }
 
     @Override
-    public void setStyleString(String styleString) {
+    public void applyStyleConfiguration(String styleString) {
         this.styleString = styleString;
         // options. styleString(styleString);
     }

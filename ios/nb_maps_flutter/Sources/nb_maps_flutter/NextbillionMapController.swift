@@ -565,16 +565,6 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
                 properties: properties
             )
             result(nil)
-        case "style#setStyleString":
-            guard let arguments = methodCall.arguments as? [String: Any] else { invalidArguments(result); return }
-            guard let styleString = arguments["styleString"] as? String else { invalidArguments(result); return }
-            if let error = inlineStyleJSONError(styleString) {
-                result(error)
-                return
-            }
-            setStyleString(styleString: styleString)
-            result(nil)
-            
         case "style#setStyleType":
             guard let arguments = methodCall.arguments as? [String: Any],
                   let styleType = Convert.mapStyleType(arguments["styleType"])
@@ -1774,13 +1764,13 @@ class NextbillionMapController: NSObject, FlutterPlatformView, NGLMapViewDelegat
                             details: nil)
     }
 
-    func setStyleString(styleString: String) {
+    func applyStyleConfiguration(styleString: String) {
         // Check if json, url, absolute path or asset path:
         if styleString.isEmpty {
-            NSLog("setStyleString - string empty")
+            NSLog("Custom style configuration is empty")
         } else if styleString.hasPrefix("{") || styleString.hasPrefix("[") {
             // Currently the iOS NbMaps SDK does not have a builder for json.
-            NSLog("setStyleString - JSON style currently not supported")
+            NSLog("Inline JSON style configuration is not supported on iOS")
         } else if styleString.hasPrefix("/") {
             // Absolute path
             mapView.styleURL = URL(fileURLWithPath: styleString, isDirectory: false)
