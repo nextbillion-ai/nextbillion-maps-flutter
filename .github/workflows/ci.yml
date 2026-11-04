@@ -70,12 +70,17 @@ jobs:
         with:
           flutter-version: "3.44.0"
 
+      - name: Resolve native Maps binary before Flutter
+        # Flutter pub get can start a background xcodebuild resolver. Prime the
+        # binary cache synchronously before any Flutter dependency generation.
+        run: python3 .github/scripts/prepare_ios_spm.py
+
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build iOS Simulator with Swift Package Manager
         working-directory: example
-        run: flutter build ios --simulator --debug --no-codesign
+        run: flutter build ios --simulator --debug --no-codesign --no-pub
 
       - name: Verify plugin privacy manifest is bundled
         working-directory: example
