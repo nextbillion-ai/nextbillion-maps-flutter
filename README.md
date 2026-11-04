@@ -3,7 +3,7 @@
 
 ## Native SDK upgrade
 
-Version 4.0.0 uses iOS Maps 2.3.3 and Android Maps 3.3.1. See the
+Version 4.0.0-beta.1 uses iOS Maps 2.3.3 and Android Maps 3.3.1. See the
 [integration guide](doc/regional-offline.md) for Orbis, Regional Offline,
 route trimming, lifecycle handling, and the Android 3.3.1 Orbis transition limitation.
 See the [changelog](CHANGELOG.md) for release changes.
@@ -31,12 +31,12 @@ This example replays preset coordinates; it does not calculate offline routes.
 Add the following dependency to your project pubspec.yaml file to use the NB Maps Flutter Plugin add the dependency to the pubspec.yaml:
 ```
 dependencies:
-  nb_maps_flutter: ^4.0.0
+  nb_maps_flutter: 4.0.0-beta.1
 ```
 
-### iOS: Swift Package Manager (4.0.0+)
+### iOS: Swift Package Manager (4.0.0-beta.1+)
 
-Starting with version 4.0.0, iOS integration is supported **only through Swift
+Starting with version 4.0.0-beta.1, iOS integration is supported **only through Swift
 Package Manager (SPM)**. CocoaPods support has been removed, including the plugin
 Podspec and the native SDK fallback Podspec.
 
@@ -515,7 +515,7 @@ The **Map Style Switch** page displays that fixed service and changes styles onl
 
 `NBMap.styleString` accepts style URLs, local file URLs, and Flutter asset paths.
 Rebuild `NBMap` with a new value to update custom style configuration. The
-`NextbillionMapController.setStyleString()` method was removed in 4.0.0; use
+`NextbillionMapController.setStyleString()` method was removed in 4.0.0-beta.1; use
 `controller.setStyleType()` for predefined themes. Inline JSON strings are supported on Android.
 On iOS, inline JSON is rejected with `PlatformException` code
 `UNSUPPORTED_STYLE_JSON`, including initial widget options and later updates.
