@@ -1,7 +1,7 @@
-# Flutter plugin 4.0.0 integration
+# Flutter plugin 4.0.0-beta.1 integration
 
 This plugin release uses iOS Maps 2.3.3 through Swift Package Manager (SPM) and
-Android Maps 3.3.1. From Flutter plugin **4.0.0 onward, iOS supports only SPM**;
+Android Maps 3.3.1. From Flutter plugin **4.0.0-beta.1 onward, iOS supports only SPM**;
 CocoaPods support and both Podspec files have been removed. Flutter 3.41+ is
 required because the package depends on the generated FlutterFramework SPM package
 (full builds are validated with Flutter 3.44). The Flutter iOS host must target

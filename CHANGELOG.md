@@ -1,4 +1,7 @@
-## v4.0.0, Nov 04, 2026
+## v4.0.0-beta.1, Nov 04, 2026
+
+First beta of the upcoming 4.0.0 release, including the breaking API and iOS SPM changes below.
+
 - **Breaking:** Remove `NextbillionMapController.setStyleString()` and its platform-interface and native-channel APIs. Use `setStyleType()` for predefined styles and `NBMap.styleString` for custom style configuration.
 - Bundle the plugin's own iOS privacy manifest through SPM for its UserDefaults preference access.
 - Reject unsupported inline JSON `NBMap.styleString` configuration on iOS with UNSUPPORTED_STYLE_JSON; document local-file and style-URL alternatives.
@@ -27,7 +30,7 @@
 - Start example offline setup after the first frame and add three map-loading regressions to CI for delayed/failed setup and pending Preview/catalog data.
 - Enable project-level SPM in the plugin repository as well as the example so dependency setup works after Podspec removal.
 - **Breaking:** Require Flutter 3.41+ for the generated FlutterFramework SPM dependency (full builds validated with Flutter 3.44); older Flutter releases fail dependency resolution early.
-- **Breaking (iOS):** From 4.0.0 onward, support only Swift Package Manager. Remove the plugin Podspec, native SDK fallback Podspec and example CocoaPods integration; host apps must enable SPM.
+- **Breaking (iOS):** From 4.0.0-beta.1 onward, support only Swift Package Manager. Remove the plugin Podspec, native SDK fallback Podspec and example CocoaPods integration; host apps must enable SPM.
 
 ## v3.4.2, Oct 06, 2026
 - Prevent crashes when annotation collections are read before the map style and annotation managers are initialized.
