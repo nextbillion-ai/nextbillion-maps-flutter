@@ -174,8 +174,7 @@ class _RegionalOfflineDemoState extends State<_RegionalOfflineDemo> {
                     child: TextField(
                         controller: _country,
                         decoration: const InputDecoration(
-                            labelText:
-                                'Country (full English name, blank for all)'),
+                            labelText: 'Country (blank for United States)'),
                         onSubmitted: (_) {
                           if (_ready && !_loading) unawaited(_reload());
                         })),

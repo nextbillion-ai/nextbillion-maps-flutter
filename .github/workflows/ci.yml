@@ -10,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -40,13 +42,33 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Authenticate to the Android Snapshot repository
+        if: >-
+          github.event_name != 'pull_request' ||
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Report Android native checks skipped for fork
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name != github.repository
+        run: echo '::notice::Android native checks require GOOGLE_CREDENTIALS, which is unavailable to fork pull requests.'
+
       - name: Build Android Release with R8
+        if: >-
+          github.event_name != 'pull_request' ||
+          github.event.pull_request.head.repo.full_name == github.repository
         working-directory: example
         # Resolve again after tests so Release excludes the dev-only
         # integration_test plugin from GeneratedPluginRegistrant.
         run: flutter build apk --release --target-platform android-arm64
 
       - name: Run Android bridge unit tests
+        if: >-
+          github.event_name != 'pull_request' ||
+          github.event.pull_request.head.repo.full_name == github.repository
         working-directory: example/android
         run: ./gradlew :nb_maps_flutter:testDebugUnitTest
 

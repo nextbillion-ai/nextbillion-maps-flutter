@@ -89,6 +89,33 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets('preset download uses the ID from its country catalog',
+      (tester) async {
+    final calls = <MethodCall>[];
+    final fallback = respond;
+    respond = (call) async {
+      calls.add(call);
+      if (call.method == 'fetchRegionList') {
+        return [
+          {'regionId': 15961, 'name': 'Hyderabad', 'adminL0': 'India'},
+        ];
+      }
+      return fallback(call);
+    };
+    await tester.pumpWidget(const MaterialApp(home: OfflineNavigationView()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Download Hyderabad'));
+    await tester.pumpAndSettle();
+    final catalog =
+        calls.indexWhere((call) => call.method == 'fetchRegionList');
+    final download =
+        calls.indexWhere((call) => call.method == 'downloadRegion');
+    expect(catalog, greaterThanOrEqualTo(0));
+    expect(download, greaterThan(catalog));
+    expect(calls[catalog].arguments, {'country': 'India'});
+    expect((calls[download].arguments as Map)['regionId'], 15961);
+  });
+
   testWidgets('closing playback page releases its periodic timer',
       (tester) async {
     final key = GlobalKey<OfflineNavigationState>();

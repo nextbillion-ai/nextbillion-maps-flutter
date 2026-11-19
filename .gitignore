@@ -132,3 +132,4 @@ app.*.symbols
 example/test_results/
 docs/*.zh-CN.md
 docs/device-test-matrix.csv
+gha-creds-*.json

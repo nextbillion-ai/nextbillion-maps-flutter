@@ -1,7 +1,7 @@
-# Flutter plugin 4.0.0-beta.1 integration
+# Flutter plugin 4.0.0-beta.2 integration
 
-This plugin release uses iOS Maps 2.3.3 through Swift Package Manager (SPM) and
-Android Maps 3.3.1. From Flutter plugin **4.0.0-beta.1 onward, iOS supports only SPM**;
+This plugin release uses iOS Maps 2.4.0-beta.4 through Swift Package Manager (SPM) and
+Android Maps 3.4.0-SNAPSHOT. From Flutter plugin **4.0.0-beta.1 onward, iOS supports only SPM**;
 CocoaPods support and both Podspec files have been removed. Flutter 3.41+ is
 required because the package depends on the generated FlutterFramework SPM package
 (full builds are validated with Flutter 3.44). The Flutter iOS host must target
@@ -26,14 +26,50 @@ flutter build ios --simulator --debug
 ```
 
 Flutter registers the plugin's Swift package and the official native distribution,
-which is pinned to **2.3.3**. Run `flutter pub get` after changing dependencies so
+which is pinned to **2.4.0-beta.4**. Run `flutter pub get` after changing dependencies so
 Flutter regenerates its plugin package metadata before building.
+
+The XCFramework published at this tag reports `2.4.1` for both
+`CFBundleShortVersionString` and `CFBundleVersion`. Use the resolved package
+tag and the checksum in the distribution manifest to identify this build.
 
 For existing apps, remove any explicit `NextBillionMap` Pod override and migrate
 the map plugin to SPM. Other dependencies can continue using CocoaPods if needed.
 The example uses SPM for all its iOS plugins and has no Podfile, Pods build phases,
 Pods workspace references or Pods xcconfig includes. See the
 [changelog](../CHANGELOG.md) for the SDK upgrade notes.
+
+## Android Snapshot installation
+
+Configure the Android host's repositories to resolve
+`ai.nextbillion:nb-maps-android:3.4.0-SNAPSHOT` from the NextBillion Artifact
+Registry. The [example's Gradle configuration](../example/android/build.gradle)
+shows the Artifact Registry plugin and a repository restricted to this dependency.
+For hosts that declare repositories in `settings.gradle`, configure the
+repository in `dependencyResolutionManagement.repositories` instead.
+
+This follows `navigation-app-android` by using the Artifact Registry plugin's
+Application Default Credentials (ADC). For a service account with read access
+to `mobile-snapshot-maven`, export its JSON key file path before building.
+The `roles/artifactregistry.reader` role provides the required repository access.
+
+```sh
+export GOOGLE_APPLICATION_CREDENTIALS="/absolute/path/to/service-account.json"
+cd example
+flutter build apk --release --target-platform android-arm64
+```
+
+For local user credentials, run `gcloud auth application-default login`. The
+Gradle plugin also discovers these credentials automatically. See the
+[Artifact Registry authentication guide](https://cloud.google.com/artifact-registry/docs/java/authentication).
+
+For this repository's GitHub Actions checks, set the repository or organization
+Actions secret `GOOGLE_CREDENTIALS` to the service account's JSON key contents.
+Grant this repository access to the secret when using an organization secret.
+`google-github-actions/auth` creates the temporary ADC file and exports
+`GOOGLE_APPLICATION_CREDENTIALS` for the Gradle build. Normal branch builds and
+same-repository pull requests require this secret. Fork pull requests report
+that the Android native checks are skipped.
 
 ## Tile servers
 
@@ -57,13 +93,10 @@ Regional Offline currently requires **TomTom**. MapTiler's reserved data-source
 ID does not imply offline support. Country coverage comes from the returned
 catalog rather than a fixed list in Dart.
 
-**Android 3.3.1 limitation:** once Regional Offline has been initialized, selecting
-Orbis throws `PlatformException(code: 'SDK_UPDATE_REQUIRED')` before changing the
-active server. The published native SDK throws internally on this transition
-and skips its refresh work. Orbis works when selected before Regional Offline
-initialization. Updating the native SDK with the refresh fix is required to
-remove this restriction; the Flutter adapter does not substitute TomTom offline
-data for Orbis.
+Android Maps 3.4.0-SNAPSHOT still has an asynchronous tile-sync crash when Orbis
+is selected after Regional Offline initialization. The Flutter bridge returns
+`SDK_UPDATE_REQUIRED` before changing the provider while offline configuration
+is pending or complete. Select Orbis before configuring Regional Offline.
 
 ## Regional package API
 
@@ -74,7 +107,7 @@ bounds, zoom limits and a style URL. Its local pack IDs are not CDN region IDs.
 
 Database locations are owned by the native SDK. The plugin does not set or expose
 a destination database path; applications do not need to create directories or
-configure a cache root. `mapsBaseUrl` only selects a network CDN. The `tilesDb`
+configure a cache root. `mapsBaseUrl` selects a custom maps CDN. The `tilesDb`
 argument to legacy `installOfflineMapTiles` identifies the source to import, not
 where the SDK stores its database.
 
@@ -98,6 +131,23 @@ Verify frame timing and map resource loading on devices during initialization
 and downloads; background dispatch and widget tests alone do not establish
 absence of resource contention inside the SDK.
 
+### Country catalogs
+
+With `RegionalOffline.configure()`, the SDK discovers the data release and
+shared style resource version from the CDN's `latest.json`. iOS keeps the
+selected release for the running process. Android checks for updates when
+requesting the catalog and preserves the source of enqueued downloads.
+
+Automatic mode defaults to the United States catalog. Pass a full English
+country name for another catalog and use its returned region IDs for detail
+and download requests. The SDK associates each listed region with its source.
+The catalog can assign a different ID to the same geographic region in a new
+release. Use `listInstalledRegions()` to manage existing local installations.
+
+An explicit `mapsBaseUrl` selects a single custom maps directory. The native
+SDKs also support named catalog sources and an explicit ambient directory and
+version. The Flutter configuration currently exposes the maps directory.
+
 ```dart
 await NextBillion.initNextBillionWithTileServer(
   accessKey,
@@ -107,7 +157,7 @@ await RegionalOffline.configure();
 // Optional: configure(mapsBaseUrl: 'https://your-cdn.example/maps').
 // A different CDN after initialization requires restarting the app.
 
-final regions = await RegionalOffline.fetchRegionList(country: 'United States');
+final regions = await RegionalOffline.fetchRegionList(country: 'Australia');
 final installed = await RegionalOffline.listInstalledRegions();
 final detail = await RegionalOffline.fetchRegionDetail(regions.first.regionId);
 
@@ -115,9 +165,8 @@ await RegionalOffline.downloadRegion(regions.first.regionId);
 // Success here means accepted/enqueued, not fully downloaded.
 ```
 
-Countries use full English names, preserving case. Whitespace is trimmed; blank
-or omitted country fetches the full catalog. Byte counts and source timestamps
-are integers; timestamps are not converted to another unit by the plugin.
+Byte counts and source timestamps are integers. The plugin returns timestamps
+in the units supplied by the SDK.
 
 `queryRegions()` combines the online catalog, installed records and readiness.
 `loadOfflineDetail(regionId)` only reads local detail and can return null fields.
@@ -204,11 +253,11 @@ or becomes transparent. Updates preserve the existing source and layer.
 
 ## Legacy compatibility and authentication
 
-Android Maps 3.3.1 keeps Google Play Services Location optional. The Flutter
-plugin includes consumer R8 rules for its three optional task callback types;
+Android Maps 3.4.0-SNAPSHOT keeps Google Play Services Location optional. The
+SDK includes consumer R8 rules for its optional task callback types, and
 hosts without Google location continue to use the SDK's Android location fallback.
 
-iOS 2.3.3 restricts legacy offline-pack downloads to TomTom. Unsupported services
+iOS restricts legacy offline-pack downloads to TomTom. Unsupported services
 now surface `UNSUPPORTED_TILE_SERVER`; switching away during a download reports
 the pause without deleting installed data. The old downloader replies to its
 method call once and sends subsequent updates on the event channel.
@@ -216,13 +265,12 @@ method call once and sends subsequent updates on the event channel.
 `installOfflineMapTiles` imports a compatible SDK offline-pack database from a
 Flutter asset or absolute file path. It copies the input to a private writable
 temporary directory, then uses the native SDK's import/merge API. The SDK chooses
-the active database path and validates the input schema. Maps iOS 2.3.3 / Android
-3.3.1 merge APIs accept schema v6 matching the active library; they reject v5 and
-future versions rather than migrate the supplied library. Existing storage is not
-replaced and the supplied file is left intact. The Future completes after the SDK
-reports import success or failure. Temporary files are removed on completion or
-failure. Import already submitted to the SDK may finish after engine detachment,
-but its callback will not reply to the detached engine.
+the active database path and requires schema v6, matching the active library.
+The import merges into existing storage and leaves the supplied file intact.
+The Future completes after the SDK reports import success or failure. Temporary
+files are removed on completion or failure. Import already submitted to the SDK
+may finish after engine detachment, but its callback will not reply to the
+detached engine.
 
 Supply a closed, consistent database containing offline packs and their resources.
 This API does not restore a database containing only ambient cache entries, import

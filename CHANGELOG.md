@@ -1,3 +1,10 @@
+## v4.0.0-beta.2
+
+- Upgrade iOS Maps to 2.4.0-beta.4 and Android Maps to 3.4.0-SNAPSHOT.
+- Resolve the Android Snapshot from the NextBillion Artifact Registry.
+- Retain the Orbis switch guard after Regional Offline setup because Android 3.4.0-SNAPSHOT still has an asynchronous tile-sync crash. Use the SDK's optional Google Location R8 rules.
+- Use the native automatic offline release discovery path and look up regions in their country catalog before requesting details or downloads.
+
 ## v4.0.0-beta.1, Nov 04, 2026
 
 First beta of the upcoming 4.0.0 release, including the breaking API and iOS SPM changes below.

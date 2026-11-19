@@ -192,24 +192,27 @@ void main() {
                 mapsBaseUrl: 'https://example.invalid/maps'),
             'CONFIGURATION_FAILED'));
     if (Platform.isAndroid) {
-      await check(
-          ['INIT-004'],
-          () => expectCode(
-              NextBillion.switchWellKnownTileServer(
-                  WellKnownTileServer.nbTomtomOrbis),
-              'SDK_UPDATE_REQUIRED'),
+      await check(['INIT-004'], () async {
+        await expectCode(
+            NextBillion.switchWellKnownTileServer(
+                WellKnownTileServer.nbTomtomOrbis),
+            'SDK_UPDATE_REQUIRED');
+        expect(await RegionalOffline.supportStatus(),
+            RegionalOfflineSupportStatus.supported);
+      },
           evidence:
-              'Post-initialization protection; in-flight race requires dedicated injection',
-          complete: false);
-      await check(
-          ['INIT-005'],
-          () => expectCode(
-              NextBillion.initNextBillionWithTileServer(
-                  MapsDemo.accessKey, WellKnownTileServer.nbTomtomOrbis),
-              'SDK_UPDATE_REQUIRED'),
+              'Orbis rejected before mutation to prevent the published native tile-sync crash');
+      await check(['INIT-005'], () async {
+        await expectCode(
+            NextBillion.initNextBillionWithTileServer(
+                MapsDemo.accessKey, WellKnownTileServer.nbTomtomOrbis),
+            'SDK_UPDATE_REQUIRED');
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        expect(await RegionalOffline.supportStatus(),
+            RegionalOfflineSupportStatus.supported);
+      },
           evidence:
-              'Post-initialization protection; in-flight race requires dedicated injection',
-          complete: false);
+              'Reinitialization is rejected while the active provider and offline runtime remain TomTom');
     }
     await check(['INIT-013'], () async {
       await NextBillion.setApiKeyHeaderName('X-NB-Test-Key');
@@ -222,20 +225,25 @@ void main() {
     await check(['DATA-001', 'DATA-002'], () async {
       await state.refreshCatalog();
       expect(state.catalog, isNotEmpty);
+      expect(state.catalog.every((r) => r.adminL0 == 'United States'), isTrue);
       final filtered =
           await RegionalOffline.fetchRegionList(country: ' Australia ');
       expect(filtered, isNotEmpty);
       expect(filtered.every((r) => r.adminL0 == 'Australia'), isTrue);
-    }, evidence: 'Default CDN full catalog and trimmed-country native query');
+    }, evidence: 'Default US catalog and trimmed Australia query');
 
-    final candidates = [7242, 3474, 6980];
-    final regionId = candidates.firstWhere((id) => !initialIds.contains(id),
-        orElse: () => 7242);
-    final trackIndex = regionId == 7242
-        ? 2
-        : regionId == 3474
-            ? 1
-            : 0;
+    final candidates = <({int trackIndex, int regionId})>[];
+    for (final trackIndex in [2, 1, 0]) {
+      final region =
+          await PlaybackTrack.presets[trackIndex].findOfflineRegion();
+      if (region != null) {
+        candidates.add((trackIndex: trackIndex, regionId: region.regionId));
+      }
+    }
+    expect(candidates, isNotEmpty);
+    final (:trackIndex, :regionId) = candidates.firstWhere(
+        (candidate) => !initialIds.contains(candidate.regionId),
+        orElse: () => candidates.first);
     binding.reportData!['primaryRegionId'] = regionId;
     binding.reportData!['preexistingRegionIds'] = initialIds.toList();
     if (trackIndex != 2) {
@@ -349,9 +357,9 @@ void main() {
           final loads = state.styleLoads;
           // Visit a high-zoom area not traversed during online playback, so an
           // earlier online tile cache alone cannot establish the offline result.
-          final center = regionId == 7242
+          final center = trackIndex == 2
               ? const LatLng(-33.9135, 151.2055)
-              : regionId == 3474
+              : trackIndex == 1
                   ? const LatLng(37.725, -122.433)
                   : const LatLng(17.348, 78.486);
           state.selectTrack(PlaybackTrack('Offline verification track', [
@@ -361,7 +369,11 @@ void main() {
           ]));
           await waitFor(() => state.styleLoads > loads && state.routeReady,
               seconds: 90);
+          final idleBefore = state.mapIdleEvents;
           await state.seek(0.4);
+          await waitFor(() => state.mapIdleEvents > idleBefore, seconds: 90);
+          await tester.pump(const Duration(seconds: 1));
+          await Future<void>.delayed(const Duration(seconds: 2));
           expect(state.error, isNull);
           await saveSnapshot('system-offline-map');
         },

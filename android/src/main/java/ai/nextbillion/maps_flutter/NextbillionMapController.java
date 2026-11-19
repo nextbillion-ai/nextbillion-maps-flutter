@@ -1376,7 +1376,7 @@ final class NextbillionMapController
                 // Compatibility bridge. Cross-provider changes on the same
                 // MapView are outside the current cross-platform release scope.
                 // Select the provider before creating maps; switch themes with
-                // style#setStyleType. Keep the Orbis safety guard below.
+                // style#setStyleType.
                 if (nextbillionMap == null) {
                     result.error("MAP_NOT_READY", "Wait for onMapCreated before switching tile servers", null);
                     break;

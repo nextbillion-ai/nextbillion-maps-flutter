@@ -54,6 +54,7 @@ void main() {
     final region = [
       7242,
       3474,
+      15961,
       6980
     ].firstWhere((id) => installed.any((r) => r.regionId == id && r.allTarsOk));
     binding.reportData!['primaryRegionId'] = region;

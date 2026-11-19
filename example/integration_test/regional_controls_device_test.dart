@@ -80,10 +80,14 @@ void main() {
     final initial = (await RegionalOffline.listInstalledRegions())
         .map((r) => r.regionId)
         .toSet();
+    final initialTasks = (await RegionalOffline.getDownloadProgress())
+        .map((task) => task.regionId)
+        .toSet();
     final catalog = await RegionalOffline.fetchRegionList();
     final choices = catalog
         .where((r) =>
             !initial.contains(r.regionId) &&
+            !initialTasks.contains(r.regionId) &&
             r.totalSize > 80 * 1048576 &&
             r.totalSize < 120 * 1048576)
         .toList();
@@ -91,6 +95,7 @@ void main() {
     final id = choices.first.regionId;
     binding.reportData!['testOwnedRegionId'] = id;
     binding.reportData!['preservedRegionIds'] = initial.toList();
+    binding.reportData!['preservedTaskIds'] = initialTasks.toList();
     final page = await RegionalOffline.beginDownloadPage();
     final observed = <Map<String, Object?>>[];
     final subscription = RegionalOffline.downloadProgress.listen((values) {

@@ -93,11 +93,11 @@ void main() {
 
   test('native rejection is propagated without a fallback URL request',
       () async {
-    respond = (_) async => throw PlatformException(code: 'SDK_UPDATE_REQUIRED');
+    respond = (_) async => throw PlatformException(code: 'NEXTBILLION_ERROR');
     await expectLater(
         controller.switchTileServer(WellKnownTileServer.nbTomtomOrbis),
         throwsA(isA<PlatformException>()
-            .having((error) => error.code, 'code', 'SDK_UPDATE_REQUIRED')));
+            .having((error) => error.code, 'code', 'NEXTBILLION_ERROR')));
     expect(calls, hasLength(1));
     expect(calls.single.method, 'map#switchTileServer');
   });
