@@ -16,8 +16,7 @@ void setTestingGlobalChannel(MethodChannel channel) {
 /// without replacing the live database. This does not restore an ambient-only
 /// cache. Completes after import; the supplied file is left intact. Supply a
 /// closed, consistent database exported from a compatible SDK.
-/// iOS 2.3.3 / Android 3.3.1 require matching schema v6 for merge; the import
-/// does not migrate older input databases.
+/// The native merge requires schema v6, matching the active library.
 /// [tilesDb] is the import source; the destination uses the SDK default storage.
 /// Import completion is independent of normal map creation and style loading.
 Future<void> installOfflineMapTiles(String tilesDb) async {

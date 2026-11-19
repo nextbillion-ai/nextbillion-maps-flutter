@@ -34,20 +34,20 @@ void main() {
       'completed': completed,
     }));
   });
-  testWidgets('iOS 2.3.3 physical offline snapshots and network recovery',
+  testWidgets('iOS physical offline snapshots and network recovery',
       (tester) async {
     expect(Platform.isIOS, isTrue);
     final results = <Map<String, Object?>>[];
     final images = <String, String>{};
     binding.reportData = {
-      'sdk': {'ios': '2.3.3', 'android': '3.3.1'},
+      'sdk': {'ios': '2.4.0-beta.4'},
       'platform': Platform.operatingSystem,
       'requiresCompletion': true,
       'completed': false,
       'results': results,
       'snapshots': images,
     };
-    final temporary = await Directory.systemTemp.createTemp('nbmaps-sdk233-');
+    final temporary = await Directory.systemTemp.createTemp('nbmaps-snapshot-');
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     var fixtureRequests = 0;
     final recorder = ui.PictureRecorder();

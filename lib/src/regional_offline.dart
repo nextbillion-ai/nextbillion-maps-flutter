@@ -29,7 +29,8 @@ abstract final class RegionalOffline {
   /// Configures the process-wide manager using SDK-owned default storage.
   ///
   /// [mapsBaseUrl] is an optional absolute HTTP(S) CDN URL, not a database path.
-  /// When omitted, the SDK uses the current TomTom configuration's default CDN.
+  /// When omitted, the SDK discovers the offline data release from the default
+  /// TomTom CDN and can initialize using local metadata while offline.
   /// Whitespace and trailing slashes are removed; an invalid URL throws
   /// [ArgumentError]. Repeating the same configuration is supported; changing
   /// the CDN after initialization requires an app restart and otherwise fails
@@ -70,8 +71,11 @@ abstract final class RegionalOffline {
   /// Fetches the online catalog, optionally filtered by [country].
   ///
   /// Use a full English country name, such as `Australia`, rather than an ISO
-  /// code. Whitespace is trimmed and filtering is case-insensitive; null or
-  /// blank fetches all rows. Returns an unmodifiable list, which can be empty.
+  /// code. Whitespace is trimmed and filtering is case-insensitive. In
+  /// automatic mode, null or blank loads the United States catalog. Pass the
+  /// country for other catalogs and use the returned IDs for details and
+  /// downloads so the SDK can route those requests to the correct source.
+  /// Returns an unmodifiable list, which can be empty.
   /// This may require network access; use [listInstalledRegions] while offline.
   static Future<List<RegionalOfflineCatalogItem>> fetchRegionList(
       {String? country}) async {

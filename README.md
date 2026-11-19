@@ -3,9 +3,9 @@
 
 ## Native SDK upgrade
 
-Version 4.0.0-beta.1 uses iOS Maps 2.3.3 and Android Maps 3.3.1. See the
+Version 4.0.0-beta.2 uses iOS Maps 2.4.0-beta.4 and Android Maps 3.4.0-SNAPSHOT. See the
 [integration guide](doc/regional-offline.md) for Orbis, Regional Offline,
-route trimming, lifecycle handling, and the Android 3.3.1 Orbis transition limitation.
+route trimming, lifecycle handling, and Android Snapshot authentication.
 See the [changelog](CHANGELOG.md) for release changes.
 
 The example menu includes **Offline Maps & Route Playback**. Download a preset region,
@@ -31,7 +31,7 @@ This example replays preset coordinates; it does not calculate offline routes.
 Add the following dependency to your project pubspec.yaml file to use the NB Maps Flutter Plugin add the dependency to the pubspec.yaml:
 ```
 dependencies:
-  nb_maps_flutter: 4.0.0-beta.1
+  nb_maps_flutter: 4.0.0-beta.2
 ```
 
 ### iOS: Swift Package Manager (4.0.0-beta.1+)
@@ -56,7 +56,7 @@ flutter build ios --simulator --debug
 ```
 
 Flutter adds the plugin package and its native SDK dependency automatically.
-The plugin pins `maps-native-distribution` to iOS Maps **2.3.3**. Use a Flutter SDK
+The plugin pins `maps-native-distribution` to iOS Maps **2.4.0-beta.4**. Use a Flutter SDK
 **3.41+**, which generates the required FlutterFramework package; this setup is
 validated with Flutter **3.44.0**. The
 [example](example/pubspec.yaml) already enables SPM.
@@ -69,6 +69,13 @@ When upgrading an existing app, remove any explicit `NextBillionMap` Pod overrid
 and migrate the map plugin's CocoaPods wiring to SPM. Apps can retain CocoaPods
 for other dependencies. The example has removed its Pods build phases,
 workspace references and xcconfig includes entirely.
+
+### Android Snapshot
+
+The Android dependency comes from the private NextBillion Artifact Registry.
+Configure the [example Gradle repository](example/android/build.gradle) in your
+Android host and provide Google Application Default Credentials with read access
+to that repository. See the [authentication instructions](doc/regional-offline.md#android-snapshot-installation).
 
 ### Import
 Import the maps plugin in your code
@@ -120,8 +127,10 @@ requires TomTom.
 Use the public `RegionalOffline` class from
 `package:nb_maps_flutter/nb_maps_flutter.dart` to browse, download, and manage
 catalog-based offline regions. The API works on iOS and Android and currently
-requires **TomTom**. This release includes iOS Maps **2.3.3**, which fixes
-independent snapshots of installed regions during regional offline fallback.
+requires **TomTom**. The default SDK configuration discovers the offline data
+release from the CDN. Countryless catalog requests load the United States
+catalog. Request the relevant country before fetching details or downloading
+regions in other countries.
 
 The native SDK manages the database location. `configure(mapsBaseUrl: ...)`
 optionally selects a network CDN; it does not select a local storage directory.
@@ -212,10 +221,11 @@ Future<void> downloadSelectedRegion(int regionId) async {
 }
 ```
 
-`country` uses the full English name, such as `Australia` or `United States`;
-omit it or pass a blank value for the full catalog. Use IDs returned by the
-catalog or installed records. IDs must be integers from 0 through 2147483647,
-inclusive. `fetchRegionDetail(regionId)` retrieves online package metadata.
+Use a full English country name, such as `Australia`. In automatic mode, a
+blank or omitted country loads the United States catalog. Use IDs from the
+country catalog for new downloads and from installed records for local data.
+IDs must be integers from 0 through 2147483647, inclusive.
+`fetchRegionDetail(regionId)` retrieves online package metadata.
 
 **`downloadRegion()` completes when the task is accepted, not when installation
 finishes.** Keep `clearBefore` at its default `false` for ordinary downloads and
@@ -273,9 +283,8 @@ final imageBase64 = await mapController.takeSnapshot(
 ```
 
 Use `writeToDisk: true` for a file result. Snapshots render a separate map and
-do not capture the Flutter UI or on-screen annotation overlays. Even on iOS
-2.3.3, missing resources/tiles can produce a blank or incomplete image; a
-non-null result alone does not establish complete offline coverage.
+do not capture the Flutter UI or on-screen annotation overlays. Missing
+resources or tiles can produce a blank or incomplete image.
 
 ### 5. Manage tasks and release the download page
 
@@ -500,14 +509,12 @@ every map resource finished loading.
 
 Changing services on an existing MapView is outside this release's supported
 scope. The global `NextBillion.switchWellKnownTileServer(...)` and controller
-`switchTileServer(...)` APIs remain for compatibility; their acceptance does not
-guarantee that an existing map can load the new service. iOS Maps 2.3.2 can retain
-the previous resource configuration. Recreating a Flutter map alone does not
-guarantee that process-wide SDK resource pools are reset. Test each service in
-a fresh app process, selecting it before map creation.
+`switchTileServer(...)` APIs remain for compatibility. Test each service in a
+fresh app process, selecting it before map creation.
 
-Android Maps 3.3.1 still rejects Orbis selection during or after Regional Offline
-setup with `SDK_UPDATE_REQUIRED`; this protective check remains in place.
+Android Maps 3.4.0-SNAPSHOT still has an asynchronous Orbis tile-sync crash after
+Regional Offline setup. The Flutter bridge rejects this transition with
+`SDK_UPDATE_REQUIRED`. Select Orbis before configuring Regional Offline.
 In the example, choose the service on the home screen before opening a map.
 The **Map Style Switch** page displays that fixed service and changes styles only.
 

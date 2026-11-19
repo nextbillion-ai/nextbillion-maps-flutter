@@ -4,6 +4,11 @@ import UIKit
 import CoreFoundation
 
 final class RegionalOfflineHandler: NSObject, FlutterPlugin, FlutterStreamHandler {
+    private enum Configuration: Equatable {
+        case automatic
+        case custom(String)
+    }
+
     private let registrar: FlutterPluginRegistrar
     private let methods: FlutterMethodChannel
     private let events: FlutterEventChannel
@@ -14,13 +19,13 @@ final class RegionalOfflineHandler: NSObject, FlutterPlugin, FlutterStreamHandle
     private var closed = false
     private var pendingResults: [UUID: FlutterResult] = [:]
     private static weak var activePageOwner: RegionalOfflineHandler?
-    private static var configuredBaseURL: String?
-    private static var configuringBaseURL: String?
+    private static var configured: Configuration?
+    private static var configuring: Configuration?
     private static var configurationCompletions: [() -> Void] = []
     // SDK configuration/local metadata can touch disk. This queue is independent
     // of map creation and never waits synchronously for the platform-view thread.
     private static let storageQueue = DispatchQueue(label: "ai.nextbillion.flutter.regional-offline", qos: .utility)
-    static var isConfigured: Bool { configuredBaseURL != nil }
+    static var isConfigured: Bool { configured != nil }
 
     static func register(with registrar: FlutterPluginRegistrar) {
         registrar.publish(registerHandler(with: registrar))
@@ -72,21 +77,24 @@ final class RegionalOfflineHandler: NSObject, FlutterPlugin, FlutterStreamHandle
             return
         }
         if call.method == "configure" {
-            let requested = args["mapsBaseUrl"] as? String
-                ?? NGLRegionalOfflineConfig.fromCurrentTileServer().mapsBaseUrl
-            let baseURL = requested.trimmingCharacters(in: .whitespacesAndNewlines)
-                .replacingOccurrences(of: "/+$", with: "", options: .regularExpression)
-            guard let url = URL(string: baseURL), ["http", "https"].contains(url.scheme ?? ""),
-                  let host = url.host, !host.isEmpty else {
-                result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected an HTTP(S) mapsBaseUrl", details: nil))
-                return
+            let configuration: Configuration
+            if let requested = args["mapsBaseUrl"] as? String {
+                let baseURL = requested.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .replacingOccurrences(of: "/+$", with: "", options: .regularExpression)
+                guard let url = URL(string: baseURL), ["http", "https"].contains(url.scheme ?? ""),
+                      let host = url.host, !host.isEmpty else {
+                    result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected an HTTP(S) mapsBaseUrl", details: nil))
+                    return
+                }
+                configuration = .custom(baseURL)
+            } else {
+                configuration = .automatic
             }
-            if let configured = Self.configuredBaseURL ?? Self.configuringBaseURL, configured != baseURL {
+            if let current = Self.configured ?? Self.configuring, current != configuration {
                 result(FlutterError(code: "CONFIGURATION_FAILED", message: "A different CDN requires app restart", details: nil))
                 return
             }
-            configure(baseURL: baseURL, useDefault: args["mapsBaseUrl"] == nil || args["mapsBaseUrl"] is NSNull,
-                      result: result)
+            configure(configuration, result: result)
             return
         }
         guard Self.isConfigured else {
@@ -178,7 +186,7 @@ final class RegionalOfflineHandler: NSObject, FlutterPlugin, FlutterStreamHandle
         }
     }
 
-    private func configure(baseURL: String, useDefault: Bool, result: @escaping FlutterResult) {
+    private func configure(_ configuration: Configuration, result: @escaping FlutterResult) {
         if Self.isConfigured {
             attachListeners()
             result(nil)
@@ -189,15 +197,16 @@ final class RegionalOfflineHandler: NSObject, FlutterPlugin, FlutterStreamHandle
             self.attachListeners()
             result(nil)
         }
-        guard Self.configuringBaseURL == nil else { return }
-        Self.configuringBaseURL = baseURL
+        guard Self.configuring == nil else { return }
+        Self.configuring = configuration
         Self.storageQueue.async {
-            // No database location is supplied: storage stays SDK-owned.
-            if useDefault { NGLRegionalOffline.configure() }
-            else { NGLRegionalOffline.configure(withMapsBaseUrl: baseURL) }
+            switch configuration {
+            case .automatic: NGLRegionalOffline.configure()
+            case .custom(let baseURL): NGLRegionalOffline.configure(withMapsBaseUrl: baseURL)
+            }
             DispatchQueue.main.async {
-                Self.configuredBaseURL = baseURL
-                Self.configuringBaseURL = nil
+                Self.configured = configuration
+                Self.configuring = nil
                 let completions = Self.configurationCompletions
                 Self.configurationCompletions.removeAll()
                 completions.forEach { $0() }
@@ -276,7 +285,8 @@ final class RegionalOfflineHandler: NSObject, FlutterPlugin, FlutterStreamHandle
                          "NO_INSTALLED_REGIONS", "CANCELLED", "UNKNOWN", "NETWORK_UNAVAILABLE", "REQUEST_TIMED_OUT",
                          "HTTP_STATUS", "INVALID_RESPONSE", "FILE_SYSTEM", "INSUFFICIENT_STORAGE", "INVALID_PACKAGE",
                          "PACKAGE_DECOMPRESSION", "PACKAGE_INSTALLATION", "DOWNLOAD_ALREADY_ACTIVE",
-                         "PREVIEW_DATABASE_OPEN", "PREVIEW_ROLLBACK_FAILED", "UNSUPPORTED_TILE_SERVER"]
+                         "PREVIEW_DATABASE_OPEN", "PREVIEW_ROLLBACK_FAILED", "UNSUPPORTED_TILE_SERVER",
+                         "UNKNOWN_CATALOG_SOURCE", "INVALID_CONFIGURATION"]
             if native.code > 0 && native.code <= codes.count { code = codes[native.code - 1] }
         } else if native.domain == NGLErrorDomain && native.code == 12 { code = "UNSUPPORTED_TILE_SERVER" }
         return FlutterError(code: code, message: native.localizedDescription, details: errorMap(native))

@@ -12,7 +12,6 @@ import java.util.Map;
 
 import ai.nextbillion.maps.Nextbillion;
 import ai.nextbillion.maps.regionaloffline.release.client.RegionalOffline;
-import ai.nextbillion.maps.style.NGLDefaultMapStyle;
 import ai.nextbillion.maps.style.NGLWellKnownTileServer;
 import ai.nextbillion.maps.util.DefaultStyle;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
@@ -49,7 +48,12 @@ public class NextBillionMethodHandler implements MethodChannel.MethodCallHandler
                 if (serverName != null) {
                     NGLWellKnownTileServer wellKnownTileServer = NGLWellKnownTileServer.valueOf(serverName);
                     if (!canSelectServer(wellKnownTileServer, result)) break;
+                    boolean serverChanged = Nextbillion.hasInstance() &&
+                        Nextbillion.getWellKnownTileServer() != wellKnownTileServer;
                     Nextbillion.getInstance(context, token, wellKnownTileServer);
+                    if (serverChanged) {
+                        Nextbillion.setWellKnownTileServer(wellKnownTileServer);
+                    }
                     Log.e("Styles","wellKnownTileServer : " + wellKnownTileServer);
                 } else {
                     Nextbillion.getInstance(context, token);
@@ -143,14 +147,14 @@ public class NextBillionMethodHandler implements MethodChannel.MethodCallHandler
         }
     }
 
-    // Published Android 3.3.0 and 3.3.1 throw inside its asynchronous refresh when switching an
-    // initialized Regional Offline runtime to Orbis. Fail before changing state.
+    // The 3.4.0 Snapshot still reads the active data source in a queued tile-sync callback.
+    // Switching to Orbis after offline initialization can throw on the main thread.
     static boolean canSelectServer(NGLWellKnownTileServer server, MethodChannel.Result result) {
         if (server == NGLWellKnownTileServer.NGLTomTomOrbis &&
             (RegionalOffline.isInitialized() || RegionalOfflineHandler.isConfiguring())) {
             result.error("SDK_UPDATE_REQUIRED",
-                "Android Maps 3.3.1 cannot switch to Orbis during or after Regional Offline initialization. " +
-                "Use Orbis before configuring Regional Offline, or update the native SDK with the Orbis refresh fix.", null);
+                "Android Maps 3.4.0-SNAPSHOT cannot safely select Orbis during or after Regional Offline initialization. " +
+                "Select Orbis before configuring Regional Offline.", null);
             return false;
         }
         return true;

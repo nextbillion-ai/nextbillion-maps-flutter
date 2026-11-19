@@ -1,5 +1,5 @@
 group 'ai.nextbillion.maps_flutter'
-version '4.0.0-beta.1'
+version '4.0.0-beta.2'
 
 buildscript {
     repositories {
@@ -23,7 +23,6 @@ android {
 
     defaultConfig {
         minSdkVersion 23
-        consumerProguardFiles 'consumer-rules.pro'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         buildConfigField "String", "GIT_REVISION_SHORT", String.format("\"%s\"", getGitRevision())
@@ -63,7 +62,7 @@ android {
     }
 
     dependencies {
-        implementation 'ai.nextbillion:nb-maps-android:3.3.1'
+        implementation 'ai.nextbillion:nb-maps-android:3.4.0-SNAPSHOT'
         implementation 'com.squareup.okhttp3:okhttp:4.10.0'
         implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
         implementation 'androidx.lifecycle:lifecycle-runtime:2.10.0'

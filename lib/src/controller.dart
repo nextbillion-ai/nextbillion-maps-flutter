@@ -1766,7 +1766,7 @@ class NextbillionMapController extends ChangeNotifier {
   /// Returns true when the native SDK accepts the request, or false if disposed.
   /// Wait for [onStyleLoadedCallback] before adding style layers or annotations;
   /// acceptance does not mean all map resources have loaded. Native SDK errors
-  /// are propagated, including Android 3.3.1's Orbis/Regional Offline guard.
+  /// are propagated.
   Future<bool> switchTileServer(WellKnownTileServer server,
       {NBMapStyleType styleType = NBMapStyleType.bright}) async {
     if (_disposed) return false;
@@ -2140,7 +2140,7 @@ class NextbillionMapController extends ChangeNotifier {
   /// Default will return snapshot uri in Android and iOS
   /// If you want base64 value, you must set writeToDisk option to False
   ///
-  /// iOS SDK 2.3.3 fixes independent snapshots during regional offline fallback.
+  /// iOS supports independent snapshots during regional offline fallback.
   /// Offline snapshots still depend on cached style resources and tile coverage;
   /// a non-null image does not guarantee all requested tiles are available.
   /// This API renders a separate map; on-screen overlays are captured separately.

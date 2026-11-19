@@ -21,7 +21,8 @@ class OfflineNavigationPage extends ExamplePage {
 class PlaybackTrack {
   final String name;
   final List<LatLng> points;
-  const PlaybackTrack(this.name, this.points);
+  final String? country;
+  const PlaybackTrack(this.name, this.points, {this.country});
 
   LatLng position(double fraction) {
     final offset = fraction.clamp(0.0, 1.0) * (points.length - 1);
@@ -34,31 +35,49 @@ class PlaybackTrack {
   }
 
   static const presets = [
-    PlaybackTrack('Hyderabad', [
-      LatLng(17.4401, 78.4860),
-      LatLng(17.4416, 78.4880),
-      LatLng(17.4438, 78.4900),
-      LatLng(17.4456, 78.4920),
-      LatLng(17.4475, 78.4940),
-      LatLng(17.4494, 78.4960),
-    ]),
-    PlaybackTrack('San Francisco', [
-      LatLng(37.7749, -122.4194),
-      LatLng(37.7761, -122.4177),
-      LatLng(37.7774, -122.4160),
-      LatLng(37.7788, -122.4144),
-      LatLng(37.7801, -122.4127),
-      LatLng(37.7814, -122.4110),
-    ]),
-    PlaybackTrack('Sydney', [
-      LatLng(-33.8685, 151.2070),
-      LatLng(-33.8670, 151.2080),
-      LatLng(-33.8655, 151.2090),
-      LatLng(-33.8640, 151.2100),
-      LatLng(-33.8625, 151.2110),
-      LatLng(-33.8610, 151.2120),
-    ]),
+    PlaybackTrack(
+        'Hyderabad',
+        [
+          LatLng(17.4401, 78.4860),
+          LatLng(17.4416, 78.4880),
+          LatLng(17.4438, 78.4900),
+          LatLng(17.4456, 78.4920),
+          LatLng(17.4475, 78.4940),
+          LatLng(17.4494, 78.4960),
+        ],
+        country: 'India'),
+    PlaybackTrack(
+        'San Francisco',
+        [
+          LatLng(37.7749, -122.4194),
+          LatLng(37.7761, -122.4177),
+          LatLng(37.7774, -122.4160),
+          LatLng(37.7788, -122.4144),
+          LatLng(37.7801, -122.4127),
+          LatLng(37.7814, -122.4110),
+        ],
+        country: 'United States'),
+    PlaybackTrack(
+        'Sydney',
+        [
+          LatLng(-33.8685, 151.2070),
+          LatLng(-33.8670, 151.2080),
+          LatLng(-33.8655, 151.2090),
+          LatLng(-33.8640, 151.2100),
+          LatLng(-33.8625, 151.2110),
+          LatLng(-33.8610, 151.2120),
+        ],
+        country: 'Australia'),
   ];
+
+  Future<RegionalOfflineCatalogItem?> findOfflineRegion() async {
+    if (country == null) return null;
+    final regions = await RegionalOffline.fetchRegionList(country: country);
+    for (final region in regions) {
+      if (region.name == name) return region;
+    }
+    return null;
+  }
 }
 
 class OfflineNavigationView extends StatefulWidget {
@@ -244,6 +263,22 @@ class OfflineNavigationState extends State<OfflineNavigationView> {
     }
   }
 
+  Future<void> downloadPreset(PlaybackTrack preset) async {
+    selectTrack(preset);
+    try {
+      final region = await preset.findOfflineRegion();
+      if (!mounted) return;
+      if (region == null) {
+        setState(() =>
+            error = '${preset.name} is unavailable in the offline catalog');
+        return;
+      }
+      await download(region.regionId);
+    } catch (value) {
+      _failure(value);
+    }
+  }
+
   Future<void> control(int id, RegionalOfflineDownloadAction action) async {
     try {
       await RegionalOffline.controlDownload(id, action);
@@ -419,7 +454,7 @@ class OfflineNavigationState extends State<OfflineNavigationView> {
   }
 
   Map<String, Object?> get report => {
-        'sdk': {'ios': '2.3.3', 'android': '3.3.1'},
+        'sdk': {'ios': '2.4.0-beta.4', 'android': '3.4.0-SNAPSHOT'},
         'configured': configured,
         'styleLoads': styleLoads,
         'routeReady': routeReady,
@@ -507,22 +542,18 @@ class OfflineNavigationState extends State<OfflineNavigationView> {
 
   Widget _downloads() => Column(children: [
         Wrap(children: [
-          for (var i = 0; i < PlaybackTrack.presets.length; i++)
+          for (final preset in PlaybackTrack.presets)
             TextButton(
-                onPressed: configured
-                    ? () {
-                        selectTrack(PlaybackTrack.presets[i]);
-                        unawaited(download([6980, 3474, 7242][i]));
-                      }
-                    : null,
-                child: Text('Download ${PlaybackTrack.presets[i].name}')),
+                onPressed:
+                    configured ? () => unawaited(downloadPreset(preset)) : null,
+                child: Text('Download ${preset.name}')),
         ]),
         Row(children: [
           Expanded(
               child: TextField(
                   controller: _country,
                   decoration: const InputDecoration(
-                      labelText: 'Country (English; blank for all)'))),
+                      labelText: 'Country (blank for United States)'))),
           TextButton(
               onPressed: configured && !loadingCatalog ? refreshCatalog : null,
               child: Text(loadingCatalog ? 'Loading' : 'Load catalog')),
